@@ -1,20 +1,26 @@
 package net.dijitalbeyin.firma_rehberim;
 
-import android.os.AsyncTask;
+import android.content.Context;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.AsyncTaskLoader;
+import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.ListView;
-import java.io.IOException;
-import java.net.URL;
+import android.widget.TextView;
+
 import java.util.ArrayList;
 import java.util.List;
 
-public class CitiesActivity extends AppCompatActivity {
+public class CitiesActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<List<City>> {
     private static final String CITIES_REQUEST_URL = "https://firmarehberim.com/sayfalar/radyo/json/iller.php";
+    private static final int CITY_LOADER_ID = 1;
 
     ListView lw_cities;
     CityAdapter cityAdapter;
+    TextView tv_emptyView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,27 +28,53 @@ public class CitiesActivity extends AppCompatActivity {
         setContentView(R.layout.activity_cities);
 
         lw_cities = findViewById(R.id.lw_cities);
+        tv_emptyView = findViewById(R.id.tv_emptyView);
+        lw_cities.setEmptyView(tv_emptyView);
         cityAdapter = new CityAdapter(this, R.layout.item_city, new ArrayList<City>());
         lw_cities.setAdapter(cityAdapter);
-        CityAsyncTask task = new CityAsyncTask();
-        task.execute(CITIES_REQUEST_URL);
+        getSupportLoaderManager().initLoader(CITY_LOADER_ID, null, this);
     }
 
-    private class CityAsyncTask extends AsyncTask<String, Void, List<City>> {
+    @NonNull
+    @Override
+    public Loader<List<City>> onCreateLoader(int i, @Nullable Bundle bundle) {
+        return new CityLoader(this, CITIES_REQUEST_URL);
+    }
+
+    @Override
+    public void onLoadFinished(@NonNull Loader<List<City>> loader, List<City> cities) {
+        cityAdapter.clear();
+        if (cities != null) {
+            cityAdapter.addAll(cities);
+        }
+        tv_emptyView.setText(getResources().getString(R.string.tv_empty_view));
+    }
+
+    @Override
+    public void onLoaderReset(@NonNull Loader<List<City>> loader) {
+        cityAdapter.clear();
+    }
+
+    private static class CityLoader extends AsyncTaskLoader<List<City>> {
+        private String requestUrl;
+
+        public CityLoader(@NonNull Context context, String requestUrl) {
+            super(context);
+            this.requestUrl = requestUrl;
+        }
+
         @Override
-        protected List<City> doInBackground(String... requestUrls) {
-            if (requestUrls.length < 1 || requestUrls[0] == null) {
+        public List<City> loadInBackground() {
+            if (requestUrl == null) {
                 return null;
             }
-            ArrayList<City> cities = QueryUtils.fetchCityData(requestUrls[0]);
+            ArrayList<City> cities = QueryUtils.fetchCityData(requestUrl);
             return cities;
         }
+
         @Override
-        protected void onPostExecute(List<City> citiesResult) {
-            cityAdapter.clear();
-            if (citiesResult != null && !citiesResult.isEmpty()) {
-                cityAdapter.addAll(citiesResult);
-            }
+        protected void onStartLoading() {
+            forceLoad();
         }
     }
 }

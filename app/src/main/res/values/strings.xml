@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">firma-rehberim</string>
+    <string name="tv_empty_view">No cities found</string>
 </resources>
