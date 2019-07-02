@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">firma-rehberim</string>
-    <string name="tv_empty_view">No cities found</string>
+    <string name="empty_view_text">No cities found</string>
+    <string name="no_internet_connection_text">No Internet Connection</string>
 </resources>

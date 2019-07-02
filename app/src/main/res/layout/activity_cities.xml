@@ -11,6 +11,12 @@
         android:layout_height="wrap_content">
     </ListView>
 
+    <ProgressBar
+        android:id="@+id/pb_loadingCities"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"/>
+
     <TextView
         android:id="@+id/tv_emptyView"
         android:layout_width="wrap_content"

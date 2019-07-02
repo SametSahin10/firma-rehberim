@@ -1,6 +1,8 @@
 package net.dijitalbeyin.firma_rehberim;
 
 import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.LoaderManager;
@@ -8,7 +10,9 @@ import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -21,18 +25,30 @@ public class CitiesActivity extends AppCompatActivity implements LoaderManager.L
     ListView lw_cities;
     CityAdapter cityAdapter;
     TextView tv_emptyView;
+    ProgressBar pb_loadingCities;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_cities);
 
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        boolean isConnected = activeNetwork!= null &&
+                              activeNetwork.isConnectedOrConnecting();
+
+        pb_loadingCities = findViewById(R.id.pb_loadingCities);
         lw_cities = findViewById(R.id.lw_cities);
         tv_emptyView = findViewById(R.id.tv_emptyView);
         lw_cities.setEmptyView(tv_emptyView);
         cityAdapter = new CityAdapter(this, R.layout.item_city, new ArrayList<City>());
         lw_cities.setAdapter(cityAdapter);
-        getSupportLoaderManager().initLoader(CITY_LOADER_ID, null, this);
+        if (isConnected) {
+            getSupportLoaderManager().initLoader(CITY_LOADER_ID, null, this);
+        } else {
+            pb_loadingCities.setVisibility(View.GONE);
+            tv_emptyView.setText(getString(R.string.no_internet_connection_text));
+        }
     }
 
     @NonNull
@@ -47,7 +63,8 @@ public class CitiesActivity extends AppCompatActivity implements LoaderManager.L
         if (cities != null) {
             cityAdapter.addAll(cities);
         }
-        tv_emptyView.setText(getResources().getString(R.string.tv_empty_view));
+        pb_loadingCities.setVisibility(View.GONE);
+        tv_emptyView.setText(getResources().getString(R.string.empty_view_text));
     }
 
     @Override
