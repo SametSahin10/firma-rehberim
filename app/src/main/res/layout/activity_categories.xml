@@ -7,19 +7,19 @@
     tools:context=".CitiesActivity">
 
     <ListView
-        android:id="@+id/lw_cities"
+        android:id="@+id/lw_categories"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
     </ListView>
 
     <ProgressBar
-        android:id="@+id/pb_loadingCities"
+        android:id="@+id/pb_loadingCategories"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"/>
 
     <TextView
-        android:id="@+id/tv_emptyCityView"
+        android:id="@+id/tv_emptyCatView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"

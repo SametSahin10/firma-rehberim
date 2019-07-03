@@ -39,7 +39,7 @@ public class CitiesActivity extends AppCompatActivity implements LoaderManager.L
 
         pb_loadingCities = findViewById(R.id.pb_loadingCities);
         lw_cities = findViewById(R.id.lw_cities);
-        tv_emptyView = findViewById(R.id.tv_emptyView);
+        tv_emptyView = findViewById(R.id.tv_emptyCityView);
         lw_cities.setEmptyView(tv_emptyView);
         cityAdapter = new CityAdapter(this, R.layout.item_city, new ArrayList<City>());
         lw_cities.setAdapter(cityAdapter);
@@ -64,7 +64,7 @@ public class CitiesActivity extends AppCompatActivity implements LoaderManager.L
             cityAdapter.addAll(cities);
         }
         pb_loadingCities.setVisibility(View.GONE);
-        tv_emptyView.setText(getResources().getString(R.string.empty_view_text));
+        tv_emptyView.setText(getResources().getString(R.string.empty_cities_text));
     }
 
     @Override

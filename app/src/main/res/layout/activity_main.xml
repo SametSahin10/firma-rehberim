@@ -10,10 +10,24 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
-        android:padding="12dp"
+        android:padding="18dp"
         android:background="@android:color/holo_blue_dark"
+        android:textColor="@android:color/background_light"
         android:textAllCaps="false"
-        android:text="See Cities"
+        android:text="Sehirler"
         android:textSize="36sp"/>
 
+    <Button
+        android:id="@+id/btn_go_categories"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/btn_go_cities"
+        android:layout_centerHorizontal="true"
+        android:layout_margin="10dp"
+        android:padding="18dp"
+        android:background="@android:color/holo_blue_dark"
+        android:textColor="@android:color/background_light"
+        android:textAllCaps="false"
+        android:text="Kategoriler"
+        android:textSize="36sp"/>
 </RelativeLayout>

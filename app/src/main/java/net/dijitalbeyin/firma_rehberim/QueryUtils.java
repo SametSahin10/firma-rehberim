@@ -33,6 +33,18 @@ public class QueryUtils {
         return cities;
     }
 
+    public static ArrayList<Category> fetchCategoryData(String requestUrl) {
+        URL url = createURL(requestUrl);
+        String jsonResponse = "";
+        try {
+             jsonResponse = makeHttpRequest(url);
+        } catch (IOException e) {
+            Log.e(LOG_TAG, "Error retrieving categories JSON response", e);
+        }
+        ArrayList<Category> categories = extractCategoriesFromJson(jsonResponse);
+        return categories;
+    }
+
     private static URL createURL(String stringUrl) {
         URL url = null;
         try {
@@ -107,8 +119,30 @@ public class QueryUtils {
                 }
             }
         } catch (JSONException e) {
-            Log.e("QueryUtils", "Problems occured while parsing city JSON results");
+            Log.e("QueryUtils", "Problems occured while parsing cities JSON response");
         }
         return cities;
+    }
+
+    private static ArrayList<Category> extractCategoriesFromJson(String categoriesJSONResponse) {
+        if (TextUtils.isEmpty(categoriesJSONResponse)) {
+            return null;
+        }
+        ArrayList<Category> categories = new ArrayList<>();
+        try {
+            JSONArray rootJSONArray = new JSONArray(categoriesJSONResponse);
+            if (rootJSONArray.length() > 0) {
+                for (int i = 0; i < rootJSONArray.length(); i++) {
+                    JSONObject categoryObject = rootJSONArray.getJSONObject(i);
+                    int categoryId = Integer.parseInt(categoryObject.getString("katId"));
+                    String categoryName = categoryObject.getString("kategori");
+                    Category category = new Category(categoryId, categoryName);
+                    categories.add(category);
+                }
+            }
+        } catch (JSONException e) {
+            Log.e(LOG_TAG, "Problem occured while parsin JSON response");
+        }
+        return categories;
     }
 }
