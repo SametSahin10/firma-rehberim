@@ -7,6 +7,8 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
+import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
+import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -41,7 +43,7 @@ public class CategoriesActivity extends AppCompatActivity implements LoaderManag
         tv_emptyCatView = findViewById(R.id.tv_emptyCatView);
         lw_categories.setEmptyView(tv_emptyCatView);
         if (isConnected) {
-            getSupportLoaderManager().initLoader(CATEGORY_LOADER_ID, null, this);
+            getSupportLoaderManager().initLoader(CATEGORY_LOADER_ID, null, this).forceLoad();
         } else {
             tv_emptyCatView.setText(getString(R.string.no_internet_connection_text));
             pb_loadingCategories.setVisibility(View.GONE);

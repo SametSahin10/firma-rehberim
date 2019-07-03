@@ -44,7 +44,7 @@ public class CitiesActivity extends AppCompatActivity implements LoaderManager.L
         cityAdapter = new CityAdapter(this, R.layout.item_city, new ArrayList<City>());
         lw_cities.setAdapter(cityAdapter);
         if (isConnected) {
-            getSupportLoaderManager().initLoader(CITY_LOADER_ID, null, this);
+            getSupportLoaderManager().initLoader(CITY_LOADER_ID, null, this).forceLoad();
         } else {
             pb_loadingCities.setVisibility(View.GONE);
             tv_emptyView.setText(getString(R.string.no_internet_connection_text));
