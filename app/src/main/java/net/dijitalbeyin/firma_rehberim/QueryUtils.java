@@ -1,5 +1,6 @@
 package net.dijitalbeyin.firma_rehberim;
 
+import android.graphics.Bitmap;
 import android.text.TextUtils;
 import android.util.Log;
 import org.json.JSONArray;
@@ -43,6 +44,18 @@ public class QueryUtils {
         }
         ArrayList<Category> categories = extractCategoriesFromJson(jsonResponse);
         return categories;
+    }
+
+    public static ArrayList<Radio> fetchRadioData(String requestUrl) {
+        URL url = createURL(requestUrl);
+        String jsonRespoonse = "";
+        try {
+            jsonRespoonse = makeHttpRequest(url);
+        } catch (IOException e) {
+            Log.e(LOG_TAG, "Error retrieving radios JSON response");
+        }
+        ArrayList<Radio> radios = extractRadiosFromJson(jsonRespoonse);
+        return radios;
     }
 
     private static URL createURL(String stringUrl) {
@@ -141,8 +154,34 @@ public class QueryUtils {
                 }
             }
         } catch (JSONException e) {
-            Log.e(LOG_TAG, "Problem occured while parsin JSON response");
+            Log.e(LOG_TAG, "Problem occured while parsing categories JSON response");
         }
         return categories;
+    }
+
+    private static ArrayList<Radio> extractRadiosFromJson(String radiosJSONResponse) {
+        if (TextUtils.isEmpty(radiosJSONResponse)) {
+            return null;
+        }
+        ArrayList<Radio> radios = new ArrayList<>();
+        try {
+            JSONArray rootJSONArray = new JSONArray(radiosJSONResponse);
+            for (int i = 0; i < rootJSONArray.length(); i++) {
+                JSONObject radioObject = rootJSONArray.getJSONObject(i);
+                int radioId = Integer.parseInt(radioObject.getString("id"));
+                String radioName = radioObject.getString("baslik");
+                String category = radioObject.getString("kategori");
+                String radioIconLink = radioObject.getString("resim");
+                String streamLink = radioObject.getString("link");
+                String shareableLink = radioObject.getString("paylasmaLink");
+                int hit = Integer.parseInt(radioObject.getString("hit"));
+                int numOfOnlineListeners = Integer.parseInt(radioObject.getString("online"));
+                Radio radio = new Radio(radioId, radioName, category, radioIconLink, streamLink, shareableLink, hit, numOfOnlineListeners);
+                radios.add(radio);
+            }
+        } catch (JSONException e) {
+            Log.e(LOG_TAG, "Problem occured while parsing radio JSON response ");
+        }
+        return radios;
     }
 }

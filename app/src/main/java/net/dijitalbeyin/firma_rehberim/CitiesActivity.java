@@ -15,6 +15,8 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import net.dijitalbeyin.firma_rehberim.adapters.CityAdapter;
+
 import java.util.ArrayList;
 import java.util.List;
 

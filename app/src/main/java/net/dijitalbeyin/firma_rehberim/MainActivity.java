@@ -1,7 +1,9 @@
 package net.dijitalbeyin.firma_rehberim;
 
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
 
@@ -21,6 +23,14 @@ public class MainActivity extends AppCompatActivity {
         ib_listenToRadio.setClipToOutline(true);
         ib_watchTelevision = findViewById(R.id.ib_watchTelevison);
         ib_watchTelevision.setClipToOutline(true);
+
+        ib_listenToRadio.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getApplicationContext(), RadiosActivity.class);
+                startActivity(intent);
+            }
+        });
 
 //        btn_go_cities = findViewById(R.id.btn_go_cities);
 //        btn_go_cities.setOnClickListener(new View.OnClickListener() {

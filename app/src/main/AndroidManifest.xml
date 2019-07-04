@@ -12,7 +12,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".CategoriesActivity"></activity>
+        <activity android:name=".RadiosActivity"></activity>
+        <activity android:name=".CategoriesActivity" />
         <activity android:name=".CitiesActivity" />
         <activity android:name=".MainActivity">
             <intent-filter>
