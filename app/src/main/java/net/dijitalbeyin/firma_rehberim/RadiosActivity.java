@@ -1,6 +1,8 @@
 package net.dijitalbeyin.firma_rehberim;
 
 import android.content.Context;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.support.annotation.NonNull;
@@ -11,12 +13,16 @@ import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import net.dijitalbeyin.firma_rehberim.adapters.RadioAdapter;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,6 +34,12 @@ public class RadiosActivity extends AppCompatActivity implements LoaderManager.L
     RadioAdapter radioAdapter;
     TextView tv_emptyView;
     ProgressBar pb_loadingRadios;
+
+    MediaPlayer mediaPlayer = new MediaPlayer();
+
+    ImageView iv_radioIcon;
+    TextView  tv_radioTitle;
+    ImageButton ib_playPauseRadio;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,6 +63,54 @@ public class RadiosActivity extends AppCompatActivity implements LoaderManager.L
             tv_emptyView.setText(getString(R.string.no_internet_connection_text));
             pb_loadingRadios.setVisibility(View.GONE);
         }
+
+        //////////////////////////////////////////////////////////////////////////////
+        iv_radioIcon = findViewById(R.id.iv_radio_icon);
+        tv_radioTitle = findViewById(R.id.tv_radio_title);
+        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+        ib_playPauseRadio = findViewById(R.id.ib_play_radio);
+        lw_radios.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
+                if (mediaPlayer.isPlaying()) {
+                    mediaPlayer.pause();
+                    mediaPlayer.reset();
+                }
+                ib_playPauseRadio.setImageResource(R.drawable.ic_pause_radio);
+                Radio radioClicked = (Radio) adapterView.getItemAtPosition(position);
+                tv_radioTitle.setText(radioClicked.getRadioName());
+                String streamLink = radioClicked.getStreamLink();
+                try {
+                    mediaPlayer.setDataSource(streamLink);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                try {
+                    mediaPlayer.prepare();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                    @Override
+                    public void onPrepared(MediaPlayer mp) {
+                        mp.start();
+                    }
+                });
+            }
+        });
+
+        ib_playPauseRadio.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mediaPlayer.isPlaying()) {
+                    ib_playPauseRadio.setImageResource(R.drawable.ic_play_radio);
+                    mediaPlayer.pause();
+                } else {
+                    ib_playPauseRadio.setImageResource(R.drawable.ic_pause_radio);
+                    mediaPlayer.start();
+                }
+            }
+        });
     }
 
     @Override
