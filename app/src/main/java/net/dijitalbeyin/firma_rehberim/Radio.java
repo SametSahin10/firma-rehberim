@@ -1,26 +1,26 @@
 package net.dijitalbeyin.firma_rehberim;
 
-import android.graphics.Bitmap;
-
 public class Radio {
     private int radioId;
     private String radioName;
     private String category;
-    private String radioIconLink;
+    private String radioIconUrl;
     private String streamLink;
     private String shareableLink;
     private int hit;
     private int numOfOnlineListeners;
+    private boolean isBeingBuffered;
 
-    public Radio(int radioId, String radioName, String category, String radioIconLink, String streamLink, String shareableLink, int hit, int numOfOnlineListeners) {
+    public Radio(int radioId, String radioName, String category, String radioIconUrl, String streamLink, String shareableLink, int hit, int numOfOnlineListeners, boolean isBeingBufferd) {
         this.radioId = radioId;
         this.radioName = radioName;
         this.category = category;
-        this.radioIconLink = radioIconLink;
+        this.radioIconUrl = radioIconUrl;
         this.streamLink = streamLink;
         this.shareableLink = shareableLink;
         this.hit = hit;
         this.numOfOnlineListeners = numOfOnlineListeners;
+        this.isBeingBuffered = isBeingBufferd;
     }
 
     public int getRadioId() {
@@ -47,12 +47,12 @@ public class Radio {
         this.category = category;
     }
 
-    public String getRadioIconLink() {
-        return radioIconLink;
+    public String getRadioIconUrl() {
+        return radioIconUrl;
     }
 
-    public void setRadioIconLink(String radioIconLink) {
-        this.radioIconLink = radioIconLink;
+    public void setRadioIconUrl(String radioIconUrl) {
+        this.radioIconUrl = radioIconUrl;
     }
 
     public String getStreamLink() {
@@ -85,5 +85,13 @@ public class Radio {
 
     public void setNumOfOnlineListeners(int numOfOnlineListeners) {
         this.numOfOnlineListeners = numOfOnlineListeners;
+    }
+
+    public boolean isBeingBuffered() {
+        return isBeingBuffered;
+    }
+
+    public void setBeingBuffered(boolean beingBuffered) {
+        isBeingBuffered = beingBuffered;
     }
 }

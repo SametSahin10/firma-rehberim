@@ -39,22 +39,24 @@
         android:layout_weight="1.4"
         android:layout_margin="6dp"
         android:padding="10dp"
-        android:background="@drawable/radio_player_background">
+        android:background="@drawable/radio_player_background"
+        android:elevation="4dp">
 
         <ImageView
             android:id="@+id/iv_radio_icon"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
             android:src="@mipmap/ic_launcher"/>
 
         <TextView
             android:id="@+id/tv_radio_title"
-            android:layout_width="wrap_content"
+            android:layout_width="200dp"
             android:layout_height="match_parent"
             android:layout_centerInParent="true"
-            android:layout_marginStart="8dp"
             android:gravity="center"
-            android:textSize="28sp"
+            android:textColor="@color/radio_title_text_color"
+            android:textSize="26sp"
             android:text="Show\nRadyo"/>
 
         <ImageButton

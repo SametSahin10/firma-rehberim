@@ -1,10 +1,9 @@
 package net.dijitalbeyin.firma_rehberim;
 
 import android.content.Context;
-import android.media.AudioManager;
-import android.media.MediaPlayer;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.LoaderManager;
@@ -12,6 +11,7 @@ import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ImageButton;
@@ -19,14 +19,30 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.google.android.exoplayer2.ExoPlaybackException;
+import com.google.android.exoplayer2.ExoPlayer;
+import com.google.android.exoplayer2.ExoPlayerFactory;
+import com.google.android.exoplayer2.Player;
+import com.google.android.exoplayer2.SimpleExoPlayer;
+import com.google.android.exoplayer2.source.ExtractorMediaSource;
+import com.google.android.exoplayer2.source.MediaSource;
+import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection;
+import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
+import com.google.android.exoplayer2.trackselection.TrackSelection;
+import com.google.android.exoplayer2.trackselection.TrackSelector;
+import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
+import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
+import com.google.android.exoplayer2.util.Util;
 
 import net.dijitalbeyin.firma_rehberim.adapters.RadioAdapter;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class RadiosActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<List<Radio>> {
+    private static final String LOG_TAG = RadiosActivity.class.getSimpleName();
     private static final String RADIO_REQUEST_URL = "https://firmarehberim.com/sayfalar/radyo/json/radyolar_arama.php?q=";
     private static final int RADIO_LOADER_ID = 1;
 
@@ -34,12 +50,22 @@ public class RadiosActivity extends AppCompatActivity implements LoaderManager.L
     RadioAdapter radioAdapter;
     TextView tv_emptyView;
     ProgressBar pb_loadingRadios;
-
-    MediaPlayer mediaPlayer = new MediaPlayer();
+    ProgressBar pb_bufferingRadio;
 
     ImageView iv_radioIcon;
     TextView  tv_radioTitle;
     ImageButton ib_playPauseRadio;
+
+    private SimpleExoPlayer exoPlayer;
+    private MediaSource mediaSource;
+    private DefaultDataSourceFactory dataSourceFactory;
+    private ExoPlayer.EventListener eventListener;
+    private DefaultBandwidthMeter BANDWIDTH_METER = new DefaultBandwidthMeter();
+
+    TrackSelection.Factory trackSelectionFactory = new AdaptiveTrackSelection.Factory();
+    TrackSelector trackSelector = new DefaultTrackSelector(trackSelectionFactory);
+
+    Radio radioClicked;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,6 +78,7 @@ public class RadiosActivity extends AppCompatActivity implements LoaderManager.L
                               && activeNetwork.isConnectedOrConnecting();
 
         pb_loadingRadios = findViewById(R.id.pb_loadingRadios);
+        pb_bufferingRadio = findViewById(R.id.pb_buffering_radio);
         lw_radios = findViewById(R.id.lw_radios);
         tv_emptyView = findViewById(R.id.tv_emptyRadioView);
         lw_radios.setEmptyView(tv_emptyView);
@@ -67,50 +94,88 @@ public class RadiosActivity extends AppCompatActivity implements LoaderManager.L
         //////////////////////////////////////////////////////////////////////////////
         iv_radioIcon = findViewById(R.id.iv_radio_icon);
         tv_radioTitle = findViewById(R.id.tv_radio_title);
-        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
         ib_playPauseRadio = findViewById(R.id.ib_play_radio);
         lw_radios.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
-                if (mediaPlayer.isPlaying()) {
-                    mediaPlayer.pause();
-                    mediaPlayer.reset();
+                if (radioClicked != null) {
+                    radioClicked.setBeingBuffered(false);
+                    radioAdapter.notifyDataSetChanged();
                 }
-                ib_playPauseRadio.setImageResource(R.drawable.ic_pause_radio);
-                Radio radioClicked = (Radio) adapterView.getItemAtPosition(position);
-                tv_radioTitle.setText(radioClicked.getRadioName());
-                String streamLink = radioClicked.getStreamLink();
-                try {
-                    mediaPlayer.setDataSource(streamLink);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                try {
-                    mediaPlayer.prepare();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-                    @Override
-                    public void onPrepared(MediaPlayer mp) {
-                        mp.start();
+                radioClicked = (Radio) adapterView.getItemAtPosition(position);
+                radioClicked.setBeingBuffered(true);
+                if (exoPlayer != null) {
+                    exoPlayer.release();
+                    if (isPlaying()) {
+                        exoPlayer.setPlayWhenReady(false);
+                        exoPlayer.stop(true);
                     }
-                });
+                }
+                String streamLink = radioClicked.getStreamLink();
+                prepareExoPlayer(Uri.parse(streamLink));
+                tv_radioTitle.setText(radioClicked.getRadioName());
+                ImageView iv_item_radio_icon = view.findViewById(R.id.iv_item_radio_icon);
+                iv_radioIcon.setImageDrawable(iv_item_radio_icon.getDrawable());
             }
         });
+
+        eventListener = new ExoPlayer.EventListener() {
+            @Override
+            public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
+                switch (playbackState) {
+                    case ExoPlayer.STATE_BUFFERING:
+                        radioClicked.setBeingBuffered(true);
+                        radioAdapter.notifyDataSetChanged();
+                        Log.d("TAG", "STATE_BUFFERING");
+                        break;
+                    case ExoPlayer.STATE_READY:
+                        radioClicked.setBeingBuffered(false);
+                        radioAdapter.notifyDataSetChanged();
+                        if (isPlaying()) {
+                            ib_playPauseRadio.setImageDrawable(getDrawable(R.drawable.ic_pause_radio));
+                        }
+                        Log.d("TAG", "STATE_READY");
+                        break;
+                    case ExoPlayer.STATE_IDLE:
+                        Log.d("TAG", "STATE_IDLE");
+                        exoPlayer.release();
+                        radioClicked.setBeingBuffered(false);
+                        radioAdapter.notifyDataSetChanged();
+                        break;
+                    case ExoPlayer.STATE_ENDED:
+                        Log.d("TAG", "STATE_ENDED");
+                        break;
+                }
+            }
+
+            @Override
+            public void onPlayerError(ExoPlaybackException error) {
+                Toast.makeText(getApplicationContext(), R.string.cannot_stream_radio_text, Toast.LENGTH_SHORT).show();
+                Log.e(LOG_TAG, "onPlayerError: ", error);
+            }
+        };
 
         ib_playPauseRadio.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (mediaPlayer.isPlaying()) {
-                    ib_playPauseRadio.setImageResource(R.drawable.ic_play_radio);
-                    mediaPlayer.pause();
+                if (isPlaying()) {
+                    exoPlayer.setPlayWhenReady(false);
+                    ib_playPauseRadio.setImageDrawable(getDrawable(R.drawable.ic_play_radio));
                 } else {
-                    ib_playPauseRadio.setImageResource(R.drawable.ic_pause_radio);
-                    mediaPlayer.start();
+                    exoPlayer.setPlayWhenReady(true);
+                    ib_playPauseRadio.setImageDrawable(getDrawable(R.drawable.ic_pause_radio));
                 }
             }
         });
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (exoPlayer != null) {
+            exoPlayer.stop(true);
+            exoPlayer.release();
+        }
     }
 
     @Override
@@ -150,6 +215,23 @@ public class RadiosActivity extends AppCompatActivity implements LoaderManager.L
         @Override
         protected void onStartLoading() {
             forceLoad();
+        }
+    }
+
+    private void prepareExoPlayer(Uri uri) {
+        dataSourceFactory = new DefaultDataSourceFactory(this, Util.getUserAgent(this, "exoPlayerSimple"), BANDWIDTH_METER);
+        mediaSource = new ExtractorMediaSource.Factory(dataSourceFactory).createMediaSource(uri);
+        exoPlayer = ExoPlayerFactory.newSimpleInstance(this, trackSelector);
+        exoPlayer.addListener(eventListener);
+        exoPlayer.prepare(mediaSource);
+        exoPlayer.setPlayWhenReady(true);
+    }
+
+    private boolean isPlaying() {
+        if (exoPlayer != null) {
+            return exoPlayer.getPlaybackState() == Player.STATE_READY && exoPlayer.getPlayWhenReady();
+        } else {
+            return false;
         }
     }
 }

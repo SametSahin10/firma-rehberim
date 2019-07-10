@@ -1,6 +1,7 @@
 package net.dijitalbeyin.firma_rehberim;
 
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.text.TextUtils;
 import android.util.Log;
 import org.json.JSONArray;
@@ -57,6 +58,31 @@ public class QueryUtils {
         ArrayList<Radio> radios = extractRadiosFromJson(jsonRespoonse);
         return radios;
     }
+
+//    public static Bitmap DownloadBitmap(String imageUrl) {
+//        HttpURLConnection urlConnection = null;
+//        URL url = createURL(imageUrl);
+//        try {
+//            urlConnection = (HttpURLConnection) url.openConnection();
+//            int httpResponseCode = urlConnection.getResponseCode();
+//            if (httpResponseCode != HttpURLConnection.HTTP_OK) {
+//                return null;
+//            }
+//            InputStream inputStream = urlConnection.getInputStream();
+//            Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+//            return bitmap;
+//        } catch (IOException e) {
+//            if (urlConnection != null) {
+//                urlConnection.disconnect();
+//            }
+//            e.printStackTrace();
+//        } finally {
+//            if (urlConnection != null) {
+//                urlConnection.disconnect();
+//            }
+//        }
+//        return null;
+//    }
 
     private static URL createURL(String stringUrl) {
         URL url = null;
@@ -171,12 +197,13 @@ public class QueryUtils {
                 int radioId = Integer.parseInt(radioObject.getString("id"));
                 String radioName = radioObject.getString("baslik");
                 String category = radioObject.getString("kategori");
-                String radioIconLink = radioObject.getString("resim");
+                String rawRadioIconLink = radioObject.getString("resim");
+                String radioIconLink = "https:" + rawRadioIconLink;
                 String streamLink = radioObject.getString("link");
                 String shareableLink = radioObject.getString("paylasmaLink");
                 int hit = Integer.parseInt(radioObject.getString("hit"));
                 int numOfOnlineListeners = Integer.parseInt(radioObject.getString("online"));
-                Radio radio = new Radio(radioId, radioName, category, radioIconLink, streamLink, shareableLink, hit, numOfOnlineListeners);
+                Radio radio = new Radio(radioId, radioName, category, radioIconLink, streamLink, shareableLink, hit, numOfOnlineListeners, false);
                 radios.add(radio);
             }
         } catch (JSONException e) {

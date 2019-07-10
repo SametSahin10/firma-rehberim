@@ -1,16 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:orientation="horizontal"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="110dp"
+    android:padding="15dp">
+
+    <ImageView
+        android:id="@+id/iv_item_radio_icon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:adjustViewBounds="true"
+        android:scaleType="center"
+        android:src="@mipmap/ic_launcher"/>
 
     <TextView
         android:id="@+id/tv_radio_name"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:gravity="center"
+        android:textColor="@android:color/black"
+        android:textSize="26sp"
+        tools:text="Show Radyo"/>
+
+    <ProgressBar
+        android:id="@+id/pb_buffering_radio"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_margin="18dp"
-        android:textSize="32sp"
-        tools:text="Show Radyo"/>
-</LinearLayout>
+        android:layout_alignParentEnd="true"
+        android:layout_centerVertical="true"
+        android:visibility="invisible"/>
+</RelativeLayout>
