@@ -1,78 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:orientation="vertical"
+
+<android.support.v4.view.ViewPager
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/view_pager"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:weightSum="10"
-    tools:context=".RadiosActivity">
+    android:layout_height="match_parent">
 
-    <RelativeLayout
+    <fragment
+        android:name="net.dijitalbeyin.firma_rehberim.RadiosFragment"
+        android:id="@+id/radio_list"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="8.6">
+        android:layout_height="match_parent"/>
 
-        <ListView
-            android:id="@+id/lw_radios"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:divider="@null"/>
-
-        <ProgressBar
-            android:id="@+id/pb_loadingRadios"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true"/>
-
-        <TextView
-            android:id="@+id/tv_emptyRadioView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:textSize="36sp"
-            tools:text="Empty View Text"/>
-    </RelativeLayout>
-
-    <RelativeLayout
+    <fragment
+        android:name="net.dijitalbeyin.firma_rehberim.RadiosFragment"
+        android:id="@+id/favourite_radio_list"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1.4"
-        android:layout_margin="6dp"
-        android:padding="10dp"
-        android:background="@drawable/radio_player_background"
-        android:elevation="4dp">
+        android:layout_height="match_parent"/>
 
-        <ImageView
-            android:id="@+id/iv_radio_icon"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerVertical="true"
-            android:src="@mipmap/ic_launcher"/>
-
-        <TextView
-            android:id="@+id/tv_radio_title"
-            android:layout_width="200dp"
-            android:layout_height="match_parent"
-            android:layout_centerInParent="true"
-            android:gravity="center"
-            android:lines="1"
-            android:fontFamily="@font/righteous_regular_res"
-            android:textColor="@color/radio_title_text_color"
-            android:textSize="26sp"
-            android:text="Show Radyo"/>
-
-        <ImageButton
-            android:id="@+id/ib_play_radio"
-            android:layout_width="80dp"
-            android:layout_height="80dp"
-            android:layout_alignParentEnd="true"
-            android:layout_marginStart="8dp"
-            android:padding="0dp"
-            android:adjustViewBounds="true"
-            android:background="@null"
-            android:scaleType="fitCenter"
-            android:src="@drawable/ic_play_radio"/>
-    </RelativeLayout>
-
-</LinearLayout>
+    <FrameLayout
+        android:id="@+id/fragment_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+</android.support.v4.view.ViewPager>
