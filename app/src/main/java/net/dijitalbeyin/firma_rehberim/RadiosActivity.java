@@ -13,6 +13,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -55,6 +56,8 @@ public class RadiosActivity extends AppCompatActivity implements LoaderManager.L
     ImageView iv_radioIcon;
     TextView  tv_radioTitle;
     ImageButton ib_playPauseRadio;
+
+//    ArrayList<Radio> favouriteRadios = new ArrayList<>();
 
     private SimpleExoPlayer exoPlayer;
     private MediaSource mediaSource;

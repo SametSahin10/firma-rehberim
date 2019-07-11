@@ -10,8 +10,9 @@ public class Radio {
     private int hit;
     private int numOfOnlineListeners;
     private boolean isBeingBuffered;
+    private boolean isLiked;
 
-    public Radio(int radioId, String radioName, String category, String radioIconUrl, String streamLink, String shareableLink, int hit, int numOfOnlineListeners, boolean isBeingBufferd) {
+    public Radio(int radioId, String radioName, String category, String radioIconUrl, String streamLink, String shareableLink, int hit, int numOfOnlineListeners, boolean isBeingBufferd, boolean isLiked) {
         this.radioId = radioId;
         this.radioName = radioName;
         this.category = category;
@@ -21,6 +22,7 @@ public class Radio {
         this.hit = hit;
         this.numOfOnlineListeners = numOfOnlineListeners;
         this.isBeingBuffered = isBeingBufferd;
+        this.isLiked = isLiked;
     }
 
     public int getRadioId() {
@@ -93,5 +95,13 @@ public class Radio {
 
     public void setBeingBuffered(boolean beingBuffered) {
         isBeingBuffered = beingBuffered;
+    }
+
+    public boolean isLiked() {
+        return isLiked;
+    }
+
+    public void setLiked(boolean liked) {
+        isLiked = liked;
     }
 }

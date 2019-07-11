@@ -5,32 +5,60 @@
     android:orientation="horizontal"
     android:layout_width="match_parent"
     android:layout_height="110dp"
-    android:padding="15dp">
+    android:padding="8dp"
+    android:descendantFocusability="blocksDescendants">
 
     <ImageView
         android:id="@+id/iv_item_radio_icon"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="90dp"
+        android:layout_height="90dp"
         android:layout_centerVertical="true"
         android:adjustViewBounds="true"
         android:scaleType="center"
         android:src="@mipmap/ic_launcher"/>
 
-    <TextView
-        android:id="@+id/tv_radio_name"
-        android:layout_width="200dp"
-        android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:gravity="center"
-        android:textColor="@android:color/black"
-        android:textSize="26sp"
-        tools:text="Show Radyo"/>
-
-    <ProgressBar
-        android:id="@+id/pb_buffering_radio"
+    <RelativeLayout
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
-        android:layout_centerVertical="true"
-        android:visibility="invisible"/>
+        android:layout_height="match_parent"
+        android:layout_toEndOf="@id/iv_item_radio_icon"
+        android:background="@drawable/radio_item_background"
+        android:layout_marginStart="5dp">
+
+        <TextView
+            android:id="@+id/tv_radio_name"
+            android:layout_width="180dp"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="8dp"
+            android:gravity="center"
+            android:fontFamily="@font/righteous_regular"
+            android:textColor="@android:color/white"
+            android:textSize="26sp"
+            tools:text="Show Radyo"/>
+
+        <ProgressBar
+            android:id="@+id/pb_buffering_radio"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toStartOf="@id/ib_add_to_favourites"
+            android:layout_marginEnd="8dp"
+            android:layout_centerVertical="true"
+            android:visibility="invisible"
+            tools:visibility="visible"/>
+
+        <ImageButton
+            android:id="@+id/ib_add_to_favourites"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:layout_marginEnd="8dp"
+            android:focusableInTouchMode="true"
+            android:adjustViewBounds="true"
+            android:background="@null"
+            android:src="@drawable/ic_favourite_empty"/>
+
+    </RelativeLayout>
+
+
 </RelativeLayout>

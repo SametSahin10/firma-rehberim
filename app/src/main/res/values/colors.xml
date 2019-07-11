@@ -3,6 +3,7 @@
     <color name="colorPrimary">#66CCCC</color>
     <color name="colorPrimaryDark">#00574B</color>
     <color name="colorAccent">#D81B60</color>
-    <color name="radio_player_background_color">#E85078</color>
+    <color name="radio_item_background_color">#66DDA5</color>
+    <color name="radio_player_background_color">#66DDA5</color>
     <color name="radio_title_text_color">#FFFFFF</color>
 </resources>

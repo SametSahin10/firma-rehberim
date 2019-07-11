@@ -203,7 +203,7 @@ public class QueryUtils {
                 String shareableLink = radioObject.getString("paylasmaLink");
                 int hit = Integer.parseInt(radioObject.getString("hit"));
                 int numOfOnlineListeners = Integer.parseInt(radioObject.getString("online"));
-                Radio radio = new Radio(radioId, radioName, category, radioIconLink, streamLink, shareableLink, hit, numOfOnlineListeners, false);
+                Radio radio = new Radio(radioId, radioName, category, radioIconLink, streamLink, shareableLink, hit, numOfOnlineListeners, false, false);
                 radios.add(radio);
             }
         } catch (JSONException e) {
