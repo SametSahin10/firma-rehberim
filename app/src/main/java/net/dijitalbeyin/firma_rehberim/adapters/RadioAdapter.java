@@ -1,8 +1,11 @@
 package net.dijitalbeyin.firma_rehberim.adapters;
 
+import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.content.res.ResourcesCompat;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,24 +14,34 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
 
+import net.dijitalbeyin.firma_rehberim.FavouriteRadiosFragment;
 import net.dijitalbeyin.firma_rehberim.R;
 import net.dijitalbeyin.firma_rehberim.Radio;
+import net.dijitalbeyin.firma_rehberim.data.RadioDbHelper;
+
 import java.util.ArrayList;
 
+import static net.dijitalbeyin.firma_rehberim.data.RadioContract.*;
+
 public class RadioAdapter extends ArrayAdapter<Radio> {
+    private static final String LOG_TAG = RadioAdapter.class.getSimpleName();
     Context context;
     int layoutResourceId;
     ArrayList<Radio> radios;
+    boolean filterFavourites;
 
-    public RadioAdapter(Context context, int resource, ArrayList<Radio> radios) {
+    OnAddToFavouriteListener onAddToFavouriteListener;
+
+    public RadioAdapter(Context context, int resource, ArrayList<Radio> radios, boolean filterFavourites, OnAddToFavouriteListener onAddToFavouriteListener) {
         super(context, resource, radios);
         this.context = context;
         this.layoutResourceId = resource;
         this.radios = radios;
+        this.filterFavourites = filterFavourites;
+        this.onAddToFavouriteListener = onAddToFavouriteListener;
     }
 
     @Override
@@ -69,10 +82,13 @@ public class RadioAdapter extends ArrayAdapter<Radio> {
         holder.ib_add_to_favourites.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                onAddToFavouriteListener.onAddToFavouriteClick();
                 if (!currentRadio.isLiked()) {
                     currentRadio.setLiked(true);
+                    addToFavourites(currentRadio);
                 } else {
                     currentRadio.setLiked(false);
+                    deleteFromFavourites(currentRadio);
                 }
                 notifyDataSetChanged();
             }
@@ -85,5 +101,41 @@ public class RadioAdapter extends ArrayAdapter<Radio> {
         private TextView tv_radio_name;
         private ProgressBar pb_buffering_radio;
         private ImageButton ib_add_to_favourites;
+    }
+
+    private void addToFavourites(Radio radio) {
+        RadioDbHelper dbHelper = new RadioDbHelper(getContext());
+        SQLiteDatabase sqLiteDatabase = dbHelper.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(RadioEntry.COLUMN_RADIO_ID, radio.getRadioId());
+        contentValues.put(RadioEntry.COLUMN_RADIO_NAME, radio.getRadioName());
+        contentValues.put(RadioEntry.COLUMN_RADIO_CATEGORY, radio.getCategory());
+        contentValues.put(RadioEntry.COLUMN_RADIO_ICON_URL, radio.getRadioIconUrl());
+        contentValues.put(RadioEntry.COLUMN_RADIO_STREAM_LINK, radio.getStreamLink());
+        contentValues.put(RadioEntry.COLUMN_RADIO_SHAREABLE_LINK, radio.getShareableLink());
+        contentValues.put(RadioEntry.COLUMN_RADIO_HIT, radio.getHit());
+        contentValues.put(RadioEntry.COLUMN_NUM_OF_ONLINE_LISTENERS, radio.getNumOfOnlineListeners());
+        contentValues.put(RadioEntry.COLUMN_RADIO_IS_BEING_BUFFERED, radio.isBeingBuffered());
+        contentValues.put(RadioEntry.COLUMN_RADIO_IS_LIKED, radio.isLiked());
+        long newRowId = sqLiteDatabase.insert(RadioEntry.TABLE_NAME, null, contentValues);
+        Log.d(LOG_TAG, "newRowId: " + newRowId);
+        FavouriteRadiosFragment favouriteRadiosFragment = new FavouriteRadiosFragment();
+        if (favouriteRadiosFragment.getRadioCursorAdapter() != null) {
+            RadioCursorAdapter radioCursorAdapter = favouriteRadiosFragment.getRadioCursorAdapter();
+            Cursor newCursor = favouriteRadiosFragment.queryAllTheRadios(getContext());
+            radioCursorAdapter.swapCursor(newCursor);
+        }
+    }
+
+    private void deleteFromFavourites(Radio radio) {
+        RadioDbHelper dbHelper = new RadioDbHelper(getContext());
+        SQLiteDatabase sqLiteDatabase = dbHelper.getWritableDatabase();
+        String selection = RadioEntry.COLUMN_RADIO_NAME + "=?";
+        String selectionArgs[] = {radio.getRadioName()};
+        int numOfDeletedRows = sqLiteDatabase.delete(RadioEntry.TABLE_NAME, selection, selectionArgs);
+    }
+
+    public interface OnAddToFavouriteListener {
+        void onAddToFavouriteClick();
     }
 }

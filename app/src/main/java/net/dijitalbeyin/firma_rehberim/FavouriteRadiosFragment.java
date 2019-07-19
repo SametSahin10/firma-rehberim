@@ -1,6 +1,9 @@
 package net.dijitalbeyin.firma_rehberim;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -8,13 +11,6 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentStatePagerAdapter;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.AsyncTaskLoader;
-import android.support.v4.content.Loader;
-import android.support.v4.view.PagerAdapter;
-import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -42,27 +38,25 @@ import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
 
-import net.dijitalbeyin.firma_rehberim.adapters.RadioAdapter;
+import net.dijitalbeyin.firma_rehberim.adapters.RadioCursorAdapter;
+import net.dijitalbeyin.firma_rehberim.data.RadioDbHelper;
 
-import java.util.ArrayList;
-import java.util.List;
+import static net.dijitalbeyin.firma_rehberim.data.RadioContract.*;
 
-public class RadiosFragment extends Fragment implements LoaderManager.LoaderCallbacks<List<Radio>> {
-    private static final String LOG_TAG = RadiosFragment.class.getSimpleName();
-    private static final String RADIO_REQUEST_URL = "https://firmarehberim.com/sayfalar/radyo/json/radyolar_arama.php?q=";
-    private static final int RADIO_LOADER_ID = 1;
+public class FavouriteRadiosFragment extends Fragment {
+    private static final String LOG_TAG = FavouriteRadiosFragment.class.getSimpleName();
+    public static final String RADIO_DATASET_CHANGED = "net.dijitalbeyin.firma_rehberim.RADIO_DATASET_CHANGED";
 
-    ListView lw_radios;
-    RadioAdapter radioAdapter;
-    TextView tv_emptyView;
-    ProgressBar pb_loadingRadios;
-    ProgressBar pb_bufferingRadio;
+    RadioDbHelper dbHelper;
 
-    ImageView iv_radioIcon;
-    TextView  tv_radioTitle;
-    ImageButton ib_playPauseRadio;
+    private ListView lw_radios;
+    private RadioCursorAdapter radioCursorAdapter;
+    private TextView tv_emptyView;
+    private ProgressBar pb_bufferingRadio;
 
-//    ArrayList<Radio> favouriteRadios = new ArrayList<>();
+    private ImageView iv_radioIcon;
+    private TextView  tv_radioTitle;
+    private ImageButton ib_playPauseRadio;
 
     private SimpleExoPlayer exoPlayer;
     private MediaSource mediaSource;
@@ -80,7 +74,7 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         ViewGroup rootView = (ViewGroup) inflater.inflate(
-                R.layout.fragment_radios, container, false);
+                R.layout.fragment_favourite_radios, container, false);
         return rootView;
     }
 
@@ -91,19 +85,21 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
         boolean isConnected = activeNetwork != null
                 && activeNetwork.isConnectedOrConnecting();
 
-        pb_loadingRadios = view.findViewById(R.id.pb_loadingRadios);
         pb_bufferingRadio = view.findViewById(R.id.pb_buffering_radio);
         lw_radios = view.findViewById(R.id.lw_radios);
         tv_emptyView = view.findViewById(R.id.tv_emptyRadioView);
         lw_radios.setEmptyView(tv_emptyView);
-        radioAdapter = new RadioAdapter(getContext(), R.layout.item_radio, new ArrayList<Radio>(), false, );
-        lw_radios.setAdapter(radioAdapter);
-        if (isConnected) {
-            getLoaderManager().initLoader(RADIO_LOADER_ID, null, this).forceLoad();
-        } else {
-            tv_emptyView.setText(getString(R.string.no_internet_connection_text));
-            pb_loadingRadios.setVisibility(View.GONE);
-        }
+        final Cursor cursor = queryAllTheRadios(getContext());
+        radioCursorAdapter = new RadioCursorAdapter(getContext(), cursor);
+        lw_radios.setAdapter(radioCursorAdapter);
+//        if (isConnected) {
+////            getLoaderManager().initLoader(RADIO_LOADER_ID, null, this).forceLoad();
+//            //Use Cursor Loader instead
+//        } else {
+//            tv_emptyView.setText(getString(R.string.no_internet_connection_text));
+//            pb_loadingRadios.setVisibility(View.GONE);
+//        }
+//        Will implement this later.
 
         //////////////////////////////////////////////////////////////////////////////
         iv_radioIcon = view.findViewById(R.id.iv_radio_icon);
@@ -114,10 +110,13 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
                 if (radioClicked != null) {
                     radioClicked.setBeingBuffered(false);
-                    radioAdapter.notifyDataSetChanged();
+                    radioCursorAdapter.notifyDataSetChanged();
                 }
-                radioClicked = (Radio) adapterView.getItemAtPosition(position);
+                Cursor radioCursor = (Cursor) adapterView.getItemAtPosition(position);
+                Radio radioFromCursor = retireveRadioFromCursor(radioCursor, position);
+                radioClicked = radioFromCursor;
                 radioClicked.setBeingBuffered(true);
+//                radioCursorAdapter.notifyDataSetChanged();
                 if (exoPlayer != null) {
                     exoPlayer.release();
                     if (isPlaying()) {
@@ -139,12 +138,12 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
                 switch (playbackState) {
                     case ExoPlayer.STATE_BUFFERING:
                         radioClicked.setBeingBuffered(true);
-                        radioAdapter.notifyDataSetChanged();
+//                        radioAdapter.notifyDataSetChanged();
                         Log.d("TAG", "STATE_BUFFERING");
                         break;
                     case ExoPlayer.STATE_READY:
                         radioClicked.setBeingBuffered(false);
-                        radioAdapter.notifyDataSetChanged();
+                        radioCursorAdapter.notifyDataSetChanged();
                         if (isPlaying()) {
                             ib_playPauseRadio.setImageDrawable(getResources().getDrawable(R.drawable.ic_pause_radio));
                         }
@@ -154,7 +153,7 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
                         Log.d("TAG", "STATE_IDLE");
                         exoPlayer.release();
                         radioClicked.setBeingBuffered(false);
-                        radioAdapter.notifyDataSetChanged();
+                        radioCursorAdapter.notifyDataSetChanged();
                         break;
                     case ExoPlayer.STATE_ENDED:
                         Log.d("TAG", "STATE_ENDED");
@@ -183,44 +182,20 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
         });
     }
 
-    @Override
-    public Loader<List<Radio>> onCreateLoader(int i, @Nullable Bundle bundle) {
-        return new RadioLoader(getContext(), RADIO_REQUEST_URL);
+    public ListView getLw_radios() {
+        return lw_radios;
     }
 
-    @Override
-    public void onLoadFinished(@NonNull Loader<List<Radio>> loader, List<Radio> radios) {
-        radioAdapter.clear();
-        if (radios != null) {
-            radioAdapter.addAll(radios);
-        }
-        tv_emptyView.setText(getString(R.string.empty_radios_text));
-        pb_loadingRadios.setVisibility(View.GONE);
+    public void setLw_radios(ListView lw_radios) {
+        this.lw_radios = lw_radios;
     }
 
-    @Override
-    public void onLoaderReset(@NonNull Loader<List<Radio>> loader) {
-        radioAdapter.clear();
+    public RadioCursorAdapter getRadioCursorAdapter() {
+        return radioCursorAdapter;
     }
 
-    private static class RadioLoader extends AsyncTaskLoader<List<Radio>> {
-        private String requestUrl;
-
-        public RadioLoader(@NonNull Context context, String requestUrl) {
-            super(context);
-            this.requestUrl = requestUrl;
-        }
-
-        @Override
-        public List<Radio> loadInBackground() {
-            ArrayList<Radio> radios = QueryUtils.fetchRadioData(requestUrl);
-            return radios;
-        }
-
-        @Override
-        protected void onStartLoading() {
-            forceLoad();
-        }
+    public void setRadioCursorAdapter(RadioCursorAdapter radioCursorAdapter) {
+        this.radioCursorAdapter = radioCursorAdapter;
     }
 
     private void prepareExoPlayer(Uri uri) {
@@ -238,5 +213,79 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
         } else {
             return false;
         }
+    }
+
+    public Cursor queryAllTheRadios(Context context) {
+        dbHelper = new RadioDbHelper(context);
+        SQLiteDatabase sqLiteDatabase = dbHelper.getReadableDatabase();
+        String[] projection = {
+                RadioEntry._ID,
+                RadioEntry.COLUMN_RADIO_ID,
+                RadioEntry.COLUMN_RADIO_NAME,
+                RadioEntry.COLUMN_RADIO_CATEGORY,
+                RadioEntry.COLUMN_RADIO_ICON_URL,
+                RadioEntry.COLUMN_RADIO_STREAM_LINK,
+                RadioEntry.COLUMN_RADIO_SHAREABLE_LINK,
+                RadioEntry.COLUMN_RADIO_HIT,
+                RadioEntry.COLUMN_NUM_OF_ONLINE_LISTENERS,
+                RadioEntry.COLUMN_RADIO_IS_BEING_BUFFERED,
+                RadioEntry.COLUMN_RADIO_IS_LIKED};
+        Cursor cursor = sqLiteDatabase.query(RadioEntry.TABLE_NAME,
+                projection,
+                null,
+                null,
+                null,
+                null,
+                null);
+        return cursor;
+    }
+
+    private Radio retireveRadioFromCursor(Cursor cursor, int position) {
+        int idColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_ID);
+        int nameColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_NAME);
+        int categoryColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_CATEGORY);
+        int iconUrlColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_ICON_URL);
+        int streamLinkColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_STREAM_LINK);
+        int shareableLinkColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_SHAREABLE_LINK);
+        int numOfOnlineListenersColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_NUM_OF_ONLINE_LISTENERS);
+        int hitColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_HIT);
+        int isBeingBufferedColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_IS_BEING_BUFFERED);
+        int isLikedColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_IS_LIKED);
+
+        cursor.moveToPosition(position);
+        int radioId = cursor.getInt(idColumnIndex);
+        String radioName = cursor.getString(nameColumnIndex);
+        String category = cursor.getString(categoryColumnIndex);
+        String radioIconUrl = cursor.getString(iconUrlColumnIndex);
+        String streamLink = cursor.getString(streamLinkColumnIndex);
+        String shareableLink = cursor.getString(shareableLinkColumnIndex);
+        int hit = cursor.getInt(hitColumnIndex);
+        int numOfOnlineListeners = cursor.getInt(numOfOnlineListenersColumnIndex);
+        boolean isBeingBuffered = false;
+        if (cursor.getInt(isBeingBufferedColumnIndex) == 1) {
+            isBeingBuffered = true;
+        }
+        boolean isLiked = false;
+        if (cursor.getInt(isLikedColumnIndex) == 1) {
+            isLiked = true;
+        }
+
+        Radio radio = new Radio(
+                radioId,
+                radioName,
+                category,
+                radioIconUrl,
+                streamLink,
+                shareableLink,
+                hit,
+                numOfOnlineListeners,
+                isBeingBuffered,
+                isLiked);
+        return radio;
+    }
+
+    protected void updateFavouriteRadiosList() {
+        Log.d(LOG_TAG, "updateFavouriteRadiosList: ");
+        radioCursorAdapter.notifyDataSetChanged();
     }
 }
