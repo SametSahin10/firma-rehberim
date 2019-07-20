@@ -7,4 +7,6 @@
     <string name="cannot_stream_radio_text">Radio stream could not be resolved</string>
     <string name="all_the_radios_tab_title">Radios</string>
     <string name="favourite_radios_tab_title">Favourites</string>
+    <string name="menu_item_text_share">Share</string>
+    <string name="menu_item_text_add_to_fav">Add To Favourites</string>
 </resources>

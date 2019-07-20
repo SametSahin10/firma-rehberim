@@ -13,12 +13,15 @@ import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.PopupMenu;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -43,7 +46,9 @@ import net.dijitalbeyin.firma_rehberim.adapters.RadioAdapter;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RadiosFragment extends Fragment implements LoaderManager.LoaderCallbacks<List<Radio>>, RadioAdapter.OnAddToFavouriteListener {
+public class RadiosFragment extends Fragment implements LoaderManager.LoaderCallbacks<List<Radio>>,
+                                                        RadioAdapter.OnAddToFavouriteListener,
+                                                        PopupMenu.OnMenuItemClickListener {
     private static final String LOG_TAG = RadiosFragment.class.getSimpleName();
     private static final String RADIO_REQUEST_URL = "https://firmarehberim.com/sayfalar/radyo/json/radyolar_arama.php?q=";
     private static final int RADIO_LOADER_ID = 1;
@@ -64,6 +69,7 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
     TextView  tv_radioTitle;
     ImageButton ib_playPauseRadio;
     ImageButton ib_share_radio;
+    ImageButton ib_player_menu;
 
 //    ArrayList<Radio> favouriteRadios = new ArrayList<>();
 
@@ -88,7 +94,7 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
     }
 
     @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+    public void onViewCreated(@NonNull final View view, @Nullable Bundle savedInstanceState) {
         ConnectivityManager cm = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
         boolean isConnected = activeNetwork != null
@@ -112,6 +118,19 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
         //////////////////////////////////////////////////////////////////////////////
         iv_radioIcon = view.findViewById(R.id.iv_radio_icon);
         tv_radioTitle = view.findViewById(R.id.tv_radio_title);
+
+        ib_player_menu = view.findViewById(R.id.ib_player_menu);
+        ib_player_menu.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                PopupMenu popupMenu = new PopupMenu(v.getContext(), v);
+                popupMenu.setOnMenuItemClickListener(RadiosFragment.this);
+                MenuInflater menuInflater = popupMenu.getMenuInflater();
+                menuInflater.inflate(R.menu.player_menu, popupMenu.getMenu());
+                popupMenu.show();
+            }
+        });
+
         ib_playPauseRadio = view.findViewById(R.id.ib_play_radio);
         lw_radios.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -185,6 +204,20 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
                 }
             }
         });
+    }
+
+    @Override
+    public boolean onMenuItemClick(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menu_item_share:
+                //Share currently playing radio;
+                return true;
+            case R.id.menu_item_add_to_fav:
+                //Add currently playing radio to favourites;
+                return true;
+            default:
+                return false;
+        }
     }
 
     @Override

@@ -2,6 +2,7 @@ package net.dijitalbeyin.firma_rehberim.adapters;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.support.v4.content.ContextCompat;
@@ -14,14 +15,10 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-
 import com.squareup.picasso.Picasso;
-
-import net.dijitalbeyin.firma_rehberim.FavouriteRadiosFragment;
 import net.dijitalbeyin.firma_rehberim.R;
 import net.dijitalbeyin.firma_rehberim.Radio;
 import net.dijitalbeyin.firma_rehberim.data.RadioDbHelper;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -88,6 +85,19 @@ public class RadioAdapter extends ArrayAdapter<Radio> {
         //
         //Add click listener to share radio ImageButton here.
         //
+        holder.ib_share_radio.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent();
+                intent.setAction(Intent.ACTION_SEND);
+                String extraText = "I'm listening to " + currentRadio.getRadioName() + " on " + "Firma Rehberim Radyo";
+                intent.putExtra(Intent.EXTRA_TEXT, extraText);
+                intent.setType("text/plain");
+                if (intent.resolveActivity(context.getPackageManager()) != null) {
+                    context.startActivity(intent);
+                }
+            }
+        });
         holder.ib_add_to_favourites.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
