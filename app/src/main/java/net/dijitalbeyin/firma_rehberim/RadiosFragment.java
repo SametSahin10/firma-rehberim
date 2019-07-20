@@ -8,13 +8,9 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
-import android.support.v4.view.PagerAdapter;
-import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -52,10 +48,10 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
     private static final String RADIO_REQUEST_URL = "https://firmarehberim.com/sayfalar/radyo/json/radyolar_arama.php?q=";
     private static final int RADIO_LOADER_ID = 1;
 
-    OnEventFromFragmentListener onEventFromFragmentListener;
+    OnEventFromRadiosFragmentListener onEventFromRadiosFragmentListener;
 
-    public void setOnEventFromFragmentListener(OnEventFromFragmentListener onEventFromFragmentListener) {
-        this.onEventFromFragmentListener = onEventFromFragmentListener;
+    public void setOnEventFromRadiosFragmentListener(OnEventFromRadiosFragmentListener onEventFromRadiosFragmentListener) {
+        this.onEventFromRadiosFragmentListener = onEventFromRadiosFragmentListener;
     }
 
     ListView lw_radios;
@@ -67,6 +63,7 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
     ImageView iv_radioIcon;
     TextView  tv_radioTitle;
     ImageButton ib_playPauseRadio;
+    ImageButton ib_share_radio;
 
 //    ArrayList<Radio> favouriteRadios = new ArrayList<>();
 
@@ -99,6 +96,7 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
 
         pb_loadingRadios = view.findViewById(R.id.pb_loadingRadios);
         pb_bufferingRadio = view.findViewById(R.id.pb_buffering_radio);
+        ib_share_radio = view.findViewById(R.id.ib_share_radio);
         lw_radios = view.findViewById(R.id.lw_radios);
         tv_emptyView = view.findViewById(R.id.tv_emptyRadioView);
         lw_radios.setEmptyView(tv_emptyView);
@@ -246,12 +244,23 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
         }
     }
 
-    @Override
-    public void onAddToFavouriteClick() {
-        onEventFromFragmentListener.onEventFromFragment();
+    public void refreshRadiosList(int radioId) {
+        Log.d(LOG_TAG, "radioId: " + radioId);
+        List<Radio> radios = radioAdapter.getItems();
+        for (Radio radio: radios) {
+            if (radio.getRadioId() == radioId) {
+                radio.setLiked(false);
+            }
+        }
+        radioAdapter.notifyDataSetChanged();
     }
 
-    public interface OnEventFromFragmentListener {
-        void onEventFromFragment();
+    @Override
+    public void onAddToFavouriteClick() {
+        onEventFromRadiosFragmentListener.onEventFromRadiosFragment();
+    }
+
+    public interface OnEventFromRadiosFragmentListener {
+        void onEventFromRadiosFragment();
     }
 }

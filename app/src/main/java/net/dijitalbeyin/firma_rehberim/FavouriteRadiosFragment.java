@@ -43,9 +43,14 @@ import net.dijitalbeyin.firma_rehberim.data.RadioDbHelper;
 
 import static net.dijitalbeyin.firma_rehberim.data.RadioContract.*;
 
-public class FavouriteRadiosFragment extends Fragment {
+public class FavouriteRadiosFragment extends Fragment implements RadioCursorAdapter.OnRadioDeleteListener {
     private static final String LOG_TAG = FavouriteRadiosFragment.class.getSimpleName();
-    public static final String RADIO_DATASET_CHANGED = "net.dijitalbeyin.firma_rehberim.RADIO_DATASET_CHANGED";
+
+    OnEventFromFavRadiosFragment onEventFromFavRadiosFragment;
+
+    public void setOnEventFromFavRadiosFragment(OnEventFromFavRadiosFragment onEventFromFavRadiosFragment) {
+        this.onEventFromFavRadiosFragment = onEventFromFavRadiosFragment;
+    }
 
     RadioDbHelper dbHelper;
 
@@ -90,7 +95,7 @@ public class FavouriteRadiosFragment extends Fragment {
         tv_emptyView = view.findViewById(R.id.tv_emptyRadioView);
         lw_radios.setEmptyView(tv_emptyView);
         final Cursor cursor = queryAllTheRadios(getContext());
-        radioCursorAdapter = new RadioCursorAdapter(getContext(), cursor);
+        radioCursorAdapter = new RadioCursorAdapter(getContext(), cursor, this);
         lw_radios.setAdapter(radioCursorAdapter);
 //        if (isConnected) {
 ////            getLoaderManager().initLoader(RADIO_LOADER_ID, null, this).forceLoad();
@@ -288,5 +293,15 @@ public class FavouriteRadiosFragment extends Fragment {
         Log.d(LOG_TAG, "updateFavouriteRadiosList: ");
         Cursor cursor = queryAllTheRadios(getContext());
         radioCursorAdapter.swapCursor(cursor);
+    }
+
+    @Override
+    public void onRadioDelete(int radioId) {
+        updateFavouriteRadiosList();
+        onEventFromFavRadiosFragment.onEventFromFavRadiosFragment(radioId);
+    }
+
+    public interface OnEventFromFavRadiosFragment {
+        void onEventFromFavRadiosFragment(int radioId);
     }
 }

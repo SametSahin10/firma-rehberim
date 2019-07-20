@@ -23,6 +23,7 @@ import net.dijitalbeyin.firma_rehberim.Radio;
 import net.dijitalbeyin.firma_rehberim.data.RadioDbHelper;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import static net.dijitalbeyin.firma_rehberim.data.RadioContract.*;
 
@@ -42,6 +43,10 @@ public class RadioAdapter extends ArrayAdapter<Radio> {
         this.onAddToFavouriteListener = onAddToFavouriteListener;
     }
 
+    public List<Radio> getItems() {
+        return radios;
+    }
+
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         View row = convertView;
@@ -53,6 +58,7 @@ public class RadioAdapter extends ArrayAdapter<Radio> {
             holder.iv_item_radio_icon = row.findViewById(R.id.iv_item_radio_icon);
             holder.tv_radio_name = row.findViewById(R.id.tv_radio_name);
             holder.pb_buffering_radio = row.findViewById(R.id.pb_buffering_radio);
+            holder.ib_share_radio = row.findViewById(R.id.ib_share_radio);
             holder.ib_add_to_favourites = row.findViewById(R.id.ib_add_to_favourites);
             row.setTag(holder);
         } else {
@@ -63,20 +69,25 @@ public class RadioAdapter extends ArrayAdapter<Radio> {
         Picasso.with(row.getContext()).load(iconUrl)
                 .resize(200, 200)
                 .centerInside()
-                .placeholder(R.mipmap.ic_launcher)
+                .placeholder(R.drawable.ic_placeholder_radio_black)
                 .error(R.drawable.ic_pause_radio)
                 .into(holder.iv_item_radio_icon);
         holder.tv_radio_name.setText(currentRadio.getRadioName());
         if (currentRadio.isBeingBuffered()) {
+            holder.ib_share_radio.setVisibility(View.INVISIBLE);
             holder.pb_buffering_radio.setVisibility(View.VISIBLE);
         } else {
             holder.pb_buffering_radio.setVisibility(View.INVISIBLE);
+            holder.ib_share_radio.setVisibility(View.VISIBLE);
         }
         if (currentRadio.isLiked()) {
             holder.ib_add_to_favourites.setImageDrawable(ContextCompat.getDrawable(getContext(), R.drawable.ic_favourite_full));
         } else {
             holder.ib_add_to_favourites.setImageDrawable(ContextCompat.getDrawable(getContext(), R.drawable.ic_favourite_empty));
         }
+        //
+        //Add click listener to share radio ImageButton here.
+        //
         holder.ib_add_to_favourites.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -98,6 +109,7 @@ public class RadioAdapter extends ArrayAdapter<Radio> {
         private ImageView iv_item_radio_icon;
         private TextView tv_radio_name;
         private ProgressBar pb_buffering_radio;
+        private ImageButton ib_share_radio;
         private ImageButton ib_add_to_favourites;
     }
 

@@ -16,7 +16,8 @@ import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-public class RadiosActivity extends FragmentActivity implements RadiosFragment.OnEventFromFragmentListener {
+public class RadiosActivity extends FragmentActivity implements RadiosFragment.OnEventFromRadiosFragmentListener,
+                                                                FavouriteRadiosFragment.OnEventFromFavRadiosFragment {
     private static final int NUM_PAGES = 2;
 
     private ViewPager viewPager;
@@ -54,9 +55,14 @@ public class RadiosActivity extends FragmentActivity implements RadiosFragment.O
 
     @Override
     public void onAttachFragment(Fragment fragment) {
-        if (fragment instanceof  RadiosFragment) {
+        if (fragment instanceof RadiosFragment) {
             RadiosFragment radiosFragment = (RadiosFragment) fragment;
-            radiosFragment.setOnEventFromFragmentListener(this);
+            radiosFragment.setOnEventFromRadiosFragmentListener(this);
+        }
+
+        if (fragment instanceof FavouriteRadiosFragment) {
+            FavouriteRadiosFragment favouriteRadiosFragment = (FavouriteRadiosFragment) fragment;
+            favouriteRadiosFragment.setOnEventFromFavRadiosFragment(this);
         }
     }
 
@@ -118,7 +124,12 @@ public class RadiosActivity extends FragmentActivity implements RadiosFragment.O
     }
 
     @Override
-    public void onEventFromFragment() {
+    public void onEventFromRadiosFragment() {
         notifyFavouriteRadiosFragment();
+    }
+
+    @Override
+    public void onEventFromFavRadiosFragment(int radioId) {
+        radiosFragment.refreshRadiosList(radioId);
     }
 }

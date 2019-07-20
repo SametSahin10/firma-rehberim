@@ -25,12 +25,18 @@ import static net.dijitalbeyin.firma_rehberim.data.RadioContract.*;
 
 public class RadioCursorAdapter extends CursorAdapter {
     Context context;
+    OnRadioDeleteListener onRadioDeleteListener;
+
+    public void setOnRadioDeleteListener(OnRadioDeleteListener onRadioDeleteListener) {
+        this.onRadioDeleteListener = onRadioDeleteListener;
+    }
 
     private static final String LOG_TAG = RadioCursorAdapter.class.getSimpleName();
 
-    public RadioCursorAdapter(Context context, Cursor c) {
+    public RadioCursorAdapter(Context context, Cursor c, OnRadioDeleteListener onRadioDeleteListener) {
         super(context, c);
         this.context = context;
+        this.onRadioDeleteListener = onRadioDeleteListener;
     }
 
     @Override
@@ -55,10 +61,6 @@ public class RadioCursorAdapter extends CursorAdapter {
         int hitColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_HIT);
         int isBeingBufferedColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_IS_BEING_BUFFERED);
         int isLikedColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_IS_LIKED);
-
-        Log.d("TAG", "idColumnIndex: " + idColumnIndex);
-        Log.d("TAG", "nameColumnIndex: " + nameColumnIndex);
-        Log.d("TAG", "hitColumnIndex: " + hitColumnIndex);
 
         int radioId = cursor.getInt(idColumnIndex);
         String radioName = cursor.getString(nameColumnIndex);
@@ -116,8 +118,10 @@ public class RadioCursorAdapter extends CursorAdapter {
                 } else {
                     currentRadio.setLiked(false);
                     deleteFromFavourites(currentRadio);
+                    onRadioDeleteListener.onRadioDelete(currentRadio.getRadioId());
                 }
                 notifyDataSetChanged();
+                Log.d(LOG_TAG, "onClick ON RadioCursorAdapter: ");
             }
         });
     }
@@ -146,5 +150,9 @@ public class RadioCursorAdapter extends CursorAdapter {
         String selection = RadioEntry.COLUMN_RADIO_NAME + "=?";
         String[] selectionArgs = {radio.getRadioName()};
         int numOfDeletedRows = sqLiteDatabase.delete(RadioEntry.TABLE_NAME, selection, selectionArgs);
+    }
+
+    public interface OnRadioDeleteListener {
+        void onRadioDelete(int radioId);
     }
 }
