@@ -31,16 +31,14 @@ public class RadioAdapter extends ArrayAdapter<Radio> {
     Context context;
     int layoutResourceId;
     ArrayList<Radio> radios;
-    boolean filterFavourites;
 
     OnAddToFavouriteListener onAddToFavouriteListener;
 
-    public RadioAdapter(Context context, int resource, ArrayList<Radio> radios, boolean filterFavourites, OnAddToFavouriteListener onAddToFavouriteListener) {
+    public RadioAdapter(Context context, int resource, ArrayList<Radio> radios, OnAddToFavouriteListener onAddToFavouriteListener) {
         super(context, resource, radios);
         this.context = context;
         this.layoutResourceId = resource;
         this.radios = radios;
-        this.filterFavourites = filterFavourites;
         this.onAddToFavouriteListener = onAddToFavouriteListener;
     }
 
@@ -82,7 +80,6 @@ public class RadioAdapter extends ArrayAdapter<Radio> {
         holder.ib_add_to_favourites.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                onAddToFavouriteListener.onAddToFavouriteClick();
                 if (!currentRadio.isLiked()) {
                     currentRadio.setLiked(true);
                     addToFavourites(currentRadio);
@@ -90,6 +87,7 @@ public class RadioAdapter extends ArrayAdapter<Radio> {
                     currentRadio.setLiked(false);
                     deleteFromFavourites(currentRadio);
                 }
+                onAddToFavouriteListener.onAddToFavouriteClick();
                 notifyDataSetChanged();
             }
         });
@@ -119,12 +117,6 @@ public class RadioAdapter extends ArrayAdapter<Radio> {
         contentValues.put(RadioEntry.COLUMN_RADIO_IS_LIKED, radio.isLiked());
         long newRowId = sqLiteDatabase.insert(RadioEntry.TABLE_NAME, null, contentValues);
         Log.d(LOG_TAG, "newRowId: " + newRowId);
-        FavouriteRadiosFragment favouriteRadiosFragment = new FavouriteRadiosFragment();
-        if (favouriteRadiosFragment.getRadioCursorAdapter() != null) {
-            RadioCursorAdapter radioCursorAdapter = favouriteRadiosFragment.getRadioCursorAdapter();
-            Cursor newCursor = favouriteRadiosFragment.queryAllTheRadios(getContext());
-            radioCursorAdapter.swapCursor(newCursor);
-        }
     }
 
     private void deleteFromFavourites(Radio radio) {

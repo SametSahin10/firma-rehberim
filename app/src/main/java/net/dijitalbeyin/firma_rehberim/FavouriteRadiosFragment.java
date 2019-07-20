@@ -286,6 +286,7 @@ public class FavouriteRadiosFragment extends Fragment {
 
     protected void updateFavouriteRadiosList() {
         Log.d(LOG_TAG, "updateFavouriteRadiosList: ");
-        radioCursorAdapter.notifyDataSetChanged();
+        Cursor cursor = queryAllTheRadios(getContext());
+        radioCursorAdapter.swapCursor(cursor);
     }
 }

@@ -1,6 +1,7 @@
 package net.dijitalbeyin.firma_rehberim;
 
 import android.graphics.Typeface;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
@@ -11,19 +12,18 @@ import android.support.v4.app.FragmentTransaction;
 import android.os.Bundle;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.ViewGroup;
 import android.widget.TextView;
 
-import net.dijitalbeyin.firma_rehberim.adapters.RadioAdapter;
-
-
-public class RadiosActivity extends FragmentActivity implements RadioAdapter.OnAddToFavouriteListener {
+public class RadiosActivity extends FragmentActivity implements RadiosFragment.OnEventFromFragmentListener {
     private static final int NUM_PAGES = 2;
 
     private ViewPager viewPager;
     private PagerAdapter pagerAdapter;
     private TabLayout tabLayout;
+    private RadiosFragment radiosFragment;
+    private FavouriteRadiosFragment favouriteRadiosFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,13 +43,20 @@ public class RadiosActivity extends FragmentActivity implements RadioAdapter.OnA
         tabLayout.setupWithViewPager(viewPager);
 
         Typeface typeface = Typeface.createFromAsset(getAssets(), "fonts/righteous_regular.ttf");
-        Log.d("TAG46", "onCreate: ");
         int numOfTabs = tabLayout.getTabCount();
         for (int i = 0; i < numOfTabs; i++) {
             TextView tv_tab_title = (TextView) LayoutInflater.from(this)
                                     .inflate(R.layout.custom_textview_for_tab_titles, null);
             tv_tab_title.setTypeface(typeface);
             tabLayout.getTabAt(i).setCustomView(tv_tab_title);
+        }
+    }
+
+    @Override
+    public void onAttachFragment(Fragment fragment) {
+        if (fragment instanceof  RadiosFragment) {
+            RadiosFragment radiosFragment = (RadiosFragment) fragment;
+            radiosFragment.setOnEventFromFragmentListener(this);
         }
     }
 
@@ -68,6 +75,21 @@ public class RadiosActivity extends FragmentActivity implements RadioAdapter.OnA
                 default:
                     return null;
             }
+        }
+
+        @NonNull
+        @Override
+        public Object instantiateItem(@NonNull ViewGroup container, int position) {
+            Fragment createdFragment = (Fragment) super.instantiateItem(container, position);
+            switch (position) {
+                case 0:
+                    radiosFragment = (RadiosFragment) createdFragment;
+                    break;
+                case 1:
+                    favouriteRadiosFragment = (FavouriteRadiosFragment) createdFragment;
+                    break;
+            }
+            return createdFragment;
         }
 
         @Override
@@ -89,11 +111,14 @@ public class RadiosActivity extends FragmentActivity implements RadioAdapter.OnA
         }
     }
 
+    public void notifyFavouriteRadiosFragment() {
+        if (favouriteRadiosFragment != null) {
+            favouriteRadiosFragment.updateFavouriteRadiosList();
+        }
+    }
+
     @Override
-    public void onAddToFavouriteClick() {
-        String tag = "android:switcher:" + R.id.view_pager + ":" + 1;
-        FavouriteRadiosFragment favouriteRadiosFragment =
-                (FavouriteRadiosFragment) getSupportFragmentManager().findFragmentByTag(tag);
-        favouriteRadiosFragment.updateFavouriteRadiosList();
+    public void onEventFromFragment() {
+        notifyFavouriteRadiosFragment();
     }
 }

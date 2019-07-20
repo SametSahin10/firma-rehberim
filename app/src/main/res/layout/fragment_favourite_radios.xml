@@ -10,7 +10,7 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="8.6">
+        android:layout_weight="9">
 
         <ListView
             android:id="@+id/lw_radios"
@@ -30,7 +30,7 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1.4"
+        android:layout_weight="1"
         android:layout_margin="6dp"
         android:padding="10dp"
         android:background="@drawable/radio_player_background"

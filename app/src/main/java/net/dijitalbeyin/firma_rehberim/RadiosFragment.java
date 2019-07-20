@@ -47,10 +47,16 @@ import net.dijitalbeyin.firma_rehberim.adapters.RadioAdapter;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RadiosFragment extends Fragment implements LoaderManager.LoaderCallbacks<List<Radio>> {
+public class RadiosFragment extends Fragment implements LoaderManager.LoaderCallbacks<List<Radio>>, RadioAdapter.OnAddToFavouriteListener {
     private static final String LOG_TAG = RadiosFragment.class.getSimpleName();
     private static final String RADIO_REQUEST_URL = "https://firmarehberim.com/sayfalar/radyo/json/radyolar_arama.php?q=";
     private static final int RADIO_LOADER_ID = 1;
+
+    OnEventFromFragmentListener onEventFromFragmentListener;
+
+    public void setOnEventFromFragmentListener(OnEventFromFragmentListener onEventFromFragmentListener) {
+        this.onEventFromFragmentListener = onEventFromFragmentListener;
+    }
 
     ListView lw_radios;
     RadioAdapter radioAdapter;
@@ -96,7 +102,7 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
         lw_radios = view.findViewById(R.id.lw_radios);
         tv_emptyView = view.findViewById(R.id.tv_emptyRadioView);
         lw_radios.setEmptyView(tv_emptyView);
-        radioAdapter = new RadioAdapter(getContext(), R.layout.item_radio, new ArrayList<Radio>(), false, );
+        radioAdapter = new RadioAdapter(getContext(), R.layout.item_radio, new ArrayList<Radio>(), this);
         lw_radios.setAdapter(radioAdapter);
         if (isConnected) {
             getLoaderManager().initLoader(RADIO_LOADER_ID, null, this).forceLoad();
@@ -238,5 +244,14 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
         } else {
             return false;
         }
+    }
+
+    @Override
+    public void onAddToFavouriteClick() {
+        onEventFromFragmentListener.onEventFromFragment();
+    }
+
+    public interface OnEventFromFragmentListener {
+        void onEventFromFragment();
     }
 }
