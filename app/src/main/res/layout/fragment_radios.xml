@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
     android:layout_width="match_parent"
@@ -9,8 +9,7 @@
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="8.8">
+        android:layout_height="match_parent">
 
         <ListView
             android:id="@+id/lw_radios"
@@ -32,61 +31,4 @@
             android:textSize="36sp"
             tools:text="Empty View Text"/>
     </RelativeLayout>
-
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1.2"
-        android:layout_margin="6dp"
-        android:padding="10dp"
-        android:background="@drawable/radio_player_background"
-        android:elevation="4dp">
-
-        <ImageView
-            android:id="@+id/iv_radio_icon"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
-            android:layout_centerVertical="true"
-            android:src="@drawable/ic_placeholder_radio"/>
-
-        <TextView
-            android:id="@+id/tv_radio_title"
-            android:layout_width="150dp"
-            android:layout_height="match_parent"
-            android:layout_centerVertical="true"
-            android:layout_toEndOf="@id/iv_radio_icon"
-            android:gravity="center"
-            android:layout_marginStart="12dp"
-            android:lines="1"
-            android:fontFamily="@font/righteous_regular_res"
-            android:textColor="@color/radio_title_text_color"
-            android:textSize="24sp"
-            android:text="Show Radyo"/>
-
-        <ImageButton
-            android:id="@+id/ib_player_menu"
-            android:layout_width="35dp"
-            android:layout_height="35dp"
-            android:layout_toStartOf="@id/ib_play_radio"
-            android:layout_centerVertical="true"
-            android:padding="0dp"
-            android:adjustViewBounds="true"
-            android:background="@null"
-            android:scaleType="fitCenter"
-            android:src="@drawable/ic_player_menu"/>
-
-        <ImageButton
-            android:id="@+id/ib_play_radio"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_alignParentEnd="true"
-            android:layout_marginStart="8dp"
-            android:layout_centerVertical="true"
-            android:padding="0dp"
-            android:adjustViewBounds="true"
-            android:background="@null"
-            android:scaleType="fitCenter"
-            android:src="@drawable/ic_play_radio"/>
-    </RelativeLayout>
-
-</LinearLayout>
+</RelativeLayout>

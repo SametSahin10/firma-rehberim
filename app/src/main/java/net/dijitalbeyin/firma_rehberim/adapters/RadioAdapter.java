@@ -88,14 +88,7 @@ public class RadioAdapter extends ArrayAdapter<Radio> {
         holder.ib_share_radio.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent();
-                intent.setAction(Intent.ACTION_SEND);
-                String extraText = "I'm listening to " + currentRadio.getRadioName() + " on " + "Firma Rehberim Radyo";
-                intent.putExtra(Intent.EXTRA_TEXT, extraText);
-                intent.setType("text/plain");
-                if (intent.resolveActivity(context.getPackageManager()) != null) {
-                    context.startActivity(intent);
-                }
+                shareRadio(currentRadio);
             }
         });
         holder.ib_add_to_favourites.setOnClickListener(new View.OnClickListener() {
@@ -147,6 +140,17 @@ public class RadioAdapter extends ArrayAdapter<Radio> {
         String selection = RadioEntry.COLUMN_RADIO_NAME + "=?";
         String selectionArgs[] = {radio.getRadioName()};
         int numOfDeletedRows = sqLiteDatabase.delete(RadioEntry.TABLE_NAME, selection, selectionArgs);
+    }
+
+    private void shareRadio(Radio radio) {
+        Intent intent = new Intent();
+        intent.setAction(Intent.ACTION_SEND);
+        String extraText = "I'm listening to " + radio.getRadioName() + " on " + "Firma Rehberim Radyo";
+        intent.putExtra(Intent.EXTRA_TEXT, extraText);
+        intent.setType("text/plain");
+        if (intent.resolveActivity(context.getPackageManager()) != null) {
+            context.startActivity(intent);
+        }
     }
 
     public interface OnAddToFavouriteListener {
