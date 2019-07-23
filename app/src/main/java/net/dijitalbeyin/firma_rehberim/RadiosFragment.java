@@ -92,11 +92,6 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
                     radioAdapter.notifyDataSetChanged();
                 }
                 radioClicked = (Radio) adapterView.getItemAtPosition(position);
-                if (radioClicked == null) {
-                    Log.d(LOG_TAG, "onItemClick: radioClicked is null");
-                } else {
-                    Log.d(LOG_TAG, "onItemClick: radioClicked is not null");
-                }
                 radioClicked.setBeingBuffered(true);
                 radioAdapter.notifyDataSetChanged();
                 onRadioItemClickListener.onRadioItemClick(radioClicked);
@@ -163,21 +158,15 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
                 switch (statusCode) {
                     case 10: //STATE_BUFFERING
                         radio.setBeingBuffered(true);
-                        Log.d("TAG", "Radio set as being buffered");
                         radioAdapter.notifyDataSetChanged();
-                        Log.d("TAG", "STATE_BUFFERING");
                         break;
                     case 11: //STATE_READY
                         radio.setBeingBuffered(false);
                         radioAdapter.notifyDataSetChanged();
-                        Log.d("TAG", "Radio is ready to play");
-                        Log.d("TAG", "STATE_READY");
                         break;
                     case 12: //STATE_IDLE
                         radio.setBeingBuffered(false);
                         radioAdapter.notifyDataSetChanged();
-                        Log.d("TAG", "Radio is idle");
-                        Log.d("TAG", "STATE_IDLE");
                         break;
                     default:
                         Log.e(LOG_TAG, "Unknown status code: " + statusCode);

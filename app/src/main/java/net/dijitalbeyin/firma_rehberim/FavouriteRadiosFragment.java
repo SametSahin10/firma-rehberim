@@ -87,69 +87,8 @@ public class FavouriteRadiosFragment extends Fragment implements RadioCursorAdap
                 Radio radioFromCursor = retireveRadioFromCursor(radioCursor, position);
                 radioClicked = radioFromCursor;
                 radioClicked.setBeingBuffered(true);
-//                if (exoPlayer != null) {
-//                    exoPlayer.release();
-//                    if (isPlaying()) {
-//                        exoPlayer.setPlayWhenReady(false);
-//                        exoPlayer.stop(true);
-//                    }
-//                }
-//                String streamLink = radioClicked.getStreamLink();
-//                prepareExoPlayer(Uri.parse(streamLink));
-//                tv_radioTitle.setText(radioClicked.getRadioName());
-//                ImageView iv_item_radio_icon = view.findViewById(R.id.iv_item_radio_icon);
-//                iv_radioIcon.setImageDrawable(iv_item_radio_icon.getDrawable());
             }
         });
-
-//        eventListener = new ExoPlayer.EventListener() {
-//            @Override
-//            public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
-//                switch (playbackState) {
-//                    case ExoPlayer.STATE_BUFFERING:
-//                        radioClicked.setBeingBuffered(true);
-////                        radioAdapter.notifyDataSetChanged();
-//                        Log.d("TAG", "STATE_BUFFERING");
-//                        break;
-//                    case ExoPlayer.STATE_READY:
-//                        radioClicked.setBeingBuffered(false);
-//                        radioCursorAdapter.notifyDataSetChanged();
-//                        if (isPlaying()) {
-//                            ib_playPauseRadio.setImageDrawable(getResources().getDrawable(R.drawable.ic_pause_radio));
-//                        }
-//                        Log.d("TAG", "STATE_READY");
-//                        break;
-//                    case ExoPlayer.STATE_IDLE:
-//                        Log.d("TAG", "STATE_IDLE");
-//                        exoPlayer.release();
-//                        radioClicked.setBeingBuffered(false);
-//                        radioCursorAdapter.notifyDataSetChanged();
-//                        break;
-//                    case ExoPlayer.STATE_ENDED:
-//                        Log.d("TAG", "STATE_ENDED");
-//                        break;
-//                }
-//            }
-//
-//            @Override
-//            public void onPlayerError(ExoPlaybackException error) {
-//                Toast.makeText(getContext(), R.string.cannot_stream_radio_text, Toast.LENGTH_SHORT).show();
-//                Log.e(LOG_TAG, "onPlayerError: ", error);
-//            }
-//        };
-
-//        ib_playPauseRadio.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                if (isPlaying()) {
-//                    exoPlayer.setPlayWhenReady(false);
-//                    ib_playPauseRadio.setImageDrawable(getResources().getDrawable(R.drawable.ic_play_radio));
-//                } else {
-//                    exoPlayer.setPlayWhenReady(true);
-//                    ib_playPauseRadio.setImageDrawable(getResources().getDrawable(R.drawable.ic_pause_radio));
-//                }
-//            }
-//        });
     }
 
     public Cursor queryAllTheRadios(Context context) {
@@ -222,19 +161,11 @@ public class FavouriteRadiosFragment extends Fragment implements RadioCursorAdap
     }
 
     protected void updateFavouriteRadiosList() {
-        Log.d(LOG_TAG, "updateFavouriteRadiosList: ");
         Cursor cursor = queryAllTheRadios(getContext());
         radioCursorAdapter.swapCursor(cursor);
     }
 
     public void setCurrentRadioStatus(int statusCode, Radio radioCurrentlyPlaying) {
-        if (radioClicked == null) {
-            Log.d(LOG_TAG, "radioClicked is null");
-        } else {
-            Log.d(LOG_TAG, "radioClicked is not null");
-        }
-        Log.d(LOG_TAG, "radioId: " + radioCurrentlyPlaying.getRadioId());
-        Log.d(LOG_TAG, "radioName: " + radioCurrentlyPlaying.getRadioName());
         Cursor cursor = queryAllTheRadios(getContext());
         int idColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_ID);
         int nameColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_NAME);
@@ -277,17 +208,6 @@ public class FavouriteRadiosFragment extends Fragment implements RadioCursorAdap
             if (radio.getRadioId() == radioCurrentlyPlaying.getRadioId()) {
                 radioClicked = radio;
             }
-        }
-        //find the currently playing radio from the radio list
-//        for (Radio radio: radios) {
-//            if (radio.getRadioId() == radioCurrentlyPlaying.getRadioId()) {
-//                radioClicked = radio;
-//            }
-//        }
-        if (radioClicked == null) {
-            Log.d(LOG_TAG, "radioClicked is null");
-        } else {
-            Log.d(LOG_TAG, "radioClicked is not null");
         }
         radioCursorAdapter.notifyDataSetChanged();
         switch (statusCode) {

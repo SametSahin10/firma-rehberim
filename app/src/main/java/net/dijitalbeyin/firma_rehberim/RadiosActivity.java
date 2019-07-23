@@ -32,19 +32,26 @@ import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
+import com.google.android.exoplayer2.ext.okhttp.OkHttpDataSourceFactory;
+import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
 import com.google.android.exoplayer2.source.ExtractorMediaSource;
 import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
+import com.google.android.exoplayer2.trackselection.MappingTrackSelector;
 import com.google.android.exoplayer2.trackselection.TrackSelection;
 import com.google.android.exoplayer2.trackselection.TrackSelector;
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
+import com.google.android.exoplayer2.upstream.TransferListener;
+import com.google.android.exoplayer2.util.EventLogger;
 import com.google.android.exoplayer2.util.Util;
 import com.squareup.picasso.Picasso;
 
 import net.dijitalbeyin.firma_rehberim.data.RadioContract;
 import net.dijitalbeyin.firma_rehberim.data.RadioDbHelper;
+
+import okhttp3.OkHttpClient;
 
 public class RadiosActivity extends FragmentActivity implements RadiosFragment.OnEventFromRadiosFragmentListener,
                                                                 FavouriteRadiosFragment.OnEventFromFavRadiosFragment,
@@ -73,8 +80,9 @@ public class RadiosActivity extends FragmentActivity implements RadiosFragment.O
     private ExoPlayer.EventListener eventListener;
     private DefaultBandwidthMeter BANDWIDTH_METER = new DefaultBandwidthMeter();
 
-    TrackSelection.Factory trackSelectionFactory = new AdaptiveTrackSelection.Factory();
-    TrackSelector trackSelector = new DefaultTrackSelector(trackSelectionFactory);
+//    TrackSelection.Factory trackSelectionFactory = new AdaptiveTrackSelection.Factory();
+//    TrackSelector trackSelector = new DefaultTrackSelector(trackSelectionFactory);
+    TrackSelector trackSelector = new DefaultTrackSelector();
 
     PopupWindow popupWindow;
 
@@ -119,7 +127,6 @@ public class RadiosActivity extends FragmentActivity implements RadiosFragment.O
                     case ExoPlayer.STATE_BUFFERING:
                         Log.d("TAG", "STATE_BUFFERING");
                         if (isFromFavouriteRadiosFragment) {
-                            Log.d(LOG_TAG, "onPlayerStateChanged: Radio is selected from favourite radios");
                             favouriteRadiosFragment.setCurrentRadioStatus(STATE_BUFFERING, radioCurrentlyPlaying);
                         } else {
                             radiosFragment.setCurrentRadioStatus(STATE_BUFFERING, radioCurrentlyPlaying);
@@ -278,8 +285,15 @@ public class RadiosActivity extends FragmentActivity implements RadiosFragment.O
 
     private void prepareExoPlayer(Uri uri) {
         dataSourceFactory = new DefaultDataSourceFactory(getApplicationContext(), Util.getUserAgent(getApplicationContext(), "exoPlayerSimple"), BANDWIDTH_METER);
-        mediaSource = new ExtractorMediaSource.Factory(dataSourceFactory).createMediaSource(uri);
+//        mediaSource = new ExtractorMediaSource.Factory(dataSourceFactory).createMediaSource(uri);
+        String userAgent = Util.getUserAgent(getApplicationContext(), "exoPlayerSimple");
+        mediaSource = new ExtractorMediaSource(uri,
+                new OkHttpDataSourceFactory(new OkHttpClient(), userAgent, (TransferListener) null),
+                new DefaultExtractorsFactory(),
+                null,
+                null);
         exoPlayer = ExoPlayerFactory.newSimpleInstance(getApplicationContext(), trackSelector);
+        exoPlayer.addAnalyticsListener(new EventLogger((MappingTrackSelector) trackSelector));
         exoPlayer.addListener(eventListener);
         exoPlayer.prepare(mediaSource);
         exoPlayer.setPlayWhenReady(true);
@@ -294,6 +308,7 @@ public class RadiosActivity extends FragmentActivity implements RadiosFragment.O
     }
 
     private void playRadio(Radio radioClicked) {
+        Log.d("TAG", "Radio stream link: " + radioClicked.getStreamLink());
         radioCurrentlyPlaying = radioClicked;
         updatePopupWindow();
         if (exoPlayer != null) {
@@ -379,6 +394,12 @@ public class RadiosActivity extends FragmentActivity implements RadiosFragment.O
 
     @Override
     public void onEventFromFavRadiosFragment(int radioId) {
+        if (radioCurrentlyPlaying != null) {
+            if (radioId == radioCurrentlyPlaying.getRadioId()) {
+                radioCurrentlyPlaying.setLiked(false);
+                updatePopupWindow();
+            }
+        }
         radiosFragment.refreshRadiosList(radioId);
     }
 
