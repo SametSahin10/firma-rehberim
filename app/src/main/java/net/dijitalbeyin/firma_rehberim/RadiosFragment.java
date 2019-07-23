@@ -3,7 +3,6 @@ package net.dijitalbeyin.firma_rehberim;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -13,33 +12,12 @@ import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.PopupMenu;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
-
-import com.google.android.exoplayer2.ExoPlaybackException;
-import com.google.android.exoplayer2.ExoPlayer;
-import com.google.android.exoplayer2.ExoPlayerFactory;
-import com.google.android.exoplayer2.Player;
-import com.google.android.exoplayer2.SimpleExoPlayer;
-import com.google.android.exoplayer2.source.ExtractorMediaSource;
-import com.google.android.exoplayer2.source.MediaSource;
-import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection;
-import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
-import com.google.android.exoplayer2.trackselection.TrackSelection;
-import com.google.android.exoplayer2.trackselection.TrackSelector;
-import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
-import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
-import com.google.android.exoplayer2.util.Util;
 
 import net.dijitalbeyin.firma_rehberim.adapters.RadioAdapter;
 
@@ -47,7 +25,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class RadiosFragment extends Fragment implements LoaderManager.LoaderCallbacks<List<Radio>>,
-                                                        RadioAdapter.OnAddToFavouriteListener {
+                                                        RadioAdapter.OnAddToFavouritesListener,
+                                                        RadioAdapter.OnDeleteFromFavouritesListener {
     private static final String LOG_TAG = RadiosFragment.class.getSimpleName();
     private static final String RADIO_REQUEST_URL = "https://firmarehberim.com/sayfalar/radyo/json/radyolar_arama.php?q=";
     private static final int RADIO_LOADER_ID = 1;
@@ -68,21 +47,6 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
     private TextView tv_emptyView;
     private ProgressBar pb_loadingRadios;
     private ProgressBar pb_bufferingRadio;
-
-//    ImageView iv_radioIcon;
-//    TextView  tv_radioTitle;
-//    ImageButton ib_playPauseRadio;
-
-//    ArrayList<Radio> favouriteRadios = new ArrayList<>();
-
-//    private SimpleExoPlayer exoPlayer;
-//    private MediaSource mediaSource;
-//    private DefaultDataSourceFactory dataSourceFactory;
-//    private ExoPlayer.EventListener eventListener;
-//    private DefaultBandwidthMeter BANDWIDTH_METER = new DefaultBandwidthMeter();
-
-//    TrackSelection.Factory trackSelectionFactory = new AdaptiveTrackSelection.Factory();
-//    TrackSelector trackSelector = new DefaultTrackSelector(trackSelectionFactory);
 
     Radio radioClicked;
 
@@ -106,7 +70,11 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
         lw_radios = view.findViewById(R.id.lw_radios);
         tv_emptyView = view.findViewById(R.id.tv_emptyRadioView);
         lw_radios.setEmptyView(tv_emptyView);
-        radioAdapter = new RadioAdapter(getContext(), R.layout.item_radio, new ArrayList<Radio>(), this);
+        radioAdapter = new RadioAdapter(getContext(),
+                                        R.layout.item_radio,
+                                        new ArrayList<Radio>(),
+                this,
+                this);
         lw_radios.setAdapter(radioAdapter);
         if (isConnected) {
             getLoaderManager().initLoader(RADIO_LOADER_ID, null, this).forceLoad();
@@ -132,69 +100,8 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
                 radioClicked.setBeingBuffered(true);
                 radioAdapter.notifyDataSetChanged();
                 onRadioItemClickListener.onRadioItemClick(radioClicked);
-//                if (exoPlayer != null) {
-//                    exoPlayer.release();
-//                    if (isPlaying()) {
-//                        exoPlayer.setPlayWhenReady(false);
-//                        exoPlayer.stop(true);
-//                    }
-//                }
-//                String streamLink = radioClicked.getStreamLink();
-//                prepareExoPlayer(Uri.parse(streamLink));
-//                tv_radioTitle.setText(radioClicked.getRadioName());
-//                ImageView iv_item_radio_icon = view.findViewById(R.id.iv_item_radio_icon);
-//                iv_radioIcon.setImageDrawable(iv_item_radio_icon.getDrawable());
             }
         });
-
-//        eventListener = new ExoPlayer.EventListener() {
-//            @Override
-//            public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
-//                switch (playbackState) {
-//                    case ExoPlayer.STATE_BUFFERING:
-//                        radioClicked.setBeingBuffered(true);
-//                        radioAdapter.notifyDataSetChanged();
-//                        Log.d("TAG", "STATE_BUFFERING");
-//                        break;
-//                    case ExoPlayer.STATE_READY:
-//                        radioClicked.setBeingBuffered(false);
-//                        radioAdapter.notifyDataSetChanged();
-//                        if (isPlaying()) {
-//                            ib_playPauseRadio.setImageDrawable(getResources().getDrawable(R.drawable.ic_pause_radio));
-//                        }
-//                        Log.d("TAG", "STATE_READY");
-//                        break;
-//                    case ExoPlayer.STATE_IDLE:
-//                        Log.d("TAG", "STATE_IDLE");
-//                        exoPlayer.release();
-//                        radioClicked.setBeingBuffered(false);
-//                        radioAdapter.notifyDataSetChanged();
-//                        break;
-//                    case ExoPlayer.STATE_ENDED:
-//                        Log.d("TAG", "STATE_ENDED");
-//                        break;
-//                }
-//            }
-//
-//            @Override
-//            public void onPlayerError(ExoPlaybackException error) {
-//                Toast.makeText(getContext(), R.string.cannot_stream_radio_text, Toast.LENGTH_SHORT).show();
-//                Log.e(LOG_TAG, "onPlayerError: ", error);
-//            }
-//        };
-
-//        ib_playPauseRadio.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                if (isPlaying()) {
-//                    exoPlayer.setPlayWhenReady(false);
-//                    ib_playPauseRadio.setImageDrawable(getResources().getDrawable(R.drawable.ic_play_radio));
-//                } else {
-//                    exoPlayer.setPlayWhenReady(true);
-//                    ib_playPauseRadio.setImageDrawable(getResources().getDrawable(R.drawable.ic_pause_radio));
-//                }
-//            }
-//        });
     }
 
     @Override
@@ -237,23 +144,6 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
         }
     }
 
-//    private void prepareExoPlayer(Uri uri) {
-//        dataSourceFactory = new DefaultDataSourceFactory(getContext(), Util.getUserAgent(getContext(), "exoPlayerSimple"), BANDWIDTH_METER);
-//        mediaSource = new ExtractorMediaSource.Factory(dataSourceFactory).createMediaSource(uri);
-//        exoPlayer = ExoPlayerFactory.newSimpleInstance(getContext(), trackSelector);
-//        exoPlayer.addListener(eventListener);
-//        exoPlayer.prepare(mediaSource);
-//        exoPlayer.setPlayWhenReady(true);
-//    }
-//
-//    private boolean isPlaying() {
-//        if (exoPlayer != null) {
-//            return exoPlayer.getPlaybackState() == Player.STATE_READY && exoPlayer.getPlayWhenReady();
-//        } else {
-//            return false;
-//        }
-//    }
-
     public void refreshRadiosList(int radioId) {
         Log.d(LOG_TAG, "radioId: " + radioId);
         List<Radio> radios = radioAdapter.getItems();
@@ -266,13 +156,6 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
     }
 
     public void setCurrentRadioStatus(int statusCode, Radio radioCurrentlyPlaying) {
-//        if (radioClicked == null) {
-//            Log.d(LOG_TAG, "radioClicked is null");
-//        } else {
-//            Log.d(LOG_TAG, "radioClicked is not null");
-//        }
-//        Log.d(LOG_TAG, "radioId: " + radioCurrentlyPlaying.getRadioId());
-//        Log.d(LOG_TAG, "radioName: " + radioCurrentlyPlaying.getRadioName());
         List<Radio> radios = radioAdapter.getItems();
         //find the currently playing radio from the radio list
         for (Radio radio: radios) {
@@ -301,20 +184,20 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
                 }
             }
         }
-//        if (radioClicked == null) {
-//            Log.d(LOG_TAG, "radioClicked is null");
-//        } else {
-//            Log.d(LOG_TAG, "radioClicked is not null");
-//        }
     }
 
     @Override
-    public void onAddToFavouriteClick() {
-        onEventFromRadiosFragmentListener.onEventFromRadiosFragment();
+    public void onAddToFavouritesClick(int radioId) {
+        onEventFromRadiosFragmentListener.onEventFromRadiosFragment(radioId, true);
+    }
+
+    @Override
+    public void onDeleteFromFavouritesClick(int radioId) {
+        onEventFromRadiosFragmentListener.onEventFromRadiosFragment(radioId, false);
     }
 
     public interface OnEventFromRadiosFragmentListener {
-        void onEventFromRadiosFragment();
+        void onEventFromRadiosFragment(int radioId, boolean isLiked);
     }
 
     public interface OnRadioItemClickListener {

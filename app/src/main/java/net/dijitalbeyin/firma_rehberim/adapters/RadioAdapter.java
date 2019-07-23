@@ -3,7 +3,6 @@ package net.dijitalbeyin.firma_rehberim.adapters;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
-import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
@@ -30,14 +29,20 @@ public class RadioAdapter extends ArrayAdapter<Radio> {
     int layoutResourceId;
     ArrayList<Radio> radios;
 
-    OnAddToFavouriteListener onAddToFavouriteListener;
+    OnAddToFavouritesListener onAddToFavouritesListener;
+    OnDeleteFromFavouritesListener onDeleteFromFavouritesListener;
 
-    public RadioAdapter(Context context, int resource, ArrayList<Radio> radios, OnAddToFavouriteListener onAddToFavouriteListener) {
+    public RadioAdapter(Context context,
+                        int resource,
+                        ArrayList<Radio> radios,
+                        OnAddToFavouritesListener onAddToFavouritesListener,
+                        OnDeleteFromFavouritesListener onDeleteFromFavouritesListener) {
         super(context, resource, radios);
         this.context = context;
         this.layoutResourceId = resource;
         this.radios = radios;
-        this.onAddToFavouriteListener = onAddToFavouriteListener;
+        this.onAddToFavouritesListener = onAddToFavouritesListener;
+        this.onDeleteFromFavouritesListener = onDeleteFromFavouritesListener;
     }
 
     public List<Radio> getItems() {
@@ -97,11 +102,13 @@ public class RadioAdapter extends ArrayAdapter<Radio> {
                 if (!currentRadio.isLiked()) {
                     currentRadio.setLiked(true);
                     addToFavourites(currentRadio);
+                    onAddToFavouritesListener.onAddToFavouritesClick(currentRadio.getRadioId());
                 } else {
                     currentRadio.setLiked(false);
                     deleteFromFavourites(currentRadio);
+                    onDeleteFromFavouritesListener.onDeleteFromFavouritesClick(currentRadio.getRadioId());
                 }
-                onAddToFavouriteListener.onAddToFavouriteClick();
+
                 notifyDataSetChanged();
             }
         });
@@ -153,7 +160,11 @@ public class RadioAdapter extends ArrayAdapter<Radio> {
         }
     }
 
-    public interface OnAddToFavouriteListener {
-        void onAddToFavouriteClick();
+    public interface OnAddToFavouritesListener {
+        void onAddToFavouritesClick(int radioId);
+    }
+
+    public interface OnDeleteFromFavouritesListener {
+        void onDeleteFromFavouritesClick(int radioId);
     }
 }

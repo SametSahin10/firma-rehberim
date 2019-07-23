@@ -18,17 +18,12 @@ import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.ListAdapter;
-import android.widget.ListPopupWindow;
-import android.widget.PopupMenu;
-import android.widget.SimpleAdapter;
+import android.widget.PopupWindow;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -51,16 +46,10 @@ import com.squareup.picasso.Picasso;
 import net.dijitalbeyin.firma_rehberim.data.RadioContract;
 import net.dijitalbeyin.firma_rehberim.data.RadioDbHelper;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
 public class RadiosActivity extends FragmentActivity implements RadiosFragment.OnEventFromRadiosFragmentListener,
                                                                 FavouriteRadiosFragment.OnEventFromFavRadiosFragment,
                                                                 RadiosFragment.OnRadioItemClickListener,
-                                                                FavouriteRadiosFragment.OnFavRadioItemClickListener,
-                                                                PopupMenu.OnMenuItemClickListener,
-                                                                AdapterView.OnItemClickListener {
+                                                                FavouriteRadiosFragment.OnFavRadioItemClickListener {
     private static final String LOG_TAG = RadiosActivity.class.getSimpleName();
     private static final int STATE_BUFFERING = 10;
     private static final int STATE_READY = 11;
@@ -87,7 +76,7 @@ public class RadiosActivity extends FragmentActivity implements RadiosFragment.O
     TrackSelection.Factory trackSelectionFactory = new AdaptiveTrackSelection.Factory();
     TrackSelector trackSelector = new DefaultTrackSelector(trackSelectionFactory);
 
-    PopupMenu popupMenu;
+    PopupWindow popupWindow;
 
     Radio radioCurrentlyPlaying;
     boolean isFromFavouriteRadiosFragment = false;
@@ -175,25 +164,13 @@ public class RadiosActivity extends FragmentActivity implements RadiosFragment.O
             }
         });
 
+        setupPopupWindow();
+
         ib_player_menu = findViewById(R.id.ib_player_menu);
         ib_player_menu.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-//                popupMenu = new PopupMenu(v.getContext(), v);
-//                popupMenu.setOnMenuItemClickListener(RadiosActivity.this);
-//                MenuInflater menuInflater = popupMenu.getMenuInflater();
-//                menuInflater.inflate(R.menu.player_menu, popupMenu.getMenu());
-//                if (radioCurrentlyPlaying != null) {
-//                    if (radioCurrentlyPlaying.isLiked()) {
-//                        popupMenu.getMenu().findItem(R.id.menu_item_add_to_fav).setEnabled(false);
-//                    } else {
-//                        popupMenu.getMenu().findItem(R.id.menu_item_add_to_fav).setEnabled(true);
-//                    }
-//                }
-//                popupMenu.show();
-                addItem(R.drawable.ic_share);
-                addItem(R.drawable.ic_favourite_empty);
-                showPopupMenu(view);
+                popupWindow.showAsDropDown(view, 0, -500);
             }
         });
     }
@@ -211,28 +188,6 @@ public class RadiosActivity extends FragmentActivity implements RadiosFragment.O
             favouriteRadiosFragment.setOnEventFromFavRadiosFragment(this);
             favouriteRadiosFragment.setOnFavRadioItemClickListener(this);
         }
-    }
-
-    @Override
-    public boolean onMenuItemClick(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.menu_item_share:
-                //Share currently playing radio;
-                shareRadio(radioCurrentlyPlaying);
-                return true;
-            case R.id.menu_item_add_to_fav:
-                //Add currently playing radio to favourites;
-                addToFavourites(radioCurrentlyPlaying);
-                favouriteRadiosFragment.updateFavouriteRadiosList();
-                return true;
-            default:
-                return false;
-        }
-    }
-
-    @Override
-    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        //Implement on popup menu item click.
     }
 
     private class ScreenSlidePagerAdapter extends FragmentStatePagerAdapter {
@@ -286,31 +241,39 @@ public class RadiosActivity extends FragmentActivity implements RadiosFragment.O
         }
     }
 
-    //ListPopupMenu implementation
-    private static final String ICON = "ICON";
-
-    private List<HashMap<String, Object>> data = new ArrayList<>();
-
-    private void addItem(int imageResourceId) {
-        HashMap<String, Object> map = new HashMap<>();
-        map.put(ICON, imageResourceId);
-        data.add(map);
-    }
-
-    private void showPopupMenu(View anchor) {
-        ListPopupWindow popupWindow = new ListPopupWindow(this);
-        ListAdapter listAdapter = new SimpleAdapter(
-                                        this,
-                                        data,
-                                        R.layout.list_popup_window,
-                                        new String[] {ICON},
-                                        new int[] {R.id.ib_popup_menu_item});
-        popupWindow.setAnchorView(anchor);
-        popupWindow.setAdapter(listAdapter);
-        popupWindow.setWidth(150);
-        popupWindow.setHeight(305);
-        popupWindow.setOnItemClickListener(this);
-        popupWindow.show();
+    private void setupPopupWindow() {
+        LayoutInflater layoutInflater = (LayoutInflater) getApplicationContext().getSystemService(LAYOUT_INFLATER_SERVICE);
+        View view = layoutInflater.inflate(R.layout.list_popup_window, null);
+        ImageButton ib_popup_window_share = view.findViewById(R.id.ib_popup_window_share);
+        ib_popup_window_share.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //share currently playing radio
+                if (radioCurrentlyPlaying != null) {
+                    shareRadio(radioCurrentlyPlaying);
+                }
+            }
+        });
+        ImageButton ib_popup_window_fav = view.findViewById(R.id.ib_popup_window_fav);
+        ib_popup_window_fav.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //Add currently playing radio to favourites.
+                if (radioCurrentlyPlaying != null) {
+                    Log.d(LOG_TAG, "radio currently playing is not null");
+                    radioCurrentlyPlaying.setLiked(true);
+                    addToFavourites(radioCurrentlyPlaying);
+                    favouriteRadiosFragment.updateFavouriteRadiosList();
+                } else {
+                    Log.d(LOG_TAG, "radio currently playing is null");
+                }
+            }
+        });
+        popupWindow = new PopupWindow(view,
+                                    RelativeLayout.LayoutParams.WRAP_CONTENT,
+                                    RelativeLayout.LayoutParams.WRAP_CONTENT,
+                                    true);
+        updatePopupWindow();
     }
 
     private void prepareExoPlayer(Uri uri) {
@@ -332,6 +295,7 @@ public class RadiosActivity extends FragmentActivity implements RadiosFragment.O
 
     private void playRadio(Radio radioClicked) {
         radioCurrentlyPlaying = radioClicked;
+        updatePopupWindow();
         if (exoPlayer != null) {
             exoPlayer.release();
             if (isPlaying()) {
@@ -349,6 +313,17 @@ public class RadiosActivity extends FragmentActivity implements RadiosFragment.O
                 .placeholder(R.drawable.ic_placeholder_radio_black)
                 .error(R.drawable.ic_pause_radio)
                 .into(iv_radioIcon);
+    }
+
+    private void updatePopupWindow() {
+        if (radioCurrentlyPlaying != null) {
+            ImageButton ib_popup_window_fav = popupWindow.getContentView().findViewById(R.id.ib_popup_window_fav);
+            if (radioCurrentlyPlaying.isLiked()) {
+                ib_popup_window_fav.setImageDrawable(getDrawable(R.drawable.ic_favourite_checked));
+            } else {
+                ib_popup_window_fav.setImageDrawable(getDrawable(R.drawable.ic_favourite_empty));
+            }
+        }
     }
 
     private void shareRadio(Radio radio) {
@@ -387,7 +362,18 @@ public class RadiosActivity extends FragmentActivity implements RadiosFragment.O
     }
 
     @Override
-    public void onEventFromRadiosFragment() {
+    public void onEventFromRadiosFragment(int radioId, boolean isLiked) {
+        if (radioCurrentlyPlaying != null) {
+            if (radioId == radioCurrentlyPlaying.getRadioId()) {
+                if (isLiked) {
+                    radioCurrentlyPlaying.setLiked(true);
+                    updatePopupWindow();
+                } else {
+                    radioCurrentlyPlaying.setLiked(false);
+                    updatePopupWindow();
+                }
+            }
+        }
         notifyFavouriteRadiosFragment();
     }
 

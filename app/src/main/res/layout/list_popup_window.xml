@@ -6,12 +6,22 @@
     android:background="@color/colorPrimary">
 
     <ImageButton
-        android:id="@+id/ib_popup_menu_item"
+        android:id="@+id/ib_popup_window_share"
         android:layout_width="40dp"
         android:layout_height="40dp"
-        android:layout_margin="8dp"
+        android:layout_margin="10dp"
         android:adjustViewBounds="true"
         android:background="@null"
         android:scaleType="fitCenter"
         android:src="@drawable/ic_share"/>
+
+    <ImageButton
+        android:id="@+id/ib_popup_window_fav"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_margin="10dp"
+        android:adjustViewBounds="true"
+        android:background="@null"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ic_favourite_empty"/>
 </LinearLayout>
