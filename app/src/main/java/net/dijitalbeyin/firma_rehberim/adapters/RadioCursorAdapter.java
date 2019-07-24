@@ -78,7 +78,6 @@ public class RadioCursorAdapter extends CursorAdapter {
         if (cursor.getInt(isLikedColumnIndex) == 1) {
             isLiked = true;
         }
-
         final Radio currentRadio = new Radio(
                     radioId,
                     radioName,
@@ -90,10 +89,12 @@ public class RadioCursorAdapter extends CursorAdapter {
                     numOfOnlineListeners,
                     isBeingBuffered,
                     isLiked);
-
         String iconUrl = currentRadio.getRadioIconUrl();
+        float scale = view.getContext().getResources().getDisplayMetrics().density;
+        int width = (int) (60 * scale + 0.5f);
+        int height = (int) (60 * scale + 0.5f);
         Picasso.with(view.getContext()).load(iconUrl)
-                .resize(200, 200)
+                .resize(width, height)
                 .centerInside()
                 .placeholder(R.mipmap.ic_launcher)
                 .error(R.drawable.ic_pause_radio)

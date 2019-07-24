@@ -36,10 +36,8 @@ import com.google.android.exoplayer2.ext.okhttp.OkHttpDataSourceFactory;
 import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
 import com.google.android.exoplayer2.source.ExtractorMediaSource;
 import com.google.android.exoplayer2.source.MediaSource;
-import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 import com.google.android.exoplayer2.trackselection.MappingTrackSelector;
-import com.google.android.exoplayer2.trackselection.TrackSelection;
 import com.google.android.exoplayer2.trackselection.TrackSelector;
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
@@ -80,8 +78,6 @@ public class RadiosActivity extends FragmentActivity implements RadiosFragment.O
     private ExoPlayer.EventListener eventListener;
     private DefaultBandwidthMeter BANDWIDTH_METER = new DefaultBandwidthMeter();
 
-//    TrackSelection.Factory trackSelectionFactory = new AdaptiveTrackSelection.Factory();
-//    TrackSelector trackSelector = new DefaultTrackSelector(trackSelectionFactory);
     TrackSelector trackSelector = new DefaultTrackSelector();
 
     PopupWindow popupWindow;
@@ -276,16 +272,18 @@ public class RadiosActivity extends FragmentActivity implements RadiosFragment.O
                 }
             }
         });
+        final float scale = getApplicationContext().getResources().getDisplayMetrics().density;
+        int width = (int) (60 * scale + 0.5f);
+        int height = (int) (120 * scale + 0.5f);
         popupWindow = new PopupWindow(view,
-                                    RelativeLayout.LayoutParams.WRAP_CONTENT,
-                                    RelativeLayout.LayoutParams.WRAP_CONTENT,
+                                    width,
+                                    height,
                                     true);
         updatePopupWindow();
     }
 
     private void prepareExoPlayer(Uri uri) {
         dataSourceFactory = new DefaultDataSourceFactory(getApplicationContext(), Util.getUserAgent(getApplicationContext(), "exoPlayerSimple"), BANDWIDTH_METER);
-//        mediaSource = new ExtractorMediaSource.Factory(dataSourceFactory).createMediaSource(uri);
         String userAgent = Util.getUserAgent(getApplicationContext(), "exoPlayerSimple");
         mediaSource = new ExtractorMediaSource(uri,
                 new OkHttpDataSourceFactory(new OkHttpClient(), userAgent, (TransferListener) null),
