@@ -19,7 +19,7 @@ import net.dijitalbeyin.firma_rehberim.adapters.CategoryAdapter;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CategoriesActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<List<Category>> {
+public class CategoriesActivity extends AppCompatActivity {
     private static final String CATEGORY_REQUEST_URL = "https://firmarehberim.com/sayfalar/radyo/json/kategoriler.php";
     private static final int CATEGORY_LOADER_ID = 1;
 
@@ -42,56 +42,56 @@ public class CategoriesActivity extends AppCompatActivity implements LoaderManag
         lw_categories = findViewById(R.id.lw_categories);
         tv_emptyCatView = findViewById(R.id.tv_emptyCatView);
         lw_categories.setEmptyView(tv_emptyCatView);
-        if (isConnected) {
-            getSupportLoaderManager().initLoader(CATEGORY_LOADER_ID, null, this).forceLoad();
-        } else {
-            tv_emptyCatView.setText(getString(R.string.no_internet_connection_text));
-            pb_loadingCategories.setVisibility(View.GONE);
-        }
-        categoryAdapter = new CategoryAdapter(this, R.layout.item_category, new ArrayList<Category>());
+//        if (isConnected) {
+//            getSupportLoaderManager().initLoader(CATEGORY_LOADER_ID, null, this).forceLoad();
+//        } else {
+//            tv_emptyCatView.setText(getString(R.string.no_internet_connection_text));
+//            pb_loadingCategories.setVisibility(View.GONE);
+//        }
+        categoryAdapter = new CategoryAdapter(this, R.layout.item_category, new ArrayList<>());
         lw_categories.setAdapter(categoryAdapter);
     }
 
-    @Override
-    public Loader<List<Category>> onCreateLoader(int i, Bundle bundle) {
-        return new CategoryLoader(this, CATEGORY_REQUEST_URL);
-    }
-
-    @Override
-    public void onLoadFinished(Loader<List<Category>> loader, List<Category> categories) {
-        categoryAdapter.clear();
-        if (categories != null) {
-            categoryAdapter.addAll(categories);
-        }
-        tv_emptyCatView.setText(getString(R.string.empty_categories_text));
-        pb_loadingCategories.setVisibility(View.GONE);
-    }
-
-    @Override
-    public void onLoaderReset(Loader<List<Category>> loader) {
-        categoryAdapter.clear();
-    }
-
-    private static class CategoryLoader extends AsyncTaskLoader<List<Category>> {
-        private String requestUrl;
-
-        public CategoryLoader(@NonNull Context context, String requestUrl) {
-            super(context);
-            this.requestUrl = requestUrl;
-        }
-
-        @Override
-        public List<Category> loadInBackground() {
-            if (requestUrl == null) {
-                return null;
-            }
-            ArrayList<Category> categories = QueryUtils.fetchCategoryData(requestUrl);
-            return categories;
-        }
-
-        @Override
-        protected void onStartLoading() {
-            forceLoad();
-        }
-    }
+//    @Override
+//    public Loader<List<Category>> onCreateLoader(int i, Bundle bundle) {
+//        return new CategoryLoader(this, CATEGORY_REQUEST_URL);
+//    }
+//
+//    @Override
+//    public void onLoadFinished(Loader<List<Category>> loader, List<Category> categories) {
+//        categoryAdapter.clear();
+//        if (categories != null) {
+//            categoryAdapter.addAll(categories);
+//        }
+//        tv_emptyCatView.setText(getString(R.string.empty_categories_text));
+//        pb_loadingCategories.setVisibility(View.GONE);
+//    }
+//
+//    @Override
+//    public void onLoaderReset(Loader<List<Category>> loader) {
+//        categoryAdapter.clear();
+//    }
+//
+//    private static class CategoryLoader extends AsyncTaskLoader<List<Category>> {
+//        private String requestUrl;
+//
+//        public CategoryLoader(@NonNull Context context, String requestUrl) {
+//            super(context);
+//            this.requestUrl = requestUrl;
+//        }
+//
+//        @Override
+//        public List<Category> loadInBackground() {
+//            if (requestUrl == null) {
+//                return null;
+//            }
+//            ArrayList<Category> categories = QueryUtils.fetchCategoryData(requestUrl);
+//            return categories;
+//        }
+//
+//        @Override
+//        protected void onStartLoading() {
+//            forceLoad();
+//        }
+//    }
 }

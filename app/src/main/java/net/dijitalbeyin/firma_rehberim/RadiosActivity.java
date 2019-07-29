@@ -1,6 +1,7 @@
 package net.dijitalbeyin.firma_rehberim;
 
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Typeface;
@@ -9,21 +10,28 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.app.FragmentTransaction;
 import android.os.Bundle;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.AsyncTaskLoader;
+import android.support.v4.content.Loader;
+import android.support.v4.content.res.ResourcesCompat;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.PopupWindow;
-import android.widget.RelativeLayout;
+import android.widget.SearchView;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -46,21 +54,40 @@ import com.google.android.exoplayer2.util.EventLogger;
 import com.google.android.exoplayer2.util.Util;
 import com.squareup.picasso.Picasso;
 
+import net.dijitalbeyin.firma_rehberim.adapters.CategoryAdapter;
+import net.dijitalbeyin.firma_rehberim.adapters.CityAdapter;
 import net.dijitalbeyin.firma_rehberim.data.RadioContract;
 import net.dijitalbeyin.firma_rehberim.data.RadioDbHelper;
 
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
+
 import okhttp3.OkHttpClient;
 
-public class RadiosActivity extends FragmentActivity implements RadiosFragment.OnEventFromRadiosFragmentListener,
+public class RadiosActivity extends AppCompatActivity implements RadiosFragment.OnEventFromRadiosFragmentListener,
                                                                 FavouriteRadiosFragment.OnEventFromFavRadiosFragment,
                                                                 RadiosFragment.OnRadioItemClickListener,
-                                                                FavouriteRadiosFragment.OnFavRadioItemClickListener {
+                                                                FavouriteRadiosFragment.OnFavRadioItemClickListener,
+                                                                LoaderManager.LoaderCallbacks<List<Object>> {
     private static final String LOG_TAG = RadiosActivity.class.getSimpleName();
+    private static final String CITIES_REQUEST_URL = "https://firmarehberim.com/sayfalar/radyo/json/iller.php";
+    private static final String CATEGORY_REQUEST_URL = "https://firmarehberim.com/sayfalar/radyo/json/kategoriler.php";
+    private static final int CITY_LOADER_ID = 1;
+    private static final int CATEGORY_LOADER_ID = 2;
     private static final int STATE_BUFFERING = 10;
     private static final int STATE_READY = 11;
     private static final int STATE_IDLE = 12;
     private static final int NUM_PAGES = 2;
 
+    private Toolbar toolbar;
+    private SearchView sw_searchForRadios;
+    private ImageView iv_searchIcon;
+    private EditText et_queryText;
+    private Spinner spinner_cities;
+    private Spinner spinner_categories;
+    private CityAdapter cityAdapter;
+    private CategoryAdapter categoryAdapter;
     private ViewPager viewPager;
     private PagerAdapter pagerAdapter;
     private TabLayout tabLayout;
@@ -85,10 +112,45 @@ public class RadiosActivity extends FragmentActivity implements RadiosFragment.O
     Radio radioCurrentlyPlaying;
     boolean isFromFavouriteRadiosFragment = false;
 
+    City allTheCities = new City(301, "All Cities");
+    Category allTheCategories = new Category(301, "All Categories");
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_radio);
+
+        setupSearchView();
+        sw_searchForRadios.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                Log.d("TAG", "onQueryTextChange: ");
+                radiosFragment.radioAdapter.getFilter().filter(newText);
+                return false;
+            }
+        });
+        ArrayList<Object> defaultCityList = new ArrayList<>();
+        defaultCityList.add(allTheCities);
+        cityAdapter = new CityAdapter(this, R.layout.item_city, defaultCityList);
+        cityAdapter.setDropDownViewResource(R.layout.item_city);
+        spinner_cities = findViewById(R.id.spinner_cities);
+        setupSpinner(spinner_cities, 300, 170);
+        spinner_cities.setAdapter(cityAdapter);
+        getSupportLoaderManager().initLoader(CITY_LOADER_ID, null, this).forceLoad();
+
+        ArrayList<Object> defaultCategoryList = new ArrayList<>();
+        defaultCategoryList.add(allTheCategories);
+        categoryAdapter = new CategoryAdapter(this, R.layout.item_category, defaultCategoryList);
+        categoryAdapter.setDropDownViewResource(R.layout.item_category);
+        spinner_categories = findViewById(R.id.spinner_categories);
+        setupSpinner(spinner_categories, 300, 170);
+        spinner_categories.setAdapter(categoryAdapter);
+        getSupportLoaderManager().initLoader(CATEGORY_LOADER_ID, null, this);
 
         radiosFragment = new RadiosFragment();
         favouriteRadiosFragment = new FavouriteRadiosFragment();
@@ -178,6 +240,88 @@ public class RadiosActivity extends FragmentActivity implements RadiosFragment.O
         });
     }
 
+    @NonNull
+    @Override
+    public Loader<List<Object>> onCreateLoader(int loaderId, @Nullable Bundle bundle) {
+        SpinnerLoader spinnerLoader = null;
+        switch (loaderId) {
+            case 1:
+                spinnerLoader = new SpinnerLoader(this, CITIES_REQUEST_URL);
+                break;
+            case 2:
+                spinnerLoader = new SpinnerLoader(this, CATEGORY_REQUEST_URL);
+                break;
+        }
+        return spinnerLoader;
+    }
+
+    @Override
+    public void onLoadFinished(@NonNull Loader<List<Object>> loader, List<Object> objects) {
+        int loaderId = loader.getId();
+        switch (loaderId) {
+            case 1:
+                cityAdapter.clear();
+                if (objects != null) {
+                    cityAdapter.add(allTheCities);
+                    cityAdapter.addAll(objects);
+                }
+                break;
+            case 2:
+                categoryAdapter.clear();
+                if (objects != null) {
+                    categoryAdapter.add(allTheCategories);
+                    categoryAdapter.addAll(objects);
+                }
+                break;
+        }
+//        pb_loadingCities.setVisibility(View.GONE);
+//        tv_emptyView.setText(getResources().getString(R.string.empty_cities_text));
+    }
+
+    @Override
+    public void onLoaderReset(@NonNull Loader<List<Object>> loader) {
+        int loaderId = loader.getId();
+        switch (loaderId) {
+            case 1:
+                cityAdapter.clear();
+                break;
+            case 2:
+                categoryAdapter.clear();
+                break;
+        }
+    }
+
+    private static class SpinnerLoader extends AsyncTaskLoader<List<Object>> {
+        private String requestUrl;
+
+        public SpinnerLoader(@NonNull Context context, String requestUrl) {
+            super(context);
+            this.requestUrl = requestUrl;
+        }
+
+        @Override
+        public List<Object> loadInBackground() {
+            if (requestUrl == null) {
+                return null;
+            }
+            ArrayList<Object> objects = null;
+            switch (requestUrl) {
+                case CITIES_REQUEST_URL:
+                    objects = QueryUtils.fetchCityData(requestUrl);
+                    break;
+                case CATEGORY_REQUEST_URL:
+                    objects = QueryUtils.fetchCategoryData(requestUrl);
+                    break;
+            }
+            return objects;
+        }
+
+        @Override
+        protected void onStartLoading() {
+            forceLoad();
+        }
+    }
+
     @Override
     public void onAttachFragment(Fragment fragment) {
         if (fragment instanceof RadiosFragment) {
@@ -244,6 +388,43 @@ public class RadiosActivity extends FragmentActivity implements RadiosFragment.O
         }
     }
 
+    private void setupSearchView() {
+        sw_searchForRadios = findViewById(R.id.sw_searchForRadios);
+        int searchIconId = sw_searchForRadios
+                .getContext()
+                .getResources()
+                .getIdentifier("android:id/search_mag_icon", null, null);
+        iv_searchIcon = sw_searchForRadios.findViewById(searchIconId);
+        iv_searchIcon.setImageResource(R.drawable.ic_search);
+
+        int queryTextId = sw_searchForRadios
+                .getContext()
+                .getResources()
+                .getIdentifier("android:id/search_src_text", null, null);
+        et_queryText = sw_searchForRadios.findViewById(queryTextId);
+        et_queryText.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+
+        Typeface righteous_regular = ResourcesCompat.getFont(this, R.font.righteous_regular_res);
+        et_queryText.setTypeface(righteous_regular);
+        et_queryText.setTextColor(getResources().getColor(R.color.radio_item_background_color));
+        et_queryText.setHintTextColor(getResources().getColor(R.color.radio_item_background_color));
+    }
+
+    private void setupSpinner(Spinner spinner, int height, int width) {
+        final float scale = getApplicationContext().getResources().getDisplayMetrics().density;
+        try {
+            Field popup = Spinner.class.getDeclaredField("mPopup");
+            popup.setAccessible(true);
+            android.widget.ListPopupWindow popupWindow = (android.widget.ListPopupWindow) popup.get(spinner);
+            int heightAsDp = (int) (scale * height + 0.5f);
+            int widthAsDp = (int) (scale * width + 0.5f);
+            popupWindow.setHeight(heightAsDp);
+            popupWindow.setWidth(widthAsDp);
+        } catch (NoClassDefFoundError | ClassCastException | NoSuchFieldException | IllegalAccessException e) {
+
+        }
+    }
+
     private void setupPopupWindow() {
         LayoutInflater layoutInflater = (LayoutInflater) getApplicationContext().getSystemService(LAYOUT_INFLATER_SERVICE);
         View view = layoutInflater.inflate(R.layout.list_popup_window, null);
@@ -276,9 +457,9 @@ public class RadiosActivity extends FragmentActivity implements RadiosFragment.O
         int width = (int) (60 * scale + 0.5f);
         int height = (int) (120 * scale + 0.5f);
         popupWindow = new PopupWindow(view,
-                                    width,
-                                    height,
-                                    true);
+                width,
+                height,
+                true);
         updatePopupWindow();
     }
 

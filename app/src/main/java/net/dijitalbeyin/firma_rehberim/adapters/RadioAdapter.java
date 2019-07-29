@@ -10,6 +10,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.Filter;
+import android.widget.Filterable;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -28,6 +30,7 @@ public class RadioAdapter extends ArrayAdapter<Radio> {
     Context context;
     int layoutResourceId;
     ArrayList<Radio> radios;
+    List<Radio> permanentRadiosList;
 
     OnAddToFavouritesListener onAddToFavouritesListener;
     OnDeleteFromFavouritesListener onDeleteFromFavouritesListener;
@@ -43,6 +46,15 @@ public class RadioAdapter extends ArrayAdapter<Radio> {
         this.radios = radios;
         this.onAddToFavouritesListener = onAddToFavouritesListener;
         this.onDeleteFromFavouritesListener = onDeleteFromFavouritesListener;
+    }
+
+    public void setPermanentRadiosList(List<Radio> permanentRadiosList) {
+        this.permanentRadiosList = permanentRadiosList;
+    }
+
+    @Override
+    public int getCount() {
+        return radios.size();
     }
 
     public List<Radio> getItems() {
@@ -116,6 +128,38 @@ public class RadioAdapter extends ArrayAdapter<Radio> {
             }
         });
         return row;
+    }
+
+    @Override
+    public Filter getFilter() {
+        Filter filter = new Filter() {
+            @Override
+            protected FilterResults performFiltering(CharSequence constraint) {
+                FilterResults results = new FilterResults();
+                ArrayList<Radio> filteredRadios = new ArrayList<>();
+                constraint = constraint.toString().toLowerCase();
+                if (constraint.length() == 0) {
+                    results.count = permanentRadiosList.size();
+                    results.values = permanentRadiosList;
+                    return results;
+                }
+                for (Radio radio: permanentRadiosList) {
+                    if (radio.getRadioName().toLowerCase().contains(constraint)) {
+                        filteredRadios.add(radio);
+                    }
+                }
+                results.count = filteredRadios.size();
+                results.values = filteredRadios;
+                return results;
+            }
+
+            @Override
+            protected void publishResults(CharSequence constraint, FilterResults results) {
+                radios = (ArrayList<Radio>) results.values;
+                notifyDataSetChanged();
+            }
+        };
+        return filter;
     }
 
     private class RadioHolder {

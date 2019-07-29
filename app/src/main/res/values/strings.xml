@@ -9,4 +9,5 @@
     <string name="favourite_radios_tab_title">Favourites</string>
     <string name="menu_item_text_share">Share</string>
     <string name="menu_item_text_add_to_fav">Add To Favourites</string>
+    <string name="search_hint_text">Search for radios</string>
 </resources>

@@ -23,7 +23,7 @@ public class QueryUtils {
     private QueryUtils() {
     }
 
-    public static ArrayList<City> fetchCityData(String requestUrl) {
+    public static ArrayList<Object> fetchCityData(String requestUrl) {
         URL url = createURL(requestUrl);
         String jsonResponse = null;
         try {
@@ -31,11 +31,11 @@ public class QueryUtils {
         } catch (IOException e) {
             Log.e(LOG_TAG, "Error retrieving the JSON data", e);
         }
-        ArrayList<City> cities = extractCitiesFromJson(jsonResponse);
+        ArrayList<Object> cities = extractCitiesFromJson(jsonResponse);
         return cities;
     }
 
-    public static ArrayList<Category> fetchCategoryData(String requestUrl) {
+    public static ArrayList<Object> fetchCategoryData(String requestUrl) {
         URL url = createURL(requestUrl);
         String jsonResponse = "";
         try {
@@ -43,7 +43,7 @@ public class QueryUtils {
         } catch (IOException e) {
             Log.e(LOG_TAG, "Error retrieving categories JSON response", e);
         }
-        ArrayList<Category> categories = extractCategoriesFromJson(jsonResponse);
+        ArrayList<Object> categories = extractCategoriesFromJson(jsonResponse);
         return categories;
     }
 
@@ -141,11 +141,11 @@ public class QueryUtils {
         return output.toString();
     }
 
-    private static ArrayList<City> extractCitiesFromJson(String citiesJSONResponse) {
+    private static ArrayList<Object> extractCitiesFromJson(String citiesJSONResponse) {
         if (TextUtils.isEmpty(citiesJSONResponse)) {
             return null;
         }
-        ArrayList<City> cities = new ArrayList<>();
+        ArrayList<Object> cities = new ArrayList<>();
         try {
             JSONArray rootJsonArray = new JSONArray(citiesJSONResponse);
             if (rootJsonArray.length() > 0) {
@@ -163,11 +163,11 @@ public class QueryUtils {
         return cities;
     }
 
-    private static ArrayList<Category> extractCategoriesFromJson(String categoriesJSONResponse) {
+    private static ArrayList<Object> extractCategoriesFromJson(String categoriesJSONResponse) {
         if (TextUtils.isEmpty(categoriesJSONResponse)) {
             return null;
         }
-        ArrayList<Category> categories = new ArrayList<>();
+        ArrayList<Object> categories = new ArrayList<>();
         try {
             JSONArray rootJSONArray = new JSONArray(categoriesJSONResponse);
             if (rootJSONArray.length() > 0) {

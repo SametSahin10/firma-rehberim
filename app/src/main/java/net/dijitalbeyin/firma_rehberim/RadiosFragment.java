@@ -43,7 +43,7 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
     }
 
     private ListView lw_radios;
-    private RadioAdapter radioAdapter;
+    RadioAdapter radioAdapter;
     private TextView tv_emptyView;
     private ProgressBar pb_loadingRadios;
     private ProgressBar pb_bufferingRadio;
@@ -106,6 +106,7 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
 
     @Override
     public void onLoadFinished(@NonNull Loader<List<Radio>> loader, List<Radio> radios) {
+        radioAdapter.setPermanentRadiosList(radios);
         radioAdapter.clear();
         if (radios != null) {
             radioAdapter.addAll(radios);
