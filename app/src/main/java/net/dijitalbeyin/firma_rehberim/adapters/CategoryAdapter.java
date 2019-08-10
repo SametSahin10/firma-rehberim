@@ -13,12 +13,12 @@ import net.dijitalbeyin.firma_rehberim.R;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CategoryAdapter extends ArrayAdapter<Category> {
+public class CategoryAdapter extends ArrayAdapter<Object> {
     Context context;
     int layoutResourceId;
-    ArrayList<Category> categories;
+    ArrayList<Object> categories;
 
-    public CategoryAdapter(Context context, int resource, ArrayList<Category> categories) {
+    public CategoryAdapter(Context context, int resource, ArrayList<Object> categories) {
         super(context, resource, categories);
         this.context = context;
         this.layoutResourceId = resource;
@@ -26,7 +26,16 @@ public class CategoryAdapter extends ArrayAdapter<Category> {
     }
 
     @Override
+    public View getDropDownView(int position, View convertView, ViewGroup parent) {
+        return getCustomView(position, convertView, parent);
+    }
+
+    @Override
     public View getView(int position, View convertView, ViewGroup parent) {
+        return getCustomView(position, convertView, parent);
+    }
+
+    public View getCustomView(int position, View convertView, ViewGroup parent) {
         View row = convertView;
         CategoryHolder holder;
         if (row == null) {
@@ -38,7 +47,7 @@ public class CategoryAdapter extends ArrayAdapter<Category> {
         } else {
             holder = (CategoryHolder) row.getTag();
         }
-        Category currentCategory = categories.get(position);
+        Category currentCategory = (Category) categories.get(position);
         holder.tv_category_name.setText(currentCategory.getCategoryName());
         return row;
     }
