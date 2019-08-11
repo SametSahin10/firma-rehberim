@@ -1,31 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Firma Rehberim Radio</string>
-    <string name="empty_cities_text">No cities found</string>
-    <string name="no_internet_connection_text">No Internet Connection</string>
-    <string name="empty_categories_text">No categories found</string>
-    <string name="empty_radios_text">No radios found</string>
-    <string name="cannot_stream_radio_text">Radio stream could not be resolved</string>
-    <string name="all_the_radios_tab_title">Radios</string>
-    <string name="favourite_radios_tab_title">Favourites</string>
-    <string name="menu_item_text_share">Share</string>
-    <string name="menu_item_text_add_to_fav">Add To Favourites</string>
-    <string name="search_hint_text">Search for radios</string>
-    <string name="city_spinner_default_value_text">All Cities</string>
-    <string name="category_spinner_default_value_text">All Categories</string>
-    <string name="notifications">Notifications</string>
-    <string name="timer">Timer</string>
+    <string name="app_name">Firma Rehberim Radyo</string>
+    <string name="cannot_stream_radio_text">Radyo akışı çözülemedi</string>
+    <string name="empty_categories_text">Kategori bulunamadı</string>
+    <string name="empty_cities_text">Şehir bulunamadı</string>
+    <string name="empty_radios_text">Radyo bulunamadı</string>
+    <string name="favourite_radios_tab_title">Favoriler</string>
+    <string name="menu_item_text_add_to_fav">Favorilere ekle</string>
+    <string name="menu_item_text_share">Paylaş</string>
+    <string name="no_internet_connection_text">İnternet bağlantısı sağlanamadı</string>
+    <string name="search_hint_text">Radyo ara...</string>
+    <string name="all_the_radios_tab_title">Tüm radyolar</string>
+    <string name="category_spinner_default_value_text">Tüm Kategoriler</string>
+    <string name="city_spinner_default_value_text">Tüm Şehirler</string>
+    <string name="add_your_company">Firmanı Ekle</string>
+    <string name="add_your_radio">Radyonu Ekle</string>
+    <string name="contact">İletişim</string>
     <string name="firma_rehberim">Firma Rehberim</string>
-    <string name="add_your_company">Add your company</string>
-    <string name="radios">Radios</string>
-    <string name="add_your_radio">Add your radio</string>
-    <string name="contact">Contact</string>
-    <string name="search" translatable="false">Search</string>
-    <string name="radyo" translatable="false">Radyo</string>
-    <string name="tv" translatable="false">TV</string>
-    <string name="rehber" translatable="false">Rehber</string>
-    <string name="gazete" translatable="false">Gazete</string>
-    <string name="favori" translatable="false">Favori</string>
-    <string name="t_r" translatable="false">Tür</string>
-    <string name="yerel" translatable="false">Yerel</string>
-    <string name="ulusal" translatable="false">Ulusal</string>
+    <string name="notifications">Bildirimler</string>
+    <string name="radios">Radyolar</string>
+    <string name="timer">Zamanlayıcı</string>
 </resources>
