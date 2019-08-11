@@ -19,16 +19,13 @@
     <string name="radios">Radios</string>
     <string name="add_your_radio">Add your radio</string>
     <string name="contact">Contact</string>
-    <string name="search">Search</string>
-    <string name="radyo">Radyo</string>
-    <string name="tv">TV</string>
-    <string name="rehber">Rehber</string>
-    <string name="gazete">Gazete</string>
-    <string name="favori">Favori</string>
-    <string name="t_r">Tür</string>
-    <string name="yerel">Yerel</string>
-    <string name="ulusal">Ulusal</string>
-
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="search" translatable="false">Search</string>
+    <string name="radyo" translatable="false">Radyo</string>
+    <string name="tv" translatable="false">TV</string>
+    <string name="rehber" translatable="false">Rehber</string>
+    <string name="gazete" translatable="false">Gazete</string>
+    <string name="favori" translatable="false">Favori</string>
+    <string name="t_r" translatable="false">Tür</string>
+    <string name="yerel" translatable="false">Yerel</string>
+    <string name="ulusal" translatable="false">Ulusal</string>
 </resources>
