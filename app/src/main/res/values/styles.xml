@@ -1,15 +1,19 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <!--<item name="actionBarStyle">@style/Widget.AppTheme.ActionBar</item>-->
+        <item name="actionBarTheme">@style/ThemeOverlay.AppTheme.ActionBar</item>
     </style>
 
-    <style name="SpinnerTheme" parent="android:Widget.Spinner">
-        <item name="android:background">@drawable/spinner_arrow</item>
+    <!--<style name="Widget.AppTheme.ActionBar" parent="Widget.AppCompat.ActionBar.Solid"></style>-->
+
+    <style name="ThemeOverlay.AppTheme.ActionBar" parent="ThemeOverlay.AppCompat.Dark.ActionBar">
+        <item name="android:textColorPrimary">#FFFFFF</item>
     </style>
 
 </resources>
