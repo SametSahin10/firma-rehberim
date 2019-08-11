@@ -10,4 +10,13 @@
     <string name="menu_item_text_share">Share</string>
     <string name="menu_item_text_add_to_fav">Add To Favourites</string>
     <string name="search_hint_text">Search for radios</string>
+    <string name="category_spinner_default_value_text">Tüm Kategoriler</string>
+    <string name="city_spinner_default_value_text">Tüm Şehirler</string>
+    <string name="add_your_company">Firmanı Ekle</string>
+    <string name="add_your_radio">Radyonu Ekle</string>
+    <string name="contact">İletişim</string>
+    <string name="firma_rehberim">Firma Rehberim</string>
+    <string name="notifications">Bildirimler</string>
+    <string name="radios">Radyolar</string>
+    <string name="timer">Zamanlayıcı</string>
 </resources>
