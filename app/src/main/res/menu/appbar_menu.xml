@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item android:id="@+id/action_search"
+          android:title="@string/search"
+          android:icon="@drawable/ic_search"
+          app:showAsAction="always"/>
+
+    <item android:id="@+id/item_notifications"
+          android:title="@string/notifications"
+          app:showAsAction="never"/>
+
+    <item android:id="@+id/item_timer"
+          android:title="@string/timer"
+          app:showAsAction="never"/>
+
+    <item android:id="@+id/item_go_to_website"
+          android:title="@string/firma_rehberim"
+          app:showAsAction="never"/>
+
+    <item android:id="@+id/item_add_your_company"
+          android:title="@string/add_your_company"
+          app:showAsAction="never"/>
+
+    <item android:id="@+id/item_radios"
+          android:title="@string/radios"
+          app:showAsAction="never"/>
+
+    <item android:id="@+id/item_add_your_radio"
+          android:title="@string/add_your_radio"
+          app:showAsAction="never"/>
+
+    <item android:id="@+id/item_contact"
+          android:title="@string/contact"
+          app:showAsAction="never"/>
+</menu>

@@ -17,6 +17,12 @@
             android:layout_height="wrap_content"
             android:divider="@null"/>
 
+        <ProgressBar
+            android:id="@+id/pb_loadingRadios"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"/>
+
         <TextView
             android:id="@+id/tv_emptyRadioView"
             android:layout_width="wrap_content"

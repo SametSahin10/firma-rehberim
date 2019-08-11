@@ -4,28 +4,26 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
-import android.graphics.Typeface;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.app.FragmentTransaction;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
-import android.support.v4.content.res.ResourcesCompat;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.View;
-import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -59,7 +57,6 @@ import net.dijitalbeyin.firma_rehberim.adapters.CityAdapter;
 import net.dijitalbeyin.firma_rehberim.data.RadioContract;
 import net.dijitalbeyin.firma_rehberim.data.RadioDbHelper;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -68,7 +65,10 @@ import okhttp3.OkHttpClient;
 public class RadiosActivity extends AppCompatActivity implements RadiosFragment.OnEventFromRadiosFragmentListener,
                                                                 FavouriteRadiosFragment.OnEventFromFavRadiosFragment,
                                                                 RadiosFragment.OnRadioItemClickListener,
+                                                                RadiosFragment.OnRadioLoadingCompleteListener,
                                                                 FavouriteRadiosFragment.OnFavRadioItemClickListener,
+                                                                CitiesFragment.OnFilterRespectToCityListener,
+                                                                CategoriesFragment.OnFilterRespectToCategoryListener,
                                                                 LoaderManager.LoaderCallbacks<List<Object>> {
     private static final String LOG_TAG = RadiosActivity.class.getSimpleName();
     private static final String CITIES_REQUEST_URL = "https://firmarehberim.com/sayfalar/radyo/json/iller.php";
@@ -79,6 +79,19 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     private static final int STATE_READY = 11;
     private static final int STATE_IDLE = 12;
     private static final int NUM_PAGES = 2;
+    private final static int FILTER_TYPE_RADIO = 1;
+    private final static int FILTER_TYPE_CITY = 2;
+    private final static int FILTER_TYPE_CATEGORY = 3;
+
+    private final static int RADIOS_FRAGMENT_ID = 1;
+    private final static int TV_FRAGMENT_ID = 2;
+    private final static int CONTACTS_FRAGMENT_ID = 3;
+    private final static int NEWSPAPER_FRAGMENT_ID = 4;
+    private final static int FAV_RADIOS_FRAGMENT_ID = 5;
+    private final static int CATEGORIES_FRAGMENT_ID = 6;
+    private final static int CITIES_FRAGMENT_ID = 7;
+    private final static int LOCAL_FRAGMENT_ID = 8;
+    private int ACTIVE_FRAGMENT_ID;
 
     private Toolbar toolbar;
     private SearchView sw_searchForRadios;
@@ -93,6 +106,15 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     private TabLayout tabLayout;
     private RadiosFragment radiosFragment;
     private FavouriteRadiosFragment favouriteRadiosFragment;
+
+    private Button btn_nav_radios;
+    private Button btn_nav_tv;
+    private Button btn_nav_contacts;
+    private Button btn_nav_newspaper;
+    private Button btn_nav_fav_radios;
+    private Button btn_nav_categories;
+    private Button btn_nav_cities;
+    private Button btn_nav_global;
 
     private ImageView iv_radioIcon;
     private TextView  tv_radioTitle;
@@ -111,69 +133,228 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
 
     Radio radioCurrentlyPlaying;
     boolean isFromFavouriteRadiosFragment = false;
+    boolean isRadioLoadingCompleted = false;
 
-    City allTheCities = new City(301, "All Cities");
-    Category allTheCategories = new Category(301, "All Categories");
+    City allTheCities;
+    Category allTheCategories;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_radio);
 
-        setupSearchView();
-        sw_searchForRadios.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                return false;
-            }
-
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                Log.d("TAG", "onQueryTextChange: ");
-                radiosFragment.radioAdapter.getFilter().filter(newText);
-                return false;
-            }
-        });
-        ArrayList<Object> defaultCityList = new ArrayList<>();
-        defaultCityList.add(allTheCities);
-        cityAdapter = new CityAdapter(this, R.layout.item_city, defaultCityList);
-        cityAdapter.setDropDownViewResource(R.layout.item_city);
-        spinner_cities = findViewById(R.id.spinner_cities);
-        setupSpinner(spinner_cities, 300, 170);
-        spinner_cities.setAdapter(cityAdapter);
-        getSupportLoaderManager().initLoader(CITY_LOADER_ID, null, this).forceLoad();
-
-        ArrayList<Object> defaultCategoryList = new ArrayList<>();
-        defaultCategoryList.add(allTheCategories);
-        categoryAdapter = new CategoryAdapter(this, R.layout.item_category, defaultCategoryList);
-        categoryAdapter.setDropDownViewResource(R.layout.item_category);
-        spinner_categories = findViewById(R.id.spinner_categories);
-        setupSpinner(spinner_categories, 300, 170);
-        spinner_categories.setAdapter(categoryAdapter);
-        getSupportLoaderManager().initLoader(CATEGORY_LOADER_ID, null, this);
-
+        ACTIVE_FRAGMENT_ID = RADIOS_FRAGMENT_ID;
         radiosFragment = new RadiosFragment();
-        favouriteRadiosFragment = new FavouriteRadiosFragment();
-
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         fragmentTransaction.replace(R.id.fragment_container, radiosFragment).commit();
 
-        viewPager = findViewById(R.id.view_pager);
-        pagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager());
-        viewPager.setAdapter(pagerAdapter);
+        btn_nav_radios = findViewById(R.id.btn_nav_radios);
+        btn_nav_radios.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (ACTIVE_FRAGMENT_ID != RADIOS_FRAGMENT_ID) {
+                    getSupportActionBar().setTitle("Firma Rehberim Radyo");
+                    FragmentManager fragmentManager = getSupportFragmentManager();
+                    FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+                    fragmentTransaction.replace(R.id.fragment_container, radiosFragment).commit();
+                    ACTIVE_FRAGMENT_ID = RADIOS_FRAGMENT_ID;
+                }
+            }
+        });
 
-        tabLayout = findViewById(R.id.tab_layout);
-        tabLayout.setupWithViewPager(viewPager);
+        btn_nav_tv = findViewById(R.id.btn_nav_tv);
+        btn_nav_tv.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (ACTIVE_FRAGMENT_ID != TV_FRAGMENT_ID) {
+                    getSupportActionBar().setTitle("TV");
+                    TvFragment tvFragment = new TvFragment();
+                    FragmentManager fragmentManager = getSupportFragmentManager();
+                    FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+                    fragmentTransaction.replace(R.id.fragment_container, tvFragment).commit();
+                    ACTIVE_FRAGMENT_ID = TV_FRAGMENT_ID;
+                }
+            }
+        });
 
-        Typeface typeface = Typeface.createFromAsset(getAssets(), "fonts/righteous_regular.ttf");
-        int numOfTabs = tabLayout.getTabCount();
-        for (int i = 0; i < numOfTabs; i++) {
-            TextView tv_tab_title = (TextView) LayoutInflater.from(this)
-                                    .inflate(R.layout.custom_textview_for_tab_titles, null);
-            tv_tab_title.setTypeface(typeface);
-            tabLayout.getTabAt(i).setCustomView(tv_tab_title);
-        }
+        btn_nav_contacts = findViewById(R.id.btn_nav_contacts);
+        btn_nav_contacts.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (ACTIVE_FRAGMENT_ID != CONTACTS_FRAGMENT_ID) {
+                    getSupportActionBar().setTitle("Rehber");
+                    ContactsFragment contactsFragment = new ContactsFragment();
+                    FragmentManager fragmentManager = getSupportFragmentManager();
+                    FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+                    fragmentTransaction.replace(R.id.fragment_container, contactsFragment).commit();
+                    ACTIVE_FRAGMENT_ID = CONTACTS_FRAGMENT_ID;
+                }
+            }
+        });
+
+        btn_nav_newspaper = findViewById(R.id.btn_nav_newspaper);
+        btn_nav_newspaper.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (ACTIVE_FRAGMENT_ID != NEWSPAPER_FRAGMENT_ID) {
+                    getSupportActionBar().setTitle("Gazete");
+                    NewspaperFragment newspaperFragment = new NewspaperFragment();
+                    FragmentManager fragmentManager = getSupportFragmentManager();
+                    FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+                    fragmentTransaction.replace(R.id.fragment_container, newspaperFragment).commit();
+                    ACTIVE_FRAGMENT_ID = NEWSPAPER_FRAGMENT_ID;
+                }
+            }
+        });
+
+        btn_nav_fav_radios = findViewById(R.id.btn_nav_fav_radios);
+        btn_nav_fav_radios.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (ACTIVE_FRAGMENT_ID != FAV_RADIOS_FRAGMENT_ID) {
+                    getSupportActionBar().setTitle("Favori Radyolar");
+                    favouriteRadiosFragment = new FavouriteRadiosFragment();
+                    FragmentManager fragmentManager = getSupportFragmentManager();
+                    FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+                    fragmentTransaction.replace(R.id.fragment_container, favouriteRadiosFragment).commit();
+                    ACTIVE_FRAGMENT_ID = FAV_RADIOS_FRAGMENT_ID;
+                }
+            }
+        });
+
+        btn_nav_categories = findViewById(R.id.btn_nav_categories);
+        btn_nav_categories.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (ACTIVE_FRAGMENT_ID != CATEGORIES_FRAGMENT_ID) {
+                    getSupportActionBar().setTitle("Kategoriler");
+                    CategoriesFragment categoriesFragment = new CategoriesFragment();
+                    FragmentManager fragmentManager = getSupportFragmentManager();
+                    FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+                    fragmentTransaction.replace(R.id.fragment_container, categoriesFragment).commit();
+                    ACTIVE_FRAGMENT_ID = CATEGORIES_FRAGMENT_ID;
+                }
+            }
+        });
+
+        btn_nav_cities = findViewById(R.id.btn_nav_cities);
+        btn_nav_cities.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (ACTIVE_FRAGMENT_ID != CITIES_FRAGMENT_ID) {
+                    getSupportActionBar().setTitle("Şehirler");
+                    CitiesFragment citiesFragment = new CitiesFragment();
+                    FragmentManager fragmentManager = getSupportFragmentManager();
+                    FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+                    fragmentTransaction.replace(R.id.fragment_container, citiesFragment).commit();
+                    ACTIVE_FRAGMENT_ID = CITIES_FRAGMENT_ID;
+                }
+            }
+        });
+
+        btn_nav_global = findViewById(R.id.btn_nav_global);
+        btn_nav_global.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (ACTIVE_FRAGMENT_ID != LOCAL_FRAGMENT_ID) {
+                    getSupportActionBar().setTitle("Ulusal");
+                    FragmentManager fragmentManager = getSupportFragmentManager();
+                    FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+                    fragmentTransaction.replace(R.id.fragment_container, radiosFragment).commit();
+                    ACTIVE_FRAGMENT_ID = LOCAL_FRAGMENT_ID;
+                    radiosFragment.setFilteringRespectToCityEnabled(false);
+                    radiosFragment.setFilteringRespectToCategoryEnabled(false);
+                }
+            }
+        });
+
+//        allTheCities = new City(301, getString(R.string.city_spinner_default_value_text));
+//        allTheCategories = new Category(301, getString(R.string.category_spinner_default_value_text));
+
+//        setupSearchView();
+//        sw_searchForRadios.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+//            @Override
+//            public boolean onQueryTextSubmit(String cityToFilter) {
+//                return false;
+//            }
+//
+//            @Override
+//            public boolean onQueryTextChange(String newText) {
+//                Log.d("TAG", "onQueryTextChange: ");
+//                if (isRadioLoadingCompleted) {
+//                    radiosFragment.radioAdapter.getFilter().filter(newText);
+//                }
+//                return false;
+//            }
+//        });
+//        ArrayList<Object> defaultCityList = new ArrayList<>();
+//        defaultCityList.add(allTheCities);
+//        cityAdapter = new CityAdapter(this, R.layout.item_city, defaultCityList);
+//        cityAdapter.setDropDownViewResource(R.layout.item_city);
+//        spinner_cities = findViewById(R.id.spinner_cities);
+//        setupSpinner(spinner_cities, 300, 170);
+//        spinner_cities.setAdapter(cityAdapter);
+//        getSupportLoaderManager().initLoader(CITY_LOADER_ID, null, this).forceLoad();
+//
+//        spinner_cities.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+//            @Override
+//            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+//                if (isRadioLoadingCompleted) {
+//                    radiosFragment.radioAdapter.setFilteringSelection(FILTER_TYPE_CITY);
+//                    City selectedCity = (City) parent.getItemAtPosition(position);
+//                    radiosFragment.radioAdapter.getFilter().filter(selectedCity.getCityName());
+//                }
+//            }
+//
+//            @Override
+//            public void onNothingSelected(AdapterView<?> parent) {
+//
+//            }
+//        });
+//
+//        ArrayList<Object> defaultCategoryList = new ArrayList<>();
+//        defaultCategoryList.add(allTheCategories);
+//        categoryAdapter = new CategoryAdapter(this, R.layout.item_category, defaultCategoryList);
+//        categoryAdapter.setDropDownViewResource(R.layout.item_category);
+////        spinner_categories = findViewById(R.id.spinner_categories);
+////        setupSpinner(spinner_categories, 300, 170);
+//        spinner_categories.setAdapter(categoryAdapter);
+//        getSupportLoaderManager().initLoader(CATEGORY_LOADER_ID, null, this);
+//
+//        spinner_categories.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+//            @Override
+//            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+//                if (isRadioLoadingCompleted) {
+//                    radiosFragment.radioAdapter.setFilteringSelection(FILTER_TYPE_CATEGORY);
+//                    Category selectedCategory = (Category) parent.getItemAtPosition(position);
+//                    radiosFragment.radioAdapter.getFilter().filter(selectedCategory.getCategoryName());
+//                }
+//            }
+//
+//            @Override
+//            public void onNothingSelected(AdapterView<?> parent) {
+//
+//            }
+//        });
+
+
+
+//        viewPager = findViewById(R.id.view_pager);
+//        pagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager());
+//        viewPager.setAdapter(pagerAdapter);
+
+//        tabLayout = findViewById(R.id.tab_layout);
+//        tabLayout.setupWithViewPager(viewPager);
+
+//        Typeface typeface = Typeface.createFromAsset(getAssets(), "fonts/righteous_regular.ttf");
+//        int numOfTabs = tabLayout.getTabCount();
+//        for (int i = 0; i < numOfTabs; i++) {
+//            TextView tv_tab_title = (TextView) LayoutInflater.from(this)
+//                                    .inflate(R.layout.custom_textview_for_tab_titles, null);
+//            tv_tab_title.setTypeface(typeface);
+//            tabLayout.getTabAt(i).setCustomView(tv_tab_title);
+//        }
 
         iv_radioIcon = findViewById(R.id.iv_radio_icon);
         tv_radioTitle = findViewById(R.id.tv_radio_title);
@@ -191,7 +372,11 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
                         }
                         break;
                     case ExoPlayer.STATE_READY:
-                        radiosFragment.setCurrentRadioStatus(STATE_READY, radioCurrentlyPlaying);
+                        if (isFromFavouriteRadiosFragment) {
+                            favouriteRadiosFragment.setCurrentRadioStatus(STATE_READY, radioCurrentlyPlaying);
+                        } else {
+                            radiosFragment.setCurrentRadioStatus(STATE_READY, radioCurrentlyPlaying);
+                        }
                         if (isPlaying()) {
                             ib_playPauseRadio.setImageDrawable(getResources().getDrawable(R.drawable.ic_pause_radio));
                         }
@@ -200,7 +385,11 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
                     case ExoPlayer.STATE_IDLE:
                         Log.d("TAG", "STATE_IDLE");
                         exoPlayer.release();
-                        radiosFragment.setCurrentRadioStatus(STATE_IDLE, radioCurrentlyPlaying);
+                        if (isFromFavouriteRadiosFragment) {
+                            favouriteRadiosFragment.setCurrentRadioStatus(STATE_IDLE, radioCurrentlyPlaying);
+                        } else {
+                            radiosFragment.setCurrentRadioStatus(STATE_IDLE, radioCurrentlyPlaying);
+                        }
                         break;
                     case ExoPlayer.STATE_ENDED:
                         Log.d("TAG", "STATE_ENDED");
@@ -223,8 +412,10 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
                     exoPlayer.setPlayWhenReady(false);
                     ib_playPauseRadio.setImageDrawable(getResources().getDrawable(R.drawable.ic_play_radio));
                 } else {
-                    exoPlayer.setPlayWhenReady(true);
-                    ib_playPauseRadio.setImageDrawable(getResources().getDrawable(R.drawable.ic_pause_radio));
+                    if (exoPlayer != null) {
+                        exoPlayer.setPlayWhenReady(true);
+                        ib_playPauseRadio.setImageDrawable(getResources().getDrawable(R.drawable.ic_pause_radio));
+                    }
                 }
             }
         });
@@ -238,6 +429,13 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
                 popupWindow.showAsDropDown(view, 0, -500);
             }
         });
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        super.onCreateOptionsMenu(menu);
+        getMenuInflater().inflate(R.menu.appbar_menu, menu);
+        return true;
     }
 
     @NonNull
@@ -328,102 +526,110 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
             RadiosFragment radiosFragment = (RadiosFragment) fragment;
             radiosFragment.setOnEventFromRadiosFragmentListener(this);
             radiosFragment.setOnRadioItemClickListener(this);
+            radiosFragment.setOnRadioLoadingCompleteListener(this);
         }
-
         if (fragment instanceof FavouriteRadiosFragment) {
             FavouriteRadiosFragment favouriteRadiosFragment = (FavouriteRadiosFragment) fragment;
             favouriteRadiosFragment.setOnEventFromFavRadiosFragment(this);
             favouriteRadiosFragment.setOnFavRadioItemClickListener(this);
         }
-    }
-
-    private class ScreenSlidePagerAdapter extends FragmentStatePagerAdapter {
-        public ScreenSlidePagerAdapter(FragmentManager fm) {
-            super(fm);
+        if (fragment instanceof CitiesFragment) {
+            CitiesFragment citiesFragment = (CitiesFragment) fragment;
+            citiesFragment.setOnFilterRespectToCityListener(this);
         }
-
-        @Override
-        public Fragment getItem(int position) {
-            switch (position) {
-                case 0:
-                    return new RadiosFragment();
-                case 1:
-                    return new FavouriteRadiosFragment();
-                default:
-                    return null;
-            }
-        }
-
-        @NonNull
-        @Override
-        public Object instantiateItem(@NonNull ViewGroup container, int position) {
-            Fragment createdFragment = (Fragment) super.instantiateItem(container, position);
-            switch (position) {
-                case 0:
-                    radiosFragment = (RadiosFragment) createdFragment;
-                    break;
-                case 1:
-                    favouriteRadiosFragment = (FavouriteRadiosFragment) createdFragment;
-                    break;
-            }
-            return createdFragment;
-        }
-
-        @Override
-        public int getCount() {
-            return NUM_PAGES;
-        }
-
-        @Nullable
-        @Override
-        public CharSequence getPageTitle(int position) {
-            switch (position) {
-                case 0:
-                    return getString(R.string.all_the_radios_tab_title);
-                case 1:
-                    return getString(R.string.favourite_radios_tab_title);
-                default:
-                    return "Unknown tab title";
-            }
+        if (fragment instanceof CategoriesFragment) {
+            CategoriesFragment categoriesFragment = (CategoriesFragment) fragment;
+            categoriesFragment.setOnFilterRespectToCategoryListener(this);
         }
     }
 
-    private void setupSearchView() {
-        sw_searchForRadios = findViewById(R.id.sw_searchForRadios);
-        int searchIconId = sw_searchForRadios
-                .getContext()
-                .getResources()
-                .getIdentifier("android:id/search_mag_icon", null, null);
-        iv_searchIcon = sw_searchForRadios.findViewById(searchIconId);
-        iv_searchIcon.setImageResource(R.drawable.ic_search);
+//    private class ScreenSlidePagerAdapter extends FragmentStatePagerAdapter {
+//        public ScreenSlidePagerAdapter(FragmentManager fm) {
+//            super(fm);
+//        }
+//
+//        @Override
+//        public Fragment getItem(int position) {
+//            switch (position) {
+//                case 0:
+//                    return new RadiosFragment();
+//                case 1:
+//                    return new FavouriteRadiosFragment();
+//                default:
+//                    return null;
+//            }
+//        }
+//
+//        @NonNull
+//        @Override
+//        public Object instantiateItem(@NonNull ViewGroup container, int position) {
+//            Fragment createdFragment = (Fragment) super.instantiateItem(container, position);
+//            switch (position) {
+//                case 0:
+//                    radiosFragment = (RadiosFragment) createdFragment;
+//                    break;
+//                case 1:
+//                    favouriteRadiosFragment = (FavouriteRadiosFragment) createdFragment;
+//                    break;
+//            }
+//            return createdFragment;
+//        }
+//
+//        @Override
+//        public int getCount() {
+//            return NUM_PAGES;
+//        }
+//
+//        @Nullable
+//        @Override
+//        public CharSequence getPageTitle(int position) {
+//            switch (position) {
+//                case 0:
+//                    return getString(R.string.all_the_radios_tab_title);
+//                case 1:
+//                    return getString(R.string.favourite_radios_tab_title);
+//                default:
+//                    return "Unknown tab title";
+//            }
+//        }
+//    }
 
-        int queryTextId = sw_searchForRadios
-                .getContext()
-                .getResources()
-                .getIdentifier("android:id/search_src_text", null, null);
-        et_queryText = sw_searchForRadios.findViewById(queryTextId);
-        et_queryText.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+//    private void setupSearchView() {
+//        sw_searchForRadios = findViewById(R.id.sw_searchForRadios);
+//        int searchIconId = sw_searchForRadios
+//                .getContext()
+//                .getResources()
+//                .getIdentifier("android:id/search_mag_icon", null, null);
+//        iv_searchIcon = sw_searchForRadios.findViewById(searchIconId);
+//        iv_searchIcon.setImageResource(R.drawable.ic_search);
+//
+//        int queryTextId = sw_searchForRadios
+//                .getContext()
+//                .getResources()
+//                .getIdentifier("android:id/search_src_text", null, null);
+//        et_queryText = sw_searchForRadios.findViewById(queryTextId);
+//        et_queryText.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+//
+//        Typeface righteous_regular = ResourcesCompat.getFont(this, R.font.righteous_regular_res);
+//        et_queryText.setTypeface(righteous_regular);
+//        et_queryText.setTextColor(getResources().getColor(R.color.radio_item_background_color));
+//        et_queryText.setHintTextColor(getResources().getColor(R.color.radio_item_background_color));
+//    }
 
-        Typeface righteous_regular = ResourcesCompat.getFont(this, R.font.righteous_regular_res);
-        et_queryText.setTypeface(righteous_regular);
-        et_queryText.setTextColor(getResources().getColor(R.color.radio_item_background_color));
-        et_queryText.setHintTextColor(getResources().getColor(R.color.radio_item_background_color));
-    }
-
-    private void setupSpinner(Spinner spinner, int height, int width) {
-        final float scale = getApplicationContext().getResources().getDisplayMetrics().density;
-        try {
-            Field popup = Spinner.class.getDeclaredField("mPopup");
-            popup.setAccessible(true);
-            android.widget.ListPopupWindow popupWindow = (android.widget.ListPopupWindow) popup.get(spinner);
-            int heightAsDp = (int) (scale * height + 0.5f);
-            int widthAsDp = (int) (scale * width + 0.5f);
-            popupWindow.setHeight(heightAsDp);
-            popupWindow.setWidth(widthAsDp);
-        } catch (NoClassDefFoundError | ClassCastException | NoSuchFieldException | IllegalAccessException e) {
-
-        }
-    }
+//    private void setupSpinner(Spinner spinner, int height, int width) {
+//        final float scale = getApplicationContext().getResources().getDisplayMetrics().density;
+//        try {
+//            Field popup = Spinner.class.getDeclaredField("mPopup");
+//            popup.setAccessible(true);
+//            android.widget.ListPopupWindow popupWindow = (android.widget.ListPopupWindow) popup.get(spinner);
+//            int heightAsDp = (int) (scale * height + 0.5f);
+//            int widthAsDp = (int) (scale * width + 0.5f);
+//            popupWindow.setHeight(heightAsDp);
+//            popupWindow.setWidth(widthAsDp);
+//        } catch (NoClassDefFoundError | ClassCastException | NoSuchFieldException | IllegalAccessException e) {
+//
+//        }
+//    }
 
     private void setupPopupWindow() {
         LayoutInflater layoutInflater = (LayoutInflater) getApplicationContext().getSystemService(LAYOUT_INFLATER_SERVICE);
@@ -447,7 +653,7 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
                     Log.d(LOG_TAG, "radio currently playing is not null");
                     radioCurrentlyPlaying.setLiked(true);
                     addToFavourites(radioCurrentlyPlaying);
-                    favouriteRadiosFragment.updateFavouriteRadiosList();
+//                    favouriteRadiosFragment.updateFavouriteRadiosList();
                 } else {
                     Log.d(LOG_TAG, "radio currently playing is null");
                 }
@@ -551,7 +757,7 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
 
     public void notifyFavouriteRadiosFragment() {
         if (favouriteRadiosFragment != null) {
-            favouriteRadiosFragment.updateFavouriteRadiosList();
+//            favouriteRadiosFragment.updateFavouriteRadiosList();
         }
     }
 
@@ -593,5 +799,35 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
         playRadio(currentFavRadio);
         //Can make some adjustments. For example disabling the "Add to favourites" menu option.
         isFromFavouriteRadiosFragment = true;
+    }
+
+    @Override
+    public void onRadioLoadingComplete(boolean isRadioLoadingCompleted) {
+        this.isRadioLoadingCompleted = isRadioLoadingCompleted;
+    }
+
+    @Override
+    public void onFilterRespectToCity(String cityToFilter) {
+        //Filter respect to city.
+        getSupportActionBar().setTitle("Firma Rehberim Radyo");
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        fragmentTransaction.replace(R.id.fragment_container, radiosFragment).commit();
+        ACTIVE_FRAGMENT_ID = RADIOS_FRAGMENT_ID;
+        radiosFragment.setFilteringRespectToCityEnabled(true);
+        radiosFragment.setFilteringRespectToCategoryEnabled(false);
+        radiosFragment.setCityToFilter(cityToFilter);
+    }
+
+    @Override
+    public void OnFilterRespectToCategory(int categoryIdToFilter) {
+        getSupportActionBar().setTitle("Firma Rehberim Radyo");
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        fragmentTransaction.replace(R.id.fragment_container, radiosFragment).commit();
+        ACTIVE_FRAGMENT_ID = RADIOS_FRAGMENT_ID;
+        radiosFragment.setFilteringRespectToCityEnabled(false);
+        radiosFragment.setFilteringRespectToCategoryEnabled(true);
+        radiosFragment.setCategoryToFilter(categoryIdToFilter);
     }
 }

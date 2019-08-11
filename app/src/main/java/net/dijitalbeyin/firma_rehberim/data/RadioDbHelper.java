@@ -20,6 +20,11 @@ public class RadioDbHelper extends SQLiteOpenHelper {
         String SQL_CREATE_FAVOURITE_RADIOS_TABLE = "CREATE TABLE " + RadioEntry.TABLE_NAME + " ("
                 + RadioEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
                 + RadioEntry.COLUMN_RADIO_ID + " INTEGER NOT NULL, "
+                + RadioEntry.COLUMN_CITY_ID + " INTEGER NOT NULL, "
+                + RadioEntry.COLUMN_TOWN_ID + " INTEGER NOT NULL, "
+                + RadioEntry.COLUMN_NEIGHBOURHOOD_ID + " INTEGER NOT NULL, "
+                + RadioEntry.COLUMN_CATEGORY_ID + " TEXT NOT NULL, "
+                + RadioEntry.COLUMN_USER_ID + " INTEGER NOT NULL, "
                 + RadioEntry.COLUMN_RADIO_NAME + " TEXT NOT NULL, "
                 + RadioEntry.COLUMN_RADIO_CATEGORY + " TEXT NOT NULL, "
                 + RadioEntry.COLUMN_RADIO_ICON_URL + " TEXT NOT NULL, "
@@ -30,6 +35,22 @@ public class RadioDbHelper extends SQLiteOpenHelper {
                 + RadioEntry.COLUMN_RADIO_IS_BEING_BUFFERED + " INTEGER NOT NULL DEFAULT 0, "
                 + RadioEntry.COLUMN_RADIO_IS_LIKED + " INTEGER NOT NULL DEFAULT 0);";
         db.execSQL(SQL_CREATE_FAVOURITE_RADIOS_TABLE);
+
+        //  private int radioId;
+        //    private int cityId;
+        //    private int townId; //ilceId
+        //    private int neighbourhoodId; //mahalleId
+        //    private String categoryId;
+        //    private int userId;
+        //    private String radioName;
+        //    private String category;
+        //    private String radioIconUrl;
+        //    private String streamLink;
+        //    private String shareableLink;
+        //    private int hit;
+        //    private int numOfOnlineListeners;
+        //    private boolean isBeingBuffered;
+        //    private boolean isLiked;
     }
 
     @Override

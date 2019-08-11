@@ -52,6 +52,11 @@ public class RadioCursorAdapter extends CursorAdapter {
         ImageButton ib_add_to_favourites = view.findViewById(R.id.ib_add_to_favourites);
 
         int idColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_ID);
+        int cityIdColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_CITY_ID);
+        int townIdColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_TOWN_ID);
+        int neighbourhoodIdColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_NEIGHBOURHOOD_ID);
+        int categoryIdColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_CATEGORY_ID);
+        int userIdColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_USER_ID);
         int nameColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_NAME);
         int categoryColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_CATEGORY);
         int iconUrlColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_ICON_URL);
@@ -63,6 +68,11 @@ public class RadioCursorAdapter extends CursorAdapter {
         int isLikedColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_IS_LIKED);
 
         int radioId = cursor.getInt(idColumnIndex);
+        int cityId = cursor.getInt(cityIdColumnIndex);
+        int townId = cursor.getInt(townIdColumnIndex);
+        int neighbourhoodId = cursor.getInt(neighbourhoodIdColumnIndex);
+        String categoryId = cursor.getString(categoryIdColumnIndex);
+        int userId = cursor.getInt(userIdColumnIndex);
         String radioName = cursor.getString(nameColumnIndex);
         String category = cursor.getString(categoryColumnIndex);
         String radioIconUrl = cursor.getString(iconUrlColumnIndex);
@@ -75,20 +85,26 @@ public class RadioCursorAdapter extends CursorAdapter {
             isBeingBuffered = true;
         }
         boolean isLiked = false;
+
         if (cursor.getInt(isLikedColumnIndex) == 1) {
             isLiked = true;
         }
-        final Radio currentRadio = new Radio(
-                    radioId,
-                    radioName,
-                    category,
-                    radioIconUrl,
-                    streamLink,
-                    shareableLink,
-                    hit,
-                    numOfOnlineListeners,
-                    isBeingBuffered,
-                    isLiked);
+
+        final Radio currentRadio = new Radio(radioId,
+                radioName,
+                cityId,
+                townId,
+                neighbourhoodId,
+                categoryId,
+                userId,
+                category,
+                radioIconUrl,
+                streamLink,
+                shareableLink,
+                hit,
+                numOfOnlineListeners,
+                false,
+                false);
         String iconUrl = currentRadio.getRadioIconUrl();
         float scale = view.getContext().getResources().getDisplayMetrics().density;
         int width = (int) (60 * scale + 0.5f);
