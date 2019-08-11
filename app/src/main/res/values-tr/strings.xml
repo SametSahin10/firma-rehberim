@@ -1,4 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Firma Rehberim Radyo</string>
+    <string name="cannot_stream_radio_text">Radyo akışı çözülemedi</string>
+    <string name="empty_categories_text">Kategori bulunamadı</string>
+    <string name="empty_cities_text">Şehir bulunamadı</string>
+    <string name="empty_radios_text">Radyo bulunamadı</string>
+    <string name="favourite_radios_tab_title">Favoriler</string>
+    <string name="menu_item_text_add_to_fav">Favorilere ekle</string>
+    <string name="menu_item_text_share">Paylaş</string>
+    <string name="no_internet_connection_text">İnternet bağlantısı sağlanamadı</string>
+    <string name="search_hint_text">Radyo ara...</string>
+    <string name="all_the_radios_tab_title">Tüm radyolar</string>
+    <string name="category_spinner_default_value_text">Tüm Kategoriler</string>
+    <string name="city_spinner_default_value_text">Tüm Şehirler</string>
+    <string name="add_your_company">Firmanı Ekle</string>
+    <string name="add_your_radio">Radyonu Ekle</string>
+    <string name="contact">İletişim</string>
+    <string name="firma_rehberim">Firma Rehberim</string>
+    <string name="notifications">Bildirimler</string>
+    <string name="radios">Radyolar</string>
+    <string name="timer">Zamanlayıcı</string>
 </resources>
