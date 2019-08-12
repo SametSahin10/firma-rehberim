@@ -6,245 +6,267 @@ import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.AsyncTaskLoader;
-import android.support.v4.content.Loader;
+import android.support.p000v4.app.Fragment;
+import android.support.p000v4.app.LoaderManager.LoaderCallbacks;
+import android.support.p000v4.content.AsyncTaskLoader;
+import android.support.p000v4.content.Loader;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-
-import net.dijitalbeyin.firma_rehberim.adapters.RadioAdapter;
-
 import java.util.ArrayList;
 import java.util.List;
+import net.dijitalbeyin.firma_rehberim.adapters.RadioAdapter;
+import net.dijitalbeyin.firma_rehberim.adapters.RadioAdapter.OnAddToFavouritesListener;
+import net.dijitalbeyin.firma_rehberim.adapters.RadioAdapter.OnDeleteFromFavouritesListener;
 
-public class RadiosFragment extends Fragment implements LoaderManager.LoaderCallbacks<List<Radio>>,
-                                                        RadioAdapter.OnAddToFavouritesListener,
-                                                        RadioAdapter.OnDeleteFromFavouritesListener {
-    private static final String LOG_TAG = RadiosFragment.class.getSimpleName();
-    private static final String RADIO_REQUEST_URL = "https://firmarehberim.com/sayfalar/radyo/json/radyolar_arama.php?q=";
-    private static final String RADIO_REQUEST_URL_RESPECT_TO_CITY = "https://firmarehberim.com/sayfalar/radyo/json/radyolar_iller.php?q=";
-    private static final String RADIO_REQUEST_URL_RESPECT_TO_CATEGORY = "https://firmarehberim.com/sayfalar/radyo/json/radyolar_kategori.php?q=";
+public class RadiosFragment extends Fragment implements LoaderCallbacks<List<Radio>>, OnAddToFavouritesListener, OnDeleteFromFavouritesListener {
+    private static final String LOG_TAG = "RadiosFragment";
     private static final int RADIO_LOADER_ID = 1;
-
+    private static final String RADIO_REQUEST_URL = "https://firmarehberim.com/sayfalar/radyo/json/radyolar_arama.php?q=";
+    private static final String RADIO_REQUEST_URL_RESPECT_TO_CATEGORY = "https://firmarehberim.com/sayfalar/radyo/json/radyolar_kategori.php?q=";
+    private static final String RADIO_REQUEST_URL_RESPECT_TO_CITY = "https://firmarehberim.com/sayfalar/radyo/json/radyolar_iller.php?q=";
+    int categoryIdToFilter;
+    int cityIdToFilter;
+    boolean isFilteringRespectToCategoryEnabled = false;
+    boolean isFilteringRespectToCityEnabled = false;
+    boolean isFilteringThroughSearchViewEnabled = false;
+    private ListView lw_radios;
     OnEventFromRadiosFragmentListener onEventFromRadiosFragmentListener;
     OnRadioItemClickListener onRadioItemClickListener;
     OnRadioLoadingCompleteListener onRadioLoadingCompleteListener;
-
-    public void setOnEventFromRadiosFragmentListener(OnEventFromRadiosFragmentListener onEventFromRadiosFragmentListener) {
-        this.onEventFromRadiosFragmentListener = onEventFromRadiosFragmentListener;
-    }
-
-    public void setOnRadioItemClickListener(OnRadioItemClickListener onRadioItemClickListener) {
-        this.onRadioItemClickListener = onRadioItemClickListener;
-    }
-
-    public void setOnRadioLoadingCompleteListener(OnRadioLoadingCompleteListener onRadioLoadingCompleteListener) {
-        this.onRadioLoadingCompleteListener = onRadioLoadingCompleteListener;
-    }
-
-    String cityToFilter;
-    int categoryIdToFilter;
-    boolean isFilteringRespectToCityEnabled = false;
-    boolean isFilteringRespectToCategoryEnabled = false;
-
-    public void setCityToFilter(String cityToFilter) {
-        this.cityToFilter = cityToFilter;
-    }
-
-    public void setCategoryToFilter(int categoryIdToFilter) {
-        this.categoryIdToFilter = categoryIdToFilter;
-    }
-
-    public void setFilteringRespectToCityEnabled(boolean filteringRespectToCityEnabled) {
-        isFilteringRespectToCityEnabled = filteringRespectToCityEnabled;
-    }
-
-    public void setFilteringRespectToCategoryEnabled(boolean filteringRespectToCategoryEnabled) {
-        isFilteringRespectToCategoryEnabled = filteringRespectToCategoryEnabled;
-    }
-
-    private ListView lw_radios;
-    RadioAdapter radioAdapter;
-    private TextView tv_emptyView;
-    private ProgressBar pb_loadingRadios;
     private ProgressBar pb_bufferingRadio;
-
+    private ProgressBar pb_loadingRadios;
+    String queryFromSearchView;
+    RadioAdapter radioAdapter;
     Radio radioClicked;
+    private TextView tv_emptyView;
 
-    @Nullable
-    @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        ViewGroup rootView = (ViewGroup) inflater.inflate(
-                R.layout.fragment_radios, container, false);
-        return rootView;
+    public interface OnEventFromRadiosFragmentListener {
+        void onEventFromRadiosFragment(int i, boolean z);
     }
 
-    @Override
-    public void onViewCreated(@NonNull final View view, @Nullable Bundle savedInstanceState) {
-        ConnectivityManager cm = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-        boolean isConnected = activeNetwork != null
-                && activeNetwork.isConnectedOrConnecting();
-
-        pb_loadingRadios = view.findViewById(R.id.pb_loadingRadios);
-        pb_bufferingRadio = view.findViewById(R.id.pb_buffering_radio);
-        lw_radios = view.findViewById(R.id.lw_radios);
-        tv_emptyView = view.findViewById(R.id.tv_emptyRadioView);
-        lw_radios.setEmptyView(tv_emptyView);
-        radioAdapter = new RadioAdapter(getContext(),
-                                        R.layout.item_radio,
-                                        new ArrayList<Radio>(),
-                 this,
-                this);
-        lw_radios.setAdapter(radioAdapter);
-        if (isConnected) {
-            getLoaderManager().initLoader(RADIO_LOADER_ID, null, this).forceLoad();
-        } else {
-            Log.d("TAG", "No Network Connection");
-            tv_emptyView.setText(getString(R.string.no_internet_connection_text));
-            pb_loadingRadios.setVisibility(View.GONE);
-        }
-
-        //////////////////////////////////////////////////////////////////////////////
-        lw_radios.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
-                if (radioClicked != null) {
-                    radioClicked.setBeingBuffered(false);
-                    radioAdapter.notifyDataSetChanged();
-                }
-                radioClicked = (Radio) adapterView.getItemAtPosition(position);
-                radioClicked.setBeingBuffered(true);
-                radioAdapter.notifyDataSetChanged();
-                onRadioItemClickListener.onRadioItemClick(radioClicked);
-            }
-        });
+    public interface OnRadioItemClickListener {
+        void onRadioItemClick(Radio radio);
     }
 
-    @Override
-    public Loader<List<Radio>> onCreateLoader(int i, @Nullable Bundle bundle) {
-        if (isFilteringRespectToCityEnabled) {
-            if (cityToFilter != null) {
-                return new RadioLoader(getContext(), RADIO_REQUEST_URL_RESPECT_TO_CITY + cityToFilter, onRadioLoadingCompleteListener, true);
-            }
-        } else if (isFilteringRespectToCategoryEnabled) {
-            return new RadioLoader(getContext(), RADIO_REQUEST_URL_RESPECT_TO_CATEGORY + categoryIdToFilter, onRadioLoadingCompleteListener, true);
-        }
-        return new RadioLoader(getContext(), RADIO_REQUEST_URL, onRadioLoadingCompleteListener, false);
-    }
-
-    @Override
-    public void onLoadFinished(@NonNull Loader<List<Radio>> loader, List<Radio> radios) {
-        radioAdapter.setPermanentRadiosList(radios);
-        onRadioLoadingCompleteListener.onRadioLoadingComplete(true);
-        radioAdapter.clear();
-        if (radios != null) {
-            radioAdapter.addAll(radios);
-        }
-        tv_emptyView.setText(getString(R.string.empty_radios_text));
-        pb_loadingRadios.setVisibility(View.GONE);
-    }
-
-    @Override
-    public void onLoaderReset(@NonNull Loader<List<Radio>> loader) {
-        radioAdapter.clear();
+    public interface OnRadioLoadingCompleteListener {
+        void onRadioLoadingComplete(boolean z);
     }
 
     private static class RadioLoader extends AsyncTaskLoader<List<Radio>> {
-        private String requestUrl;
-        private OnRadioLoadingCompleteListener onRadioLoadingCompleteListener;
+        private boolean isFilteringRespectToCategoryEnabled;
         private boolean isFilteringRespectToCityEnabled;
+        private OnRadioLoadingCompleteListener onRadioLoadingCompleteListener;
+        private String requestUrl;
 
-        public RadioLoader(@NonNull Context context,
-                           String requestUrl,
-                           OnRadioLoadingCompleteListener onRadioLoadingCompleteListener,
-                           boolean isFilteringRespectToCityEnabled) {
+        public RadioLoader(@NonNull Context context, String str, OnRadioLoadingCompleteListener onRadioLoadingCompleteListener2, boolean z, boolean z2) {
             super(context);
-            this.requestUrl = requestUrl;
-            this.onRadioLoadingCompleteListener = onRadioLoadingCompleteListener;
-            this.isFilteringRespectToCityEnabled = isFilteringRespectToCityEnabled;
+            this.requestUrl = str;
+            this.onRadioLoadingCompleteListener = onRadioLoadingCompleteListener2;
+            this.isFilteringRespectToCityEnabled = z;
+            this.isFilteringRespectToCategoryEnabled = z2;
         }
 
-        @Override
         public List<Radio> loadInBackground() {
-            ArrayList<Radio> radios;
-            if (isFilteringRespectToCityEnabled) {
-                radios = QueryUtils.fetchRadioDataThroughCities(requestUrl);
-            } else {
-                radios = QueryUtils.fetchRadioData(requestUrl);
+            if (this.isFilteringRespectToCityEnabled) {
+                return QueryUtils.fetchRadioDataThroughCities(this.requestUrl);
             }
-            return radios;
+            if (this.isFilteringRespectToCategoryEnabled) {
+                return QueryUtils.fetchRadioDataThroughCategories(this.requestUrl);
+            }
+            Log.d("TAG", "Fetching all the radios");
+            return QueryUtils.fetchRadioData(this.requestUrl);
         }
 
-        @Override
-        protected void onStartLoading() {
-            onRadioLoadingCompleteListener.onRadioLoadingComplete(false);
+        /* access modifiers changed from: protected */
+        public void onStartLoading() {
+            this.onRadioLoadingCompleteListener.onRadioLoadingComplete(false);
             forceLoad();
         }
     }
 
-    public void refreshRadiosList(int radioId) {
-        Log.d(LOG_TAG, "radioId: " + radioId);
-        List<Radio> radios = radioAdapter.getItems();
-        for (Radio radio: radios) {
-            if (radio.getRadioId() == radioId) {
+    public void setOnEventFromRadiosFragmentListener(OnEventFromRadiosFragmentListener onEventFromRadiosFragmentListener2) {
+        this.onEventFromRadiosFragmentListener = onEventFromRadiosFragmentListener2;
+    }
+
+    public void setOnRadioItemClickListener(OnRadioItemClickListener onRadioItemClickListener2) {
+        this.onRadioItemClickListener = onRadioItemClickListener2;
+    }
+
+    public void setOnRadioLoadingCompleteListener(OnRadioLoadingCompleteListener onRadioLoadingCompleteListener2) {
+        this.onRadioLoadingCompleteListener = onRadioLoadingCompleteListener2;
+    }
+
+    public void setCityToFilter(int i) {
+        this.cityIdToFilter = i;
+    }
+
+    public void setCategoryToFilter(int i) {
+        this.categoryIdToFilter = i;
+    }
+
+    public void setQueryFromSearchView(String str) {
+        this.queryFromSearchView = str;
+    }
+
+    public void setFilteringRespectToCityEnabled(boolean z) {
+        this.isFilteringRespectToCityEnabled = z;
+    }
+
+    public void setFilteringRespectToCategoryEnabled(boolean z) {
+        this.isFilteringRespectToCategoryEnabled = z;
+    }
+
+    public void setFilteringThroughSearchViewEnabled(boolean z) {
+        this.isFilteringThroughSearchViewEnabled = z;
+    }
+
+    @Nullable
+    public View onCreateView(@NonNull LayoutInflater layoutInflater, @Nullable ViewGroup viewGroup, @Nullable Bundle bundle) {
+        ViewGroup viewGroup2 = (ViewGroup) layoutInflater.inflate(C0662R.layout.fragment_radios, viewGroup, false);
+        Log.d("TAG", "onCreateView: RadiosFragment");
+        return viewGroup2;
+    }
+
+    public void onViewCreated(@NonNull View view, @Nullable Bundle bundle) {
+        NetworkInfo activeNetworkInfo = ((ConnectivityManager) getActivity().getSystemService("connectivity")).getActiveNetworkInfo();
+        boolean z = activeNetworkInfo != null && activeNetworkInfo.isConnectedOrConnecting();
+        this.pb_loadingRadios = (ProgressBar) view.findViewById(C0662R.C0664id.pb_loadingRadios);
+        this.pb_bufferingRadio = (ProgressBar) view.findViewById(C0662R.C0664id.pb_buffering_radio);
+        this.lw_radios = (ListView) view.findViewById(C0662R.C0664id.lw_radios);
+        this.tv_emptyView = (TextView) view.findViewById(C0662R.C0664id.tv_emptyRadioView);
+        this.lw_radios.setEmptyView(this.tv_emptyView);
+        RadioAdapter radioAdapter2 = new RadioAdapter(getContext(), C0662R.layout.item_radio, new ArrayList(), this, this);
+        this.radioAdapter = radioAdapter2;
+        this.lw_radios.setAdapter(this.radioAdapter);
+        if (z) {
+            getLoaderManager().initLoader(1, null, this).forceLoad();
+        } else {
+            Log.d("TAG", "No Network Connection");
+            this.tv_emptyView.setText(getString(C0662R.string.no_internet_connection_text));
+            this.pb_loadingRadios.setVisibility(8);
+        }
+        this.lw_radios.setOnItemClickListener(new OnItemClickListener() {
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long j) {
+                if (RadiosFragment.this.radioClicked != null) {
+                    RadiosFragment.this.radioClicked.setBeingBuffered(false);
+                    RadiosFragment.this.radioAdapter.notifyDataSetChanged();
+                }
+                RadiosFragment.this.radioClicked = (Radio) adapterView.getItemAtPosition(i);
+                RadiosFragment.this.radioClicked.setBeingBuffered(true);
+                RadiosFragment.this.radioAdapter.notifyDataSetChanged();
+                RadiosFragment.this.onRadioItemClickListener.onRadioItemClick(RadiosFragment.this.radioClicked);
+            }
+        });
+    }
+
+    public Loader<List<Radio>> onCreateLoader(int i, @Nullable Bundle bundle) {
+        String str = "TAG";
+        if (this.isFilteringRespectToCityEnabled) {
+            Log.d(str, "Filtering respect to city");
+            Context context = getContext();
+            StringBuilder sb = new StringBuilder();
+            sb.append(RADIO_REQUEST_URL_RESPECT_TO_CITY);
+            sb.append(this.cityIdToFilter);
+            RadioLoader radioLoader = new RadioLoader(context, sb.toString(), this.onRadioLoadingCompleteListener, true, false);
+            return radioLoader;
+        }
+        String str2 = "Filtering respect to category";
+        if (this.isFilteringRespectToCategoryEnabled) {
+            Log.d(str, str2);
+            Context context2 = getContext();
+            StringBuilder sb2 = new StringBuilder();
+            sb2.append(RADIO_REQUEST_URL_RESPECT_TO_CATEGORY);
+            sb2.append(this.categoryIdToFilter);
+            RadioLoader radioLoader2 = new RadioLoader(context2, sb2.toString(), this.onRadioLoadingCompleteListener, false, true);
+            return radioLoader2;
+        } else if (this.isFilteringThroughSearchViewEnabled) {
+            Log.d(str, str2);
+            Context context3 = getContext();
+            StringBuilder sb3 = new StringBuilder();
+            sb3.append(RADIO_REQUEST_URL);
+            sb3.append(this.queryFromSearchView);
+            RadioLoader radioLoader3 = new RadioLoader(context3, sb3.toString(), this.onRadioLoadingCompleteListener, false, false);
+            return radioLoader3;
+        } else {
+            Log.d(str, "Not applying any filter");
+            RadioLoader radioLoader4 = new RadioLoader(getContext(), RADIO_REQUEST_URL, this.onRadioLoadingCompleteListener, false, false);
+            return radioLoader4;
+        }
+    }
+
+    public void onLoadFinished(@NonNull Loader<List<Radio>> loader, List<Radio> list) {
+        this.radioAdapter.setPermanentRadiosList(list);
+        this.onRadioLoadingCompleteListener.onRadioLoadingComplete(true);
+        this.radioAdapter.clear();
+        if (list != null) {
+            this.radioAdapter.addAll(list);
+        }
+        this.tv_emptyView.setText(getString(C0662R.string.empty_radios_text));
+        this.pb_loadingRadios.setVisibility(8);
+    }
+
+    public void onLoaderReset(@NonNull Loader<List<Radio>> loader) {
+        this.radioAdapter.clear();
+    }
+
+    public void refreshRadiosList(int i) {
+        String str = LOG_TAG;
+        StringBuilder sb = new StringBuilder();
+        sb.append("radioId: ");
+        sb.append(i);
+        Log.d(str, sb.toString());
+        for (Radio radio : this.radioAdapter.getItems()) {
+            if (radio.getRadioId() == i) {
                 radio.setLiked(false);
             }
         }
-        radioAdapter.notifyDataSetChanged();
+        this.radioAdapter.notifyDataSetChanged();
     }
 
-    public void setCurrentRadioStatus(int statusCode, Radio radioCurrentlyPlaying) {
-        List<Radio> radios = radioAdapter.getItems();
-        //find the currently playing radio from the radio list
-        for (Radio radio: radios) {
-            if (radio.getRadioId() == radioCurrentlyPlaying.getRadioId()) {
-                switch (statusCode) {
-                    case 10: //STATE_BUFFERING
-                        radio.setBeingBuffered(true);
-                        radioAdapter.notifyDataSetChanged();
+    public void setCurrentRadioStatus(int i, Radio radio) {
+        for (Radio radio2 : this.radioAdapter.getItems()) {
+            if (radio2.getRadioId() == radio.getRadioId()) {
+                switch (i) {
+                    case 10:
+                        radio2.setBeingBuffered(true);
+                        this.radioAdapter.notifyDataSetChanged();
                         break;
-                    case 11: //STATE_READY
-                        radio.setBeingBuffered(false);
-                        radioAdapter.notifyDataSetChanged();
+                    case 11:
+                        radio2.setBeingBuffered(false);
+                        this.radioAdapter.notifyDataSetChanged();
                         break;
-                    case 12: //STATE_IDLE
-                        radio.setBeingBuffered(false);
-                        radioAdapter.notifyDataSetChanged();
+                    case 12:
+                        radio2.setBeingBuffered(false);
+                        this.radioAdapter.notifyDataSetChanged();
                         break;
                     default:
-                        Log.e(LOG_TAG, "Unknown status code: " + statusCode);
+                        String str = LOG_TAG;
+                        StringBuilder sb = new StringBuilder();
+                        sb.append("Unknown status code: ");
+                        sb.append(i);
+                        Log.e(str, sb.toString());
+                        break;
                 }
             }
         }
     }
 
-    @Override
-    public void onAddToFavouritesClick(int radioId) {
-        onEventFromRadiosFragmentListener.onEventFromRadiosFragment(radioId, true);
+    public void restartLoader() {
+        getLoaderManager().restartLoader(1, null, this);
     }
 
-    @Override
-    public void onDeleteFromFavouritesClick(int radioId) {
-        onEventFromRadiosFragmentListener.onEventFromRadiosFragment(radioId, false);
+    public void onAddToFavouritesClick(int i) {
+        this.onEventFromRadiosFragmentListener.onEventFromRadiosFragment(i, true);
     }
 
-    public interface OnEventFromRadiosFragmentListener {
-        void onEventFromRadiosFragment(int radioId, boolean isLiked);
-    }
-
-    public interface OnRadioItemClickListener {
-        void onRadioItemClick(Radio currentRadio);
-    }
-
-    public interface OnRadioLoadingCompleteListener {
-        void onRadioLoadingComplete(boolean isRadioLoadingComplete);
+    public void onDeleteFromFavouritesClick(int i) {
+        this.onEventFromRadiosFragmentListener.onEventFromRadiosFragment(i, false);
     }
 }

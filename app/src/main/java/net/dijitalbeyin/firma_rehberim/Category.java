@@ -4,24 +4,24 @@ public class Category {
     private int categoryId;
     private String categoryName;
 
-    public Category(int categoryId, String categoryName) {
-        this.categoryId = categoryId;
-        this.categoryName = categoryName;
+    public Category(int i, String str) {
+        this.categoryId = i;
+        this.categoryName = str;
     }
 
     public int getCategoryId() {
-        return categoryId;
+        return this.categoryId;
     }
 
-    public void setCategoryId(int categoryId) {
-        this.categoryId = categoryId;
+    public void setCategoryId(int i) {
+        this.categoryId = i;
     }
 
     public String getCategoryName() {
-        return categoryName;
+        return this.categoryName;
     }
 
-    public void setCategoryName(String categoryName) {
-        this.categoryName = categoryName;
+    public void setCategoryName(String str) {
+        this.categoryName = str;
     }
 }
