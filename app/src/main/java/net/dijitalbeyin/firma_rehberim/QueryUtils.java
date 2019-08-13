@@ -205,7 +205,12 @@ public class QueryUtils {
                 JSONObject radioObject = rootJSONArray.getJSONObject(i);
                 int radioId = Integer.parseInt(radioObject.getString("id"));
                 int cityId = Integer.parseInt(radioObject.getString("ilId"));
-                int townId = Integer.parseInt(radioObject.getString("ilceId"));
+                int townId;
+                if (radioObject.getString("ilceId").equals("null")) {
+                    townId = 0;
+                } else {
+                    townId = Integer.parseInt(radioObject.getString("ilceId"));
+                }
                 int neighbourhoodId = Integer.parseInt(radioObject.getString("mahalleId"));
                 String rawRadioIconLink = radioObject.getString("resim");
                 String radioIconLink = "https:" + rawRadioIconLink;

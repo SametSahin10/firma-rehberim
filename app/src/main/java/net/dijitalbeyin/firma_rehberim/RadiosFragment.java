@@ -36,6 +36,7 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
     OnEventFromRadiosFragmentListener onEventFromRadiosFragmentListener;
     OnRadioItemClickListener onRadioItemClickListener;
     OnRadioLoadingCompleteListener onRadioLoadingCompleteListener;
+    OnRadioLoadingStartListener onRadioLoadingStartListener;
 
     public void setOnEventFromRadiosFragmentListener(OnEventFromRadiosFragmentListener onEventFromRadiosFragmentListener) {
         this.onEventFromRadiosFragmentListener = onEventFromRadiosFragmentListener;
@@ -49,10 +50,16 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
         this.onRadioLoadingCompleteListener = onRadioLoadingCompleteListener;
     }
 
+    public void setOnRadioLoadingStartListener(OnRadioLoadingStartListener onRadioLoadingStartListener) {
+        this.onRadioLoadingStartListener = onRadioLoadingStartListener;
+    }
+
     String cityToFilter;
     int categoryIdToFilter;
+    String queryFromSearchView;
     boolean isFilteringRespectToCityEnabled = false;
     boolean isFilteringRespectToCategoryEnabled = false;
+    boolean isFilteringThroughSearchViewEnabled = false;
 
     public void setCityToFilter(String cityToFilter) {
         this.cityToFilter = cityToFilter;
@@ -60,6 +67,10 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
 
     public void setCategoryToFilter(int categoryIdToFilter) {
         this.categoryIdToFilter = categoryIdToFilter;
+    }
+
+    public void setQueryFromSearchView(String queryFromSearchView) {
+        this.queryFromSearchView = queryFromSearchView;
     }
 
     public void setFilteringRespectToCityEnabled(boolean filteringRespectToCityEnabled) {
@@ -70,10 +81,14 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
         isFilteringRespectToCategoryEnabled = filteringRespectToCategoryEnabled;
     }
 
-    private ListView lw_radios;
+    public void setFilteringThroughSearchViewEnabled(boolean filteringThroughSearchViewEnabled) {
+        isFilteringThroughSearchViewEnabled = filteringThroughSearchViewEnabled;
+    }
+
+    ListView lw_radios;
     RadioAdapter radioAdapter;
     private TextView tv_emptyView;
-    private ProgressBar pb_loadingRadios;
+    ProgressBar pb_loadingRadios;
     private ProgressBar pb_bufferingRadio;
 
     Radio radioClicked;
@@ -132,13 +147,17 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
     public Loader<List<Radio>> onCreateLoader(int i, @Nullable Bundle bundle) {
         if (isFilteringRespectToCityEnabled) {
             if (cityToFilter != null) {
-                return new RadioLoader(getContext(), RADIO_REQUEST_URL_RESPECT_TO_CITY + cityToFilter, onRadioLoadingCompleteListener, true);
+                return new RadioLoader(getContext(), RADIO_REQUEST_URL_RESPECT_TO_CITY + cityToFilter, onRadioLoadingCompleteListener, onRadioLoadingStartListener, true, false);
             }
         } else if (isFilteringRespectToCategoryEnabled) {
-            return new RadioLoader(getContext(), RADIO_REQUEST_URL_RESPECT_TO_CATEGORY + categoryIdToFilter, onRadioLoadingCompleteListener, true);
+            return new RadioLoader(getContext(), RADIO_REQUEST_URL_RESPECT_TO_CATEGORY + categoryIdToFilter, onRadioLoadingCompleteListener, onRadioLoadingStartListener, false, true);
+        } else if (isFilteringThroughSearchViewEnabled) {
+            return new RadioLoader(getContext(), RADIO_REQUEST_URL + queryFromSearchView, onRadioLoadingCompleteListener, onRadioLoadingStartListener, false, false);
         }
-        return new RadioLoader(getContext(), RADIO_REQUEST_URL, onRadioLoadingCompleteListener, false);
+        return new RadioLoader(getContext(), RADIO_REQUEST_URL, onRadioLoadingCompleteListener, onRadioLoadingStartListener, false, false);
     }
+
+
 
     @Override
     public void onLoadFinished(@NonNull Loader<List<Radio>> loader, List<Radio> radios) {
@@ -149,6 +168,7 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
             radioAdapter.addAll(radios);
         }
         tv_emptyView.setText(getString(R.string.empty_radios_text));
+        lw_radios.setVisibility(View.VISIBLE);
         pb_loadingRadios.setVisibility(View.GONE);
     }
 
@@ -160,16 +180,22 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
     private static class RadioLoader extends AsyncTaskLoader<List<Radio>> {
         private String requestUrl;
         private OnRadioLoadingCompleteListener onRadioLoadingCompleteListener;
+        private OnRadioLoadingStartListener onRadioLoadingStartListener;
         private boolean isFilteringRespectToCityEnabled;
+        private boolean isFilteringRespectToCategoryEnabled;
 
         public RadioLoader(@NonNull Context context,
                            String requestUrl,
                            OnRadioLoadingCompleteListener onRadioLoadingCompleteListener,
-                           boolean isFilteringRespectToCityEnabled) {
+                           OnRadioLoadingStartListener onRadioLoadingStartListener,
+                           boolean isFilteringRespectToCityEnabled,
+                           boolean isFilteringRespectToCategoryEnabled) {
             super(context);
             this.requestUrl = requestUrl;
             this.onRadioLoadingCompleteListener = onRadioLoadingCompleteListener;
+            this.onRadioLoadingStartListener = onRadioLoadingStartListener;
             this.isFilteringRespectToCityEnabled = isFilteringRespectToCityEnabled;
+            this.isFilteringRespectToCategoryEnabled = isFilteringRespectToCategoryEnabled;
         }
 
         @Override
@@ -177,6 +203,8 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
             ArrayList<Radio> radios;
             if (isFilteringRespectToCityEnabled) {
                 radios = QueryUtils.fetchRadioDataThroughCities(requestUrl);
+            } else if (isFilteringRespectToCategoryEnabled) {
+                radios = QueryUtils.fetchRadioDataThroughCategories(requestUrl);
             } else {
                 radios = QueryUtils.fetchRadioData(requestUrl);
             }
@@ -186,8 +214,13 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
         @Override
         protected void onStartLoading() {
             onRadioLoadingCompleteListener.onRadioLoadingComplete(false);
+//            onRadioLoadingStartListener.onRadioLoadingStart();
             forceLoad();
         }
+    }
+
+    public void restartLoader() {
+        getLoaderManager().restartLoader(RADIO_LOADER_ID, null, this);
     }
 
     public void refreshRadiosList(int radioId) {
@@ -246,5 +279,9 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
 
     public interface OnRadioLoadingCompleteListener {
         void onRadioLoadingComplete(boolean isRadioLoadingComplete);
+    }
+
+    public interface OnRadioLoadingStartListener {
+        void onRadioLoadingStart();
     }
 }

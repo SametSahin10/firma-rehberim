@@ -17,7 +17,7 @@
         <Button
             android:id="@+id/btn_nav_radios"
             android:layout_width="0dp"
-            android:layout_height="40dp"
+            android:layout_height="35dp"
             android:layout_weight="1"
             android:layout_margin="1dp"
             android:background="@color/colorPrimary"
@@ -29,7 +29,7 @@
         <Button
             android:id="@+id/btn_nav_tv"
             android:layout_width="0dp"
-            android:layout_height="40dp"
+            android:layout_height="35dp"
             android:layout_weight="1"
             android:layout_margin="1dp"
             android:background="@color/colorPrimary"
@@ -41,7 +41,7 @@
         <Button
             android:id="@+id/btn_nav_contacts"
             android:layout_width="0dp"
-            android:layout_height="40dp"
+            android:layout_height="35dp"
             android:layout_weight="1"
             android:layout_margin="1dp"
             android:background="@color/colorPrimary"
@@ -53,7 +53,7 @@
         <Button
             android:id="@+id/btn_nav_newspaper"
             android:layout_width="0dp"
-            android:layout_height="40dp"
+            android:layout_height="35dp"
             android:layout_weight="1"
             android:layout_margin="1dp"
             android:background="@color/colorPrimary"
@@ -82,14 +82,14 @@
         android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_above="@id/rl_player"
+        android:layout_above="@id/rl_player_one"
         android:padding="2dp"
         android:weightSum="4">
 
         <Button
             android:id="@+id/btn_nav_fav_radios"
             android:layout_width="0dp"
-            android:layout_height="40dp"
+            android:layout_height="35dp"
             android:layout_weight="1"
             android:layout_margin="1dp"
             android:background="@color/colorPrimary"
@@ -101,7 +101,7 @@
         <Button
             android:id="@+id/btn_nav_categories"
             android:layout_width="0dp"
-            android:layout_height="40dp"
+            android:layout_height="35dp"
             android:layout_weight="1"
             android:layout_margin="1dp"
             android:background="@color/colorPrimary"
@@ -113,7 +113,7 @@
         <Button
             android:id="@+id/btn_nav_cities"
             android:layout_width="0dp"
-            android:layout_height="40dp"
+            android:layout_height="35dp"
             android:layout_weight="1"
             android:layout_margin="1dp"
             android:background="@color/colorPrimary"
@@ -125,7 +125,7 @@
         <Button
             android:id="@+id/btn_nav_global"
             android:layout_width="0dp"
-            android:layout_height="40dp"
+            android:layout_height="35dp"
             android:layout_weight="1"
             android:layout_margin="1dp"
             android:background="@color/colorPrimary"
@@ -137,11 +137,62 @@
     </LinearLayout>
 
     <RelativeLayout
-        android:id="@+id/rl_player"
+        android:id="@+id/rl_player_one"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/rl_player_two"
+        android:padding="8dp"
+        android:background="@color/radio_player_background_color">
+
+        <ImageButton
+            android:id="@+id/ib_timer"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_centerVertical="true"
+            android:background="@null"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_timer"/>
+
+        <ImageButton
+            android:id="@+id/ib_volume_control"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_centerVertical="true"
+            android:layout_toEndOf="@id/ib_timer"
+            android:layout_marginStart="15dp"
+            android:background="@null"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_volume_control"/>
+
+        <SeekBar
+            android:id="@+id/sb_volume_control_bar"
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_toEndOf="@id/ib_volume_control"
+            android:layout_marginStart="10dp"/>
+
+        <ImageButton
+            android:id="@+id/ib_play_radio"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_alignParentEnd="true"
+            android:layout_marginStart="8dp"
+            android:layout_centerVertical="true"
+            android:padding="0dp"
+            android:adjustViewBounds="true"
+            android:background="@null"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_play_radio"/>
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/rl_player_two"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:padding="10dp"
+        android:padding="8dp"
         android:background="@color/radio_player_background_color"
         android:elevation="4dp">
 
@@ -163,32 +214,28 @@
             android:lines="1"
             android:fontFamily="@font/righteous_regular_res"
             android:textColor="@color/radio_title_text_color"
-            android:textSize="20dp"
+            android:textSize="20sp"
             android:text="Show Radyo"/>
 
         <ImageButton
-            android:id="@+id/ib_player_menu"
+            android:id="@+id/ib_player_share_radio"
             android:layout_width="30dp"
             android:layout_height="30dp"
-            android:layout_toStartOf="@id/ib_play_radio"
             android:layout_centerVertical="true"
-            android:padding="0dp"
-            android:adjustViewBounds="true"
+            android:layout_toStartOf="@id/ib_player_add_to_fav"
+            android:layout_marginEnd="15dp"
             android:background="@null"
             android:scaleType="fitCenter"
-            android:src="@drawable/ic_player_menu"/>
+            android:src="@drawable/ic_share"/>
 
         <ImageButton
-            android:id="@+id/ib_play_radio"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_alignParentEnd="true"
-            android:layout_marginStart="8dp"
+            android:id="@+id/ib_player_add_to_fav"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
             android:layout_centerVertical="true"
-            android:padding="0dp"
-            android:adjustViewBounds="true"
+            android:layout_alignParentEnd="true"
             android:background="@null"
             android:scaleType="fitCenter"
-            android:src="@drawable/ic_play_radio"/>
+            android:src="@drawable/ic_favourite_empty"/>
     </RelativeLayout>
 </RelativeLayout>

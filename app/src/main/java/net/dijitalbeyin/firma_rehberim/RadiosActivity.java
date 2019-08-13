@@ -4,6 +4,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
+import android.media.AudioManager;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -20,6 +21,7 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
@@ -29,6 +31,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.PopupWindow;
 import android.widget.SearchView;
+import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -66,6 +69,7 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
                                                                 FavouriteRadiosFragment.OnEventFromFavRadiosFragment,
                                                                 RadiosFragment.OnRadioItemClickListener,
                                                                 RadiosFragment.OnRadioLoadingCompleteListener,
+                                                                RadiosFragment.OnRadioLoadingStartListener,
                                                                 FavouriteRadiosFragment.OnFavRadioItemClickListener,
                                                                 CitiesFragment.OnFilterRespectToCityListener,
                                                                 CategoriesFragment.OnFilterRespectToCategoryListener,
@@ -90,7 +94,7 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     private final static int FAV_RADIOS_FRAGMENT_ID = 5;
     private final static int CATEGORIES_FRAGMENT_ID = 6;
     private final static int CITIES_FRAGMENT_ID = 7;
-    private final static int LOCAL_FRAGMENT_ID = 8;
+    private final static int GLOBAL_FRAGMENT_ID = 8;
     private int ACTIVE_FRAGMENT_ID;
 
     private Toolbar toolbar;
@@ -116,11 +120,18 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     private Button btn_nav_cities;
     private Button btn_nav_global;
 
+    private ImageButton ib_timer;
+    private ImageButton ib_volume_control;
+    private SeekBar sb_volume_control;
+    private ImageButton ib_playPauseRadio;
+
     private ImageView iv_radioIcon;
     private TextView  tv_radioTitle;
-    private ImageButton ib_playPauseRadio;
-    private ImageButton ib_player_menu;
+    private ImageButton ib_share_radio;
+    private ImageButton ib_player_add_to_fav;
+//    private ImageButton ib_player_menu;
 
+    private AudioManager audioManager;
     private SimpleExoPlayer exoPlayer;
     private MediaSource mediaSource;
     private DefaultDataSourceFactory dataSourceFactory;
@@ -134,6 +145,7 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     Radio radioCurrentlyPlaying;
     boolean isFromFavouriteRadiosFragment = false;
     boolean isRadioLoadingCompleted = false;
+    boolean isAudioStreamMuted = false;
 
     City allTheCities;
     Category allTheCategories;
@@ -257,14 +269,24 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
         btn_nav_global.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (ACTIVE_FRAGMENT_ID != LOCAL_FRAGMENT_ID) {
-                    getSupportActionBar().setTitle("Ulusal");
+                if (ACTIVE_FRAGMENT_ID != GLOBAL_FRAGMENT_ID) {
+                    Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
                     FragmentManager fragmentManager = getSupportFragmentManager();
-                    FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-                    fragmentTransaction.replace(R.id.fragment_container, radiosFragment).commit();
-                    ACTIVE_FRAGMENT_ID = LOCAL_FRAGMENT_ID;
+                    getSupportActionBar().setTitle("Ulusal");
                     radiosFragment.setFilteringRespectToCityEnabled(false);
                     radiosFragment.setFilteringRespectToCategoryEnabled(false);
+                    radiosFragment.restartLoader();
+                    if (ACTIVE_FRAGMENT_ID == RADIOS_FRAGMENT_ID) {
+                        fragmentManager.beginTransaction()
+                                       .detach(fragment)
+                                       .attach(fragment)
+                                       .commit();
+                    } else {
+                        fragmentManager.beginTransaction()
+                                       .replace(R.id.fragment_container, radiosFragment)
+                                       .commit();
+                    }
+                    ACTIVE_FRAGMENT_ID = GLOBAL_FRAGMENT_ID;
                 }
             }
         });
@@ -338,24 +360,6 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
 //            }
 //        });
 
-
-
-//        viewPager = findViewById(R.id.view_pager);
-//        pagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager());
-//        viewPager.setAdapter(pagerAdapter);
-
-//        tabLayout = findViewById(R.id.tab_layout);
-//        tabLayout.setupWithViewPager(viewPager);
-
-//        Typeface typeface = Typeface.createFromAsset(getAssets(), "fonts/righteous_regular.ttf");
-//        int numOfTabs = tabLayout.getTabCount();
-//        for (int i = 0; i < numOfTabs; i++) {
-//            TextView tv_tab_title = (TextView) LayoutInflater.from(this)
-//                                    .inflate(R.layout.custom_textview_for_tab_titles, null);
-//            tv_tab_title.setTypeface(typeface);
-//            tabLayout.getTabAt(i).setCustomView(tv_tab_title);
-//        }
-
         iv_radioIcon = findViewById(R.id.iv_radio_icon);
         tv_radioTitle = findViewById(R.id.tv_radio_title);
 
@@ -380,6 +384,8 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
                         if (isPlaying()) {
                             ib_playPauseRadio.setImageDrawable(getResources().getDrawable(R.drawable.ic_pause_radio));
                         }
+                        sb_volume_control.setMax(audioManager.getStreamMaxVolume(exoPlayer.getAudioStreamType()));
+                        sb_volume_control.setProgress(audioManager.getStreamVolume(exoPlayer.getAudioStreamType()));
                         Log.d("TAG", "STATE_READY");
                         break;
                     case ExoPlayer.STATE_IDLE:
@@ -404,6 +410,43 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
             }
         };
 
+        ib_timer = findViewById(R.id.ib_timer);
+
+        ib_volume_control = findViewById(R.id.ib_volume_control);
+        ib_volume_control.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (isAudioStreamMuted) {
+                    audioManager.setStreamMute(AudioManager.STREAM_MUSIC, false);
+                    ib_volume_control.setImageDrawable(getDrawable(R.drawable.ic_volume_control));
+                    isAudioStreamMuted = false;
+                } else {
+                    audioManager.setStreamMute(AudioManager.STREAM_MUSIC, true);
+                    ib_volume_control.setImageDrawable(getDrawable(R.drawable.ic_volume_control_muted));
+                    isAudioStreamMuted = true;
+                }
+            }
+        });
+
+        audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        sb_volume_control = findViewById(R.id.sb_volume_control_bar);
+        sb_volume_control.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                audioManager.setStreamVolume(exoPlayer.getAudioStreamType(), progress, 0);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+
         ib_playPauseRadio = findViewById(R.id.ib_play_radio);
         ib_playPauseRadio.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -420,22 +463,68 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
             }
         });
 
-        setupPopupWindow();
+//        setupPopupWindow();
 
-        ib_player_menu = findViewById(R.id.ib_player_menu);
-        ib_player_menu.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                popupWindow.showAsDropDown(view, 0, -500);
-            }
-        });
+//        ib_player_menu = findViewById(R.id.ib_player_menu);
+//        ib_player_menu.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                popupWindow.showAsDropDown(view, 0, -500);
+//            }
+//        });
+    }
+
+    @Override
+    protected void onPause() {
+        if (exoPlayer != null) {
+            exoPlayer.setPlayWhenReady(false);
+            exoPlayer.release();
+        }
+        super.onPause();
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
         getMenuInflater().inflate(R.menu.appbar_menu, menu);
+        SearchView searchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                if (ACTIVE_FRAGMENT_ID == 1 || ACTIVE_FRAGMENT_ID == 8) {
+                    radiosFragment.lw_radios.setVisibility(View.INVISIBLE);
+                    radiosFragment.pb_loadingRadios.setVisibility(View.VISIBLE);
+                    radiosFragment.setQueryFromSearchView(newText);
+                    radiosFragment.setFilteringThroughSearchViewEnabled(true);
+                    radiosFragment.restartLoader();
+                } else {
+                    Toast.makeText(RadiosActivity.this.getApplicationContext(), "Arama yapmak için Radyolar sekmesine geçiniz.", Toast.LENGTH_SHORT).show();
+                }
+                return false;
+            }
+        });
         return true;
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (event.getKeyCode() == KeyEvent.KEYCODE_VOLUME_DOWN) {
+            sb_volume_control.setProgress(audioManager.getStreamVolume(exoPlayer.getAudioStreamType()));
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
+    @Override
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
+        if (event.getKeyCode() == KeyEvent.KEYCODE_VOLUME_UP) {
+            sb_volume_control.setProgress(audioManager.getStreamVolume(exoPlayer.getAudioStreamType()));
+        }
+        return super.onKeyUp(keyCode, event);
     }
 
     @NonNull
@@ -631,43 +720,43 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
 //        }
 //    }
 
-    private void setupPopupWindow() {
-        LayoutInflater layoutInflater = (LayoutInflater) getApplicationContext().getSystemService(LAYOUT_INFLATER_SERVICE);
-        View view = layoutInflater.inflate(R.layout.list_popup_window, null);
-        ImageButton ib_popup_window_share = view.findViewById(R.id.ib_popup_window_share);
-        ib_popup_window_share.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //share currently playing radio
-                if (radioCurrentlyPlaying != null) {
-                    shareRadio(radioCurrentlyPlaying);
-                }
-            }
-        });
-        ImageButton ib_popup_window_fav = view.findViewById(R.id.ib_popup_window_fav);
-        ib_popup_window_fav.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //Add currently playing radio to favourites.
-                if (radioCurrentlyPlaying != null) {
-                    Log.d(LOG_TAG, "radio currently playing is not null");
-                    radioCurrentlyPlaying.setLiked(true);
-                    addToFavourites(radioCurrentlyPlaying);
-//                    favouriteRadiosFragment.updateFavouriteRadiosList();
-                } else {
-                    Log.d(LOG_TAG, "radio currently playing is null");
-                }
-            }
-        });
-        final float scale = getApplicationContext().getResources().getDisplayMetrics().density;
-        int width = (int) (60 * scale + 0.5f);
-        int height = (int) (120 * scale + 0.5f);
-        popupWindow = new PopupWindow(view,
-                width,
-                height,
-                true);
-        updatePopupWindow();
-    }
+//    private void setupPopupWindow() {
+//        LayoutInflater layoutInflater = (LayoutInflater) getApplicationContext().getSystemService(LAYOUT_INFLATER_SERVICE);
+//        View view = layoutInflater.inflate(R.layout.list_popup_window, null);
+//        ImageButton ib_popup_window_share = view.findViewById(R.id.ib_popup_window_share);
+//        ib_popup_window_share.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                //share currently playing radio
+//                if (radioCurrentlyPlaying != null) {
+//                    shareRadio(radioCurrentlyPlaying);
+//                }
+//            }
+//        });
+//        ImageButton ib_popup_window_fav = view.findViewById(R.id.ib_popup_window_fav);
+//        ib_popup_window_fav.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                //Add currently playing radio to favourites.
+//                if (radioCurrentlyPlaying != null) {
+//                    Log.d(LOG_TAG, "radio currently playing is not null");
+//                    radioCurrentlyPlaying.setLiked(true);
+//                    addToFavourites(radioCurrentlyPlaying);
+////                    favouriteRadiosFragment.updateFavouriteRadiosList();
+//                } else {
+//                    Log.d(LOG_TAG, "radio currently playing is null");
+//                }
+//            }
+//        });
+//        final float scale = getApplicationContext().getResources().getDisplayMetrics().density;
+//        int width = (int) (60 * scale + 0.5f);
+//        int height = (int) (120 * scale + 0.5f);
+//        popupWindow = new PopupWindow(view,
+//                width,
+//                height,
+//                true);
+//        updatePopupWindow();
+//    }
 
     private void prepareExoPlayer(Uri uri) {
         dataSourceFactory = new DefaultDataSourceFactory(getApplicationContext(), Util.getUserAgent(getApplicationContext(), "exoPlayerSimple"), BANDWIDTH_METER);
@@ -695,7 +784,7 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     private void playRadio(Radio radioClicked) {
         Log.d("TAG", "Radio stream link: " + radioClicked.getStreamLink());
         radioCurrentlyPlaying = radioClicked;
-        updatePopupWindow();
+//        updatePopupWindow();
         if (exoPlayer != null) {
             exoPlayer.release();
             if (isPlaying()) {
@@ -767,10 +856,10 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
             if (radioId == radioCurrentlyPlaying.getRadioId()) {
                 if (isLiked) {
                     radioCurrentlyPlaying.setLiked(true);
-                    updatePopupWindow();
+//                    updatePopupWindow();
                 } else {
                     radioCurrentlyPlaying.setLiked(false);
-                    updatePopupWindow();
+//                    updatePopupWindow();
                 }
             }
         }
@@ -782,7 +871,7 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
         if (radioCurrentlyPlaying != null) {
             if (radioId == radioCurrentlyPlaying.getRadioId()) {
                 radioCurrentlyPlaying.setLiked(false);
-                updatePopupWindow();
+//                updatePopupWindow();
             }
         }
         radiosFragment.refreshRadiosList(radioId);
@@ -829,5 +918,10 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
         radiosFragment.setFilteringRespectToCityEnabled(false);
         radiosFragment.setFilteringRespectToCategoryEnabled(true);
         radiosFragment.setCategoryToFilter(categoryIdToFilter);
+    }
+
+    @Override
+    public void onRadioLoadingStart() {
+        radiosFragment.pb_loadingRadios.setVisibility(View.VISIBLE);
     }
 }

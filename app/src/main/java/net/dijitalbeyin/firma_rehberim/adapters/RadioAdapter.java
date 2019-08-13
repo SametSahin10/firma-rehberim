@@ -174,7 +174,6 @@ public class RadioAdapter extends ArrayAdapter<Radio> {
                         }
                         break;
                 }
-
                 results.count = filteredRadios.size();
                 results.values = filteredRadios;
                 return results;
