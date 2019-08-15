@@ -95,6 +95,7 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     private final static int CATEGORIES_FRAGMENT_ID = 6;
     private final static int CITIES_FRAGMENT_ID = 7;
     private final static int GLOBAL_FRAGMENT_ID = 8;
+    private final static int TIMER_FRAGMENT_ID = 9;
     private int ACTIVE_FRAGMENT_ID;
 
     private Toolbar toolbar;
@@ -411,6 +412,19 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
         };
 
         ib_timer = findViewById(R.id.ib_timer);
+        ib_timer.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (ACTIVE_FRAGMENT_ID != TIMER_FRAGMENT_ID) {
+                    TimerFragment timerFragment = new TimerFragment();
+                    FragmentManager fragmentManager = getSupportFragmentManager();
+                    FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+                    fragmentTransaction.replace(R.id.fragment_container, timerFragment).commit();
+                    getSupportActionBar().setTitle("Zamanlayıcı");
+                    ACTIVE_FRAGMENT_ID = TIMER_FRAGMENT_ID;
+                }
+            }
+        });
 
         ib_volume_control = findViewById(R.id.ib_volume_control);
         ib_volume_control.setOnClickListener(new View.OnClickListener() {
@@ -433,7 +447,9 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
         sb_volume_control.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                audioManager.setStreamVolume(exoPlayer.getAudioStreamType(), progress, 0);
+                if (exoPlayer != null) {
+                    audioManager.setStreamVolume(exoPlayer.getAudioStreamType(), progress, 0);
+                }
             }
 
             @Override
@@ -514,7 +530,9 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (event.getKeyCode() == KeyEvent.KEYCODE_VOLUME_DOWN) {
-            sb_volume_control.setProgress(audioManager.getStreamVolume(exoPlayer.getAudioStreamType()));
+            if (exoPlayer != null) {
+                sb_volume_control.setProgress(audioManager.getStreamVolume(exoPlayer.getAudioStreamType()));
+            }
         }
         return super.onKeyDown(keyCode, event);
     }
@@ -522,7 +540,9 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     @Override
     public boolean onKeyUp(int keyCode, KeyEvent event) {
         if (event.getKeyCode() == KeyEvent.KEYCODE_VOLUME_UP) {
-            sb_volume_control.setProgress(audioManager.getStreamVolume(exoPlayer.getAudioStreamType()));
+            if (exoPlayer != null) {
+                sb_volume_control.setProgress(audioManager.getStreamVolume(exoPlayer.getAudioStreamType()));
+            }
         }
         return super.onKeyUp(keyCode, event);
     }

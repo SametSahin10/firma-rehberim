@@ -28,4 +28,6 @@
     <string name="t_r" translatable="false">Tür</string>
     <string name="yerel" translatable="false">Yerel</string>
     <string name="ulusal" translatable="false">Ulusal</string>
+    <string name="radyo_ne_zaman_kapans_n">Radyo ne zaman kapansın?</string>
+    <string name="tamam">TAMAM</string>
 </resources>

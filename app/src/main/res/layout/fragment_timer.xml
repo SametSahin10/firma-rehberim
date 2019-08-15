@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FAFAFA">
+
+    <TextView
+        android:id="@+id/tv_timer_question"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_margin="10dp"
+        android:fontFamily="@font/righteous_regular"
+        android:textColor="@color/colorPrimary"
+        android:textSize="18sp"
+        android:text="@string/radyo_ne_zaman_kapans_n"/>
+
+    <TimePicker
+        android:id="@+id/timer"
+        android:layout_width="match_parent"
+        android:layout_height="360dp"
+        android:layout_below="@id/tv_timer_question"
+        android:headerBackground="@color/colorPrimary"
+        android:background="#FAFAFA"
+        android:timePickerMode="clock"/>
+
+    <Button
+        android:id="@+id/btn_set_timer"
+        android:layout_width="100dp"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/timer"
+        android:layout_marginTop="5dp"
+        android:padding="3dp"
+        android:background="@drawable/category_item_background"
+        android:fontFamily="@font/righteous_regular"
+        android:textColor="#FFFFFF"
+        android:textSize="16sp"
+        android:text="@string/tamam"/>
+
+</RelativeLayout>

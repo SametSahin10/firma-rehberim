@@ -17,49 +17,49 @@
         <Button
             android:id="@+id/btn_nav_radios"
             android:layout_width="0dp"
-            android:layout_height="35dp"
+            android:layout_height="33dp"
             android:layout_weight="1"
             android:layout_margin="1dp"
             android:background="@color/colorPrimary"
             android:fontFamily="@font/righteous_regular"
             android:textColor="#FFFFFF"
-            android:textSize="16sp"
+            android:textSize="15sp"
             android:text="@string/radyo"/>
 
         <Button
             android:id="@+id/btn_nav_tv"
             android:layout_width="0dp"
-            android:layout_height="35dp"
+            android:layout_height="33dp"
             android:layout_weight="1"
             android:layout_margin="1dp"
             android:background="@color/colorPrimary"
             android:fontFamily="@font/righteous_regular"
             android:textColor="#FFFFFF"
-            android:textSize="16sp"
+            android:textSize="15sp"
             android:text="@string/tv"/>
 
         <Button
             android:id="@+id/btn_nav_contacts"
             android:layout_width="0dp"
-            android:layout_height="35dp"
+            android:layout_height="33dp"
             android:layout_weight="1"
             android:layout_margin="1dp"
             android:background="@color/colorPrimary"
             android:fontFamily="@font/righteous_regular"
             android:textColor="#FFFFFF"
-            android:textSize="16sp"
+            android:textSize="15sp"
             android:text="@string/rehber"/>
 
         <Button
             android:id="@+id/btn_nav_newspaper"
             android:layout_width="0dp"
-            android:layout_height="35dp"
+            android:layout_height="33dp"
             android:layout_weight="1"
             android:layout_margin="1dp"
             android:background="@color/colorPrimary"
             android:fontFamily="@font/righteous_regular"
             android:textColor="#FFFFFF"
-            android:textSize="16sp"
+            android:textSize="15sp"
             android:text="@string/gazete"/>
 
     </LinearLayout>
@@ -73,7 +73,7 @@
         <FrameLayout
             android:id="@+id/fragment_container"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            android:layout_height="match_parent"/>
 
     </RelativeLayout>
 
@@ -89,49 +89,49 @@
         <Button
             android:id="@+id/btn_nav_fav_radios"
             android:layout_width="0dp"
-            android:layout_height="35dp"
+            android:layout_height="33dp"
             android:layout_weight="1"
             android:layout_margin="1dp"
             android:background="@color/colorPrimary"
             android:fontFamily="@font/righteous_regular"
             android:textColor="#FFFFFF"
-            android:textSize="16sp"
+            android:textSize="15sp"
             android:text="@string/favori"/>
 
         <Button
             android:id="@+id/btn_nav_categories"
             android:layout_width="0dp"
-            android:layout_height="35dp"
+            android:layout_height="33dp"
             android:layout_weight="1"
             android:layout_margin="1dp"
             android:background="@color/colorPrimary"
             android:fontFamily="@font/righteous_regular"
             android:textColor="#FFFFFF"
-            android:textSize="16sp"
+            android:textSize="15sp"
             android:text="@string/t_r"/>
 
         <Button
             android:id="@+id/btn_nav_cities"
             android:layout_width="0dp"
-            android:layout_height="35dp"
+            android:layout_height="33dp"
             android:layout_weight="1"
             android:layout_margin="1dp"
             android:background="@color/colorPrimary"
             android:fontFamily="@font/righteous_regular"
             android:textColor="#FFFFFF"
-            android:textSize="16sp"
+            android:textSize="15sp"
             android:text="@string/yerel"/>
 
         <Button
             android:id="@+id/btn_nav_global"
             android:layout_width="0dp"
-            android:layout_height="35dp"
+            android:layout_height="33dp"
             android:layout_weight="1"
             android:layout_margin="1dp"
             android:background="@color/colorPrimary"
             android:fontFamily="@font/righteous_regular"
             android:textColor="#FFFFFF"
-            android:textSize="16sp"
+            android:textSize="15sp"
             android:text="@string/ulusal"/>
 
     </LinearLayout>
@@ -159,7 +159,7 @@
             android:layout_height="30dp"
             android:layout_centerVertical="true"
             android:layout_toEndOf="@id/ib_timer"
-            android:layout_marginStart="15dp"
+            android:layout_marginStart="12dp"
             android:background="@null"
             android:scaleType="fitCenter"
             android:src="@drawable/ic_volume_control"/>
@@ -223,7 +223,7 @@
             android:layout_height="30dp"
             android:layout_centerVertical="true"
             android:layout_toStartOf="@id/ib_player_add_to_fav"
-            android:layout_marginEnd="15dp"
+            android:layout_marginEnd="12dp"
             android:background="@null"
             android:scaleType="fitCenter"
             android:src="@drawable/ic_share"/>
