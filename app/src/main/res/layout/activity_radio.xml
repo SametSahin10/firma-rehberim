@@ -170,7 +170,10 @@
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
             android:layout_toEndOf="@id/ib_volume_control"
-            android:layout_marginStart="10dp"/>
+            android:layout_marginStart="15dp"
+            android:splitTrack="false"
+            android:progressDrawable="@drawable/seekbar_style"
+            android:thumb="@drawable/seekbar_thumb"/>
 
         <ImageButton
             android:id="@+id/ib_play_radio"
