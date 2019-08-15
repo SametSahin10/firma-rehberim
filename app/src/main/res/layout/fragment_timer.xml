@@ -2,6 +2,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
     android:background="#FAFAFA">
 
     <TextView
@@ -13,29 +14,71 @@
         android:fontFamily="@font/righteous_regular"
         android:textColor="@color/colorPrimary"
         android:textSize="18sp"
-        android:text="@string/radyo_ne_zaman_kapans_n"/>
+        android:text="@string/radyo_ne_zaman_kapans_n"
+        tools:visibility="visible"/>
 
     <TimePicker
-        android:id="@+id/timer"
+        android:id="@+id/time_picker"
         android:layout_width="match_parent"
         android:layout_height="360dp"
         android:layout_below="@id/tv_timer_question"
         android:headerBackground="@color/colorPrimary"
         android:background="#FAFAFA"
-        android:timePickerMode="clock"/>
+        android:timePickerMode="clock"
+        tools:visibility="visible"/>
 
     <Button
         android:id="@+id/btn_set_timer"
         android:layout_width="100dp"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
-        android:layout_below="@id/timer"
+        android:layout_below="@id/time_picker"
         android:layout_marginTop="5dp"
         android:padding="3dp"
         android:background="@drawable/category_item_background"
         android:fontFamily="@font/righteous_regular"
         android:textColor="#FFFFFF"
         android:textSize="16sp"
-        android:text="@string/tamam"/>
+        android:text="@string/tamam"
+        tools:visibility="visible"/>
 
+    <TextView
+        android:id="@+id/tv_remaining_time_desc"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:layout_above="@id/tv_remaining_time"
+        android:gravity="center"
+        android:visibility="invisible"
+        android:fontFamily="@font/righteous_regular"
+        android:textColor="@color/colorPrimary"
+        android:textSize="36sp"
+        android:text="@string/radyonun_kapanmas_na"/>
+
+    <TextView
+        android:id="@+id/tv_remaining_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:layout_marginBottom="130dp"
+        android:visibility="invisible"
+        android:fontFamily="@font/righteous_regular"
+        android:textColor="@color/colorPrimary"
+        android:textSize="36sp"
+        tools:text="2 saat 10 dk"/>
+
+    <Button
+        android:id="@+id/btn_cancel_timer"
+        android:layout_width="100dp"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/time_picker"
+        android:layout_marginTop="5dp"
+        android:padding="3dp"
+        android:visibility="invisible"
+        android:background="@drawable/category_item_background"
+        android:fontFamily="@font/righteous_regular"
+        android:textColor="#FFFFFF"
+        android:textSize="16sp"
+        android:text="@string/ptal_et"/>
 </RelativeLayout>

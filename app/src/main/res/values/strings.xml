@@ -30,4 +30,6 @@
     <string name="ulusal" translatable="false">Ulusal</string>
     <string name="radyo_ne_zaman_kapans_n">Radyo ne zaman kapansın?</string>
     <string name="tamam">TAMAM</string>
+    <string name="radyonun_kapanmas_na">Radyonun kapanmasına</string>
+    <string name="ptal_et">İptal et</string>
 </resources>

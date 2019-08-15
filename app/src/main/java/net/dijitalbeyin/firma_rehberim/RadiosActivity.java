@@ -34,6 +34,7 @@ import android.widget.SearchView;
 import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.TimePicker;
 import android.widget.Toast;
 
 import com.google.android.exoplayer2.ExoPlaybackException;
@@ -73,6 +74,7 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
                                                                 FavouriteRadiosFragment.OnFavRadioItemClickListener,
                                                                 CitiesFragment.OnFilterRespectToCityListener,
                                                                 CategoriesFragment.OnFilterRespectToCategoryListener,
+                                                                TimerFragment.OnCountdownFinishedListener,
                                                                 LoaderManager.LoaderCallbacks<List<Object>> {
     private static final String LOG_TAG = RadiosActivity.class.getSimpleName();
     private static final String CITIES_REQUEST_URL = "https://firmarehberim.com/sayfalar/radyo/json/iller.php";
@@ -111,6 +113,7 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     private TabLayout tabLayout;
     private RadiosFragment radiosFragment;
     private FavouriteRadiosFragment favouriteRadiosFragment;
+    private TimerFragment timerFragment;
 
     private Button btn_nav_radios;
     private Button btn_nav_tv;
@@ -411,12 +414,12 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
             }
         };
 
+        timerFragment = new TimerFragment();
         ib_timer = findViewById(R.id.ib_timer);
         ib_timer.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (ACTIVE_FRAGMENT_ID != TIMER_FRAGMENT_ID) {
-                    TimerFragment timerFragment = new TimerFragment();
                     FragmentManager fragmentManager = getSupportFragmentManager();
                     FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
                     fragmentTransaction.replace(R.id.fragment_container, timerFragment).commit();
@@ -649,6 +652,10 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
         if (fragment instanceof CategoriesFragment) {
             CategoriesFragment categoriesFragment = (CategoriesFragment) fragment;
             categoriesFragment.setOnFilterRespectToCategoryListener(this);
+        }
+        if (fragment instanceof TimerFragment) {
+            TimerFragment timerFragment = (TimerFragment) fragment;
+            timerFragment.setOnCountdownFinishedListener(this);
         }
     }
 
@@ -943,5 +950,16 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     @Override
     public void onRadioLoadingStart() {
         radiosFragment.pb_loadingRadios.setVisibility(View.VISIBLE);
+    }
+
+    @Override
+    public void onCountDownFinished() {
+        if (isPlaying()) {
+            if (exoPlayer != null) {
+                exoPlayer.setPlayWhenReady(false);
+                ib_playPauseRadio.setImageDrawable(getResources().getDrawable(R.drawable.ic_play_radio));
+                Toast.makeText(this, "Radyo durduruldu", Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 }
