@@ -93,6 +93,18 @@ public class QueryUtils {
         return favouriteRadios;
     }
 
+    public static User fetchCallerData(String requestUrl) {
+        URL url = createURL(requestUrl);
+        String jsonResponse =  "";
+        try {
+            jsonResponse = makeHttpRequest(url);
+        } catch (IOException e) {
+            Log.e(LOG_TAG, "Error retrieving caller JSON response");
+        }
+        User user = extractCallerFromJson(jsonResponse);
+        return user;
+    }
+
     private static URL createURL(String stringUrl) {
         URL url = null;
         try {
@@ -381,5 +393,23 @@ public class QueryUtils {
             Log.e(LOG_TAG, "Problem occured while parsing radios through cities JSON response ");
         }
         return radios;
+    }
+
+    private static User extractCallerFromJson(String callerJsonResponse) {
+        if (TextUtils.isEmpty(callerJsonResponse)) {
+            return null;
+        }
+        User user = null;
+        try {
+            JSONObject callerObject = new JSONObject(callerJsonResponse);
+            String userName = callerObject.getString("isim");
+            String userPhotoLink = callerObject.getString("resim");
+            String userId = callerObject.getString("id");
+            String authoritativeName = callerObject.getString("authoritative");
+            user = new User(userName, userPhotoLink, userId, authoritativeName);
+        } catch (JSONException e) {
+            Log.e(LOG_TAG, "Problem occured while parsing caller JSON response");
+        }
+        return user;
     }
 }
