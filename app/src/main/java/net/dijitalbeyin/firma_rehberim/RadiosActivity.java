@@ -24,6 +24,7 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -528,6 +529,32 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
             }
         });
         return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.item_notifications:
+                return true;
+            case R.id.item_timer:
+                return true;
+            case R.id.item_add_your_company:
+                return true;
+            case R.id.item_go_to_website:
+                return true;
+            case R.id.item_radios:
+                return true;
+            case R.id.item_add_your_radio:
+                return true;
+            case R.id.item_contact:
+                return true;
+            case R.id.item_caller_detection:
+                Intent intent = new Intent(this, OverlayActivity.class);
+                startActivity(intent);
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 
     @Override

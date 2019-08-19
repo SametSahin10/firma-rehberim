@@ -1,6 +1,7 @@
 package net.dijitalbeyin.firma_rehberim;
 
 import android.content.Context;
+import android.content.Intent;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -9,18 +10,28 @@ import java.util.Date;
 public class CallReceiver extends PhoneCallReceiver {
     private static String USER_REQUEST_URL = "https://firmarehberim.com/inc/telephone.php?no=";
     private String query;
+    private Context context;
 
     @Override
-    protected void onIncomingCallReceived(Context context, String number, Date callStartTime) {
+    public void onReceive(Context context, Intent intent) {
+        super.onReceive(context, intent);
+        Log.d("TAG", "onReceived");
+        this.context = context;
+    }
+
+    @Override
+    protected void onIncomingCallReceived(final Context context, String number, Date callStartTime) {
         Toast.makeText(context, "onIncomingCallReceived: " + number, Toast.LENGTH_SHORT).show();
+        Log.d("TAG", "Incoming call received");
         query = formatNumber(number);
         new Thread(new Runnable() {
             @Override
             public void run() {
                 User user = QueryUtils.fetchCallerData(USER_REQUEST_URL + query);
                 if (user != null) {
-                    Log.d("TAG", "Username: " + user.getUserName());
-                    //TODO: Show an overlaying layout on bottom of the screen.
+                    Intent intent = new Intent(context, OverlayService.class);
+                    intent.putExtra("username", user.getUserName());
+                    context.startService(intent);
                 }
             }
         }).start();

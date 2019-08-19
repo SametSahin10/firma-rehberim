@@ -32,4 +32,7 @@
     <string name="tamam">TAMAM</string>
     <string name="radyonun_kapanmas_na">Radyonun kapanmasına</string>
     <string name="ptal_et">İptal et</string>
+    <string name="arayan_firma_numaras_tespitini_aktifle_tir">Arayan firma numarası tespitini aktifleştir</string>
+    <string name="arayan_firma_numaras_tespitini_devre_d_b_rak">Arayan firma numarası tespitini devre dışı bırak</string>
+    <string name="arayan_firma_tespiti">Arayan firma tespiti</string>
 </resources>
