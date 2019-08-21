@@ -2,6 +2,7 @@ package net.dijitalbeyin.firma_rehberim;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -11,12 +12,14 @@ public class CallReceiver extends PhoneCallReceiver {
     private static String USER_REQUEST_URL = "https://firmarehberim.com/inc/telephone.php?no=";
     private String query;
     private Context context;
+    private Context mContext;
 
     @Override
     public void onReceive(Context context, Intent intent) {
         super.onReceive(context, intent);
         Log.d("TAG", "onReceived");
         this.context = context;
+
     }
 
     @Override
@@ -24,17 +27,24 @@ public class CallReceiver extends PhoneCallReceiver {
         Toast.makeText(context, "onIncomingCallReceived: " + number, Toast.LENGTH_SHORT).show();
         Log.d("TAG", "Incoming call received");
         query = formatNumber(number);
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                User user = QueryUtils.fetchCallerData(USER_REQUEST_URL + query);
-                if (user != null) {
-                    Intent intent = new Intent(context, OverlayService.class);
-                    intent.putExtra("username", user.getUserName());
-                    context.startService(intent);
+        if (query != null) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    User user = QueryUtils.fetchCallerData(USER_REQUEST_URL + query);
+                    if (user != null) {
+                        Log.d("TAG", "Username: " + user.getUserName());
+                        Intent intent = new Intent(context, OverlayService.class);
+                        intent.putExtra("username", user.getUserName());
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            context.startForegroundService(intent);
+                        } else {
+                            context.startService(intent);
+                        }
+                    }
                 }
-            }
-        }).start();
+            }).start();
+        }
     }
 
     @Override
@@ -64,6 +74,10 @@ public class CallReceiver extends PhoneCallReceiver {
 
     private String formatNumber(String number) {
         //+905433723255
+        if (number.length() < 13) {
+            Log.d("TAG", "Length of number is not long enough");
+            return null;
+        }
         String zero = number.substring(2, 3);
         String firstPart = "(" + number.substring(3, 6) + ")";
         String secondPart = number.substring(6, 9);
