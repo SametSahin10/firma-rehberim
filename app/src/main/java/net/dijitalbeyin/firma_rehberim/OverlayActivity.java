@@ -49,7 +49,6 @@ public class OverlayActivity extends AppCompatActivity {
             }
         }
 
-
         btn_start_service = findViewById(R.id.btn_start_service);
         btn_start_service.setOnClickListener(new View.OnClickListener() {
             @Override

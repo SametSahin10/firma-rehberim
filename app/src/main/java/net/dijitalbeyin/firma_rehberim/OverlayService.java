@@ -80,9 +80,11 @@ public class OverlayService extends Service {
             if (intent.hasExtra("username")) {
                 if (intent.getExtras() != null) {
                     Log.d("TAG", "Intent has extra");
-                    root_overlaying_view.setVisibility(View.VISIBLE);
-                    String username = intent.getExtras().getString("username");
-                    tv_caller_name.setText(username);
+                    if (root_overlaying_view != null) {
+                        root_overlaying_view.setVisibility(View.VISIBLE);
+                        String username = intent.getExtras().getString("username");
+                        tv_caller_name.setText(username);
+                    }
                 }
             }
 
@@ -136,7 +138,8 @@ public class OverlayService extends Service {
             if (Settings.canDrawOverlays(getApplicationContext())) {
                 Log.d("TAG", "Can draw overlays");
             }
-            layoutParams = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY | WindowManager.LayoutParams.TYPE_PHONE;
+            layoutParams = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY |
+                            WindowManager.LayoutParams.TYPE_PHONE;
         } else {
             Log.d("TAG", "Lower than Oreo");
             layoutParams = WindowManager.LayoutParams.TYPE_SYSTEM_ALERT;
@@ -147,7 +150,8 @@ public class OverlayService extends Service {
                 WindowManager.LayoutParams.WRAP_CONTENT,
                 layoutParams,
                 WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL |
-                        WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
+                        WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH |
+                        WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED,
                 PixelFormat.TRANSLUCENT
         );
         params.gravity = Gravity.BOTTOM;

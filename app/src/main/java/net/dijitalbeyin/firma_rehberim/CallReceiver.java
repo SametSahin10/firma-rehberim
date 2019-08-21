@@ -3,6 +3,7 @@ package net.dijitalbeyin.firma_rehberim;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
+import android.os.Handler;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -27,6 +28,7 @@ public class CallReceiver extends PhoneCallReceiver {
         Toast.makeText(context, "onIncomingCallReceived: " + number, Toast.LENGTH_SHORT).show();
         Log.d("TAG", "Incoming call received");
         query = formatNumber(number);
+
         if (query != null) {
             new Thread(new Runnable() {
                 @Override
