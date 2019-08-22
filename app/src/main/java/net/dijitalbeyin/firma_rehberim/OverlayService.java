@@ -19,7 +19,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageButton;
-import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -36,7 +35,6 @@ public class OverlayService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-
         String channelId = "channelid";
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             channelId = getString(R.string.app_name);

@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -14,7 +13,6 @@ public class CallReceiver extends PhoneCallReceiver {
     private static String USER_REQUEST_URL = "https://firmarehberim.com/inc/telephone.php?no=";
     private String query;
     private Context context;
-    private Context mContext;
 
     @Override
     public void onReceive(Context context, Intent intent) {

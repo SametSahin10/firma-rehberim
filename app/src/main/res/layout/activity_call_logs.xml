@@ -11,4 +11,21 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
 
+    <ProgressBar
+        android:id="@+id/pb_loading_call_logs"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"/>
+
+    <TextView
+        android:id="@+id/tv_cannot_find_logs_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:visibility="invisible"
+        android:fontFamily="@font/righteous_regular"
+        android:textColor="@color/colorPrimary"
+        android:textSize="28sp"
+        android:text="@string/arama_kayd_bulunamad"/>
+
 </RelativeLayout>
