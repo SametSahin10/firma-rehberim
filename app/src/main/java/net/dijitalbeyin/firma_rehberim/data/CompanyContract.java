@@ -14,8 +14,8 @@ public class CompanyContract {
         public final static String COLUMN_AUTHORITATIVE_NAME = "authoritative_name";
         public final static String COLUMN_CALL_STATUS = "call_status";
         public final static String COLUMN_DATE_INFO = "date_info";
-        public final static String CALL_STATUS_INCOMING = "1";
-        public final static String CALL_STATUS_OUTGOING = "2";
-        public final static String CALL_STATUS_MISSED = "3";
+        public final static int CALL_STATUS_INCOMING = 1;
+        public final static int CALL_STATUS_OUTGOING = 2;
+        public final static int CALL_STATUS_MISSED = 3;
     }
 }

@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.provider.Telephony;
 import android.telephony.TelephonyManager;
+import android.util.Log;
 
 import java.util.Date;
 
@@ -46,28 +47,36 @@ public abstract class PhoneCallReceiver extends BroadcastReceiver {
         }
         switch (state) {
             case TelephonyManager.CALL_STATE_RINGING:
+                Log.d("TAG", "RINGING");
                 isIncoming = true;
                 callStartTime = new Date();
                 savedNumber = number;
                 onIncomingCallReceived(context, number, callStartTime);
                 break;
             case TelephonyManager.CALL_STATE_OFFHOOK:
+                Log.d("TAG", "OFFHOOK");
                 if (lastState != TelephonyManager.CALL_STATE_RINGING) {
+                    Log.d("TAG", "OFFHOOK NOT RINGING");
                     isIncoming = false;
                     callStartTime = new Date();
                     onOutgoingCallStarted(context, number, callStartTime);
                 } else {
+                    Log.d("TAG", "OFFHOOK RINGING");
                     isIncoming = true;
                     callStartTime = new Date();
                     onIncomingCallAnswered(context, number, callStartTime);
                 }
                 break;
             case TelephonyManager.CALL_STATE_IDLE:
+                Log.d("TAG", "IDLE");
                 if (lastState == TelephonyManager.CALL_STATE_RINGING) {
+                    Log.d("TAG", "IDLE RINGING");
                     onMissedCall(context, number, callStartTime);
                 } else if (isIncoming) {
+                    Log.d("TAG", "IDLE NOT RINGING");
                     onIncomingCallEnded(context, number, callStartTime, new Date());
                 } else {
+                    Log.d("TAG", "IDLE NOT RINGING NOT INCOMING");
                     onOutGoingCallEnded(context, number, callStartTime, new Date());
                 }
                 break;

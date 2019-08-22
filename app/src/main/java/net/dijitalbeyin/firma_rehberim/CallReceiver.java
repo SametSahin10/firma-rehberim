@@ -7,6 +7,8 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
 
+import net.dijitalbeyin.firma_rehberim.data.CompanyContract;
+
 import java.util.Date;
 
 public class CallReceiver extends PhoneCallReceiver {
@@ -23,7 +25,7 @@ public class CallReceiver extends PhoneCallReceiver {
     }
 
     @Override
-    protected void onIncomingCallReceived(final Context context, String number, Date callStartTime) {
+    protected void onIncomingCallReceived(final Context context, String number, final Date callStartTime) {
         Toast.makeText(context, "Arayan numara: " + number, Toast.LENGTH_SHORT).show();
         Log.d("TAG", "Incoming call received");
         query = formatNumber(number);
@@ -36,8 +38,12 @@ public class CallReceiver extends PhoneCallReceiver {
                         Log.d("TAG", "Username: " + user.getUserName());
                         Intent intent = new Intent(context, OverlayService.class);
                         Bundle extras = new Bundle();
+                        extras.putBoolean("newEntryAvailable", false);
+                        extras.putBoolean("showOverlay", true);
                         extras.putString("userName", user.getUserName());
                         extras.putString("authoritativeName", user.getAuthoritativeName());
+                        extras.putInt("callStatus", CompanyContract.CompanyEntry.CALL_STATUS_INCOMING);
+                        extras.putString("dateInfo", callStartTime.toString());
                         intent.putExtras(extras);
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                             context.startForegroundService(intent);
@@ -55,19 +61,100 @@ public class CallReceiver extends PhoneCallReceiver {
     }
 
     @Override
-    protected void onIncomingCallEnded(Context context, String number, Date callStartTime, Date callEndTime) {
+    protected void onIncomingCallEnded(final Context context, String number, final Date callStartTime, Date callEndTime) {
+        Log.d("TAG", "Incoming call ended");
+        query = formatNumber(number);
+        if (query != null) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    User user = QueryUtils.fetchCallerData(USER_REQUEST_URL + query);
+                    if (user != null) {
+                        Log.d("TAG", "Username: " + user.getUserName());
+                        Intent intent = new Intent(context, OverlayService.class);
+                        Bundle extras = new Bundle();
+                        extras.putBoolean("newEntryAvailable", true);
+                        extras.putBoolean("showOverlay", false);
+                        extras.putString("userName", user.getUserName());
+                        extras.putString("authoritativeName", user.getAuthoritativeName());
+                        extras.putInt("callStatus", CompanyContract.CompanyEntry.CALL_STATUS_INCOMING);
+                        extras.putString("dateInfo", callStartTime.toString());
+                        intent.putExtras(extras);
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            context.startForegroundService(intent);
+                        } else {
+                            context.startService(intent);
+                        }
+                    }
+                }
+            }).start();
+        }
     }
 
     @Override
-    protected void onOutgoingCallStarted(Context context, String number, Date callStartTime) {
+    protected void onOutgoingCallStarted(final Context context, String number, final Date callStartTime) {
+
     }
 
     @Override
-    protected void onOutGoingCallEnded(Context context, String number, Date callStartTime, Date callEndTime) {
+    protected void onOutGoingCallEnded(final Context context, String number, final Date callStartTime, Date callEndTime) {
+        Log.d("TAG", "Outgoing call ended");
+        query = formatNumber(number);
+        if (query != null) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    User user = QueryUtils.fetchCallerData(USER_REQUEST_URL + query);
+                    if (user != null) {
+                        Log.d("TAG", "Username: " + user.getUserName());
+                        Intent intent = new Intent(context, OverlayService.class);
+                        Bundle extras = new Bundle();
+                        extras.putBoolean("newEntryAvailable", true);
+                        extras.putBoolean("showOverlay", false);
+                        extras.putString("userName", user.getUserName());
+                        extras.putString("authoritativeName", user.getAuthoritativeName());
+                        extras.putInt("callStatus", CompanyContract.CompanyEntry.CALL_STATUS_OUTGOING);
+                        extras.putString("dateInfo", callStartTime.toString());
+                        intent.putExtras(extras);
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            context.startForegroundService(intent);
+                        } else {
+                            context.startService(intent);
+                        }
+                    }
+                }
+            }).start();
+        }
     }
 
     @Override
-    protected void onMissedCall(Context context, String number, Date callStartTime) {
+    protected void onMissedCall(final Context context, String number, final Date callStartTime) {
+        query = formatNumber(number);
+        if (query != null) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    User user = QueryUtils.fetchCallerData(USER_REQUEST_URL + query);
+                    if (user != null) {
+                        Log.d("TAG", "Username: " + user.getUserName());
+                        Intent intent = new Intent(context, OverlayService.class);
+                        Bundle extras = new Bundle();
+                        extras.putBoolean("newEntryAvailable", true);
+                        extras.putBoolean("showOverlay", false);
+                        extras.putString("userName", user.getUserName());
+                        extras.putString("authoritativeName", user.getAuthoritativeName());
+                        extras.putInt("callStatus", CompanyContract.CompanyEntry.CALL_STATUS_MISSED);
+                        extras.putString("dateInfo", callStartTime.toString());
+                        intent.putExtras(extras);
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            context.startForegroundService(intent);
+                        } else {
+                            context.startService(intent);
+                        }
+                    }
+                }
+            }).start();
+        }
     }
 
     private String formatNumber(String number) {

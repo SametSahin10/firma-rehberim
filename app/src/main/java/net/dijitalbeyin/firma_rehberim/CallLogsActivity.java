@@ -1,20 +1,17 @@
 package net.dijitalbeyin.firma_rehberim;
 
-import android.Manifest;
-import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.provider.CallLog;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
+import android.database.sqlite.SQLiteDatabase;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import net.dijitalbeyin.firma_rehberim.adapters.CallLogAdapter;
+import net.dijitalbeyin.firma_rehberim.adapters.CallLogCursorAdapter;
+import net.dijitalbeyin.firma_rehberim.data.CompanyContract.CompanyEntry;
+import net.dijitalbeyin.firma_rehberim.data.CompanyDbHelper;
 
 import java.util.ArrayList;
 
@@ -24,7 +21,7 @@ public class CallLogsActivity extends AppCompatActivity {
     ListView lw_call_log;
     ProgressBar pb_loading_call_logs;
     TextView tv_cannot_find_logs_text;
-    CallLogAdapter callLogAdapter;
+    CallLogCursorAdapter callLogCursorAdapter;
     ArrayList<CompanyCallLog> companyCallLogs;
     private String query;
 
@@ -32,6 +29,28 @@ public class CallLogsActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_call_logs);
+
+        CompanyDbHelper dbHelper = new CompanyDbHelper(this);
+        SQLiteDatabase database = dbHelper.getWritableDatabase();
+        String[] projection = {CompanyEntry._ID,
+                                CompanyEntry.COLUMN_COMPANY_NAME,
+                                CompanyEntry.COLUMN_AUTHORITATIVE_NAME,
+                                CompanyEntry.COLUMN_CALL_STATUS,
+                                CompanyEntry.COLUMN_DATE_INFO};
+        Cursor cursor = database.query(CompanyEntry.TABLE_NAME,
+                                        projection,
+                                        null,
+                                        null,
+                                        null,
+                                        null,
+                                CompanyEntry._ID + " DESC",
+                                        null);
+        callLogCursorAdapter = new CallLogCursorAdapter(this, cursor);
+        lw_call_log = findViewById(R.id.lw_call_log);
+        tv_cannot_find_logs_text = findViewById(R.id.tv_cannot_find_logs_text);
+        lw_call_log.setEmptyView(tv_cannot_find_logs_text);
+        lw_call_log.setAdapter(callLogCursorAdapter);
+
 
 //        boolean permissionGranted = ContextCompat.checkSelfPermission(
 //                this,
@@ -41,7 +60,7 @@ public class CallLogsActivity extends AppCompatActivity {
 //            tv_cannot_find_logs_text = findViewById(R.id.tv_cannot_find_logs_text);
 //            companyCallLogs = new ArrayList<>();
 //            lw_call_log = findViewById(R.id.lw_call_log);
-//            callLogAdapter = new CallLogAdapter(this, R.layout.item_call_log, companyCallLogs);
+//            callLogAdapter = new CallLogCursorAdapter(this, R.layout.item_call_log, companyCallLogs);
 //            lw_call_log.setAdapter(callLogAdapter);
 //            Cursor cursor = getContentResolver().query(CallLog.Calls.CONTENT_URI, null, null, null, null);
 //            if (cursor != null) {

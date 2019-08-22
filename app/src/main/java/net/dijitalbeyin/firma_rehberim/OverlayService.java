@@ -5,7 +5,9 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.ContentValues;
 import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.PixelFormat;
 import android.net.Uri;
 import android.os.Build;
@@ -21,6 +23,9 @@ import android.view.WindowManager;
 import android.widget.ImageButton;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+
+import net.dijitalbeyin.firma_rehberim.data.CompanyContract.CompanyEntry;
+import net.dijitalbeyin.firma_rehberim.data.CompanyDbHelper;
 
 public class OverlayService extends Service {
     RelativeLayout root_overlaying_view;
@@ -78,12 +83,28 @@ public class OverlayService extends Service {
             if (intent.hasExtra("userName")) {
                 if (intent.getExtras() != null) {
                     Log.d("TAG", "Intent has extra");
-                    if (root_overlaying_view != null) {
-                        root_overlaying_view.setVisibility(View.VISIBLE);
-                        String userName = intent.getExtras().getString("userName");
-                        String authoritativeName = intent.getExtras().getString("authoritativeName");
-                        tv_company_name.setText(userName);
-                        tv_authoritative_name.setText(authoritativeName);
+                    boolean newEntryAvailable = intent.getExtras().getBoolean("newEntryAvailable");
+                    boolean showOverlay = intent.getExtras().getBoolean("showOverlay");
+                    String userName = intent.getExtras().getString("userName");
+                    String authoritativeName = intent.getExtras().getString("authoritativeName");
+                    int callStatus = intent.getExtras().getInt("callStatus");
+                    String dateInfo = intent.getExtras().getString("dateInfo");
+                    if (showOverlay) {
+                        if (root_overlaying_view != null) {
+                            root_overlaying_view.setVisibility(View.VISIBLE);
+                            tv_company_name.setText(userName);
+                            tv_authoritative_name.setText(authoritativeName);
+                        }
+                    }
+                    if (newEntryAvailable) {
+                        ContentValues contentValues = new ContentValues();
+                        contentValues.put(CompanyEntry.COLUMN_COMPANY_NAME, userName);
+                        contentValues.put(CompanyEntry.COLUMN_AUTHORITATIVE_NAME, authoritativeName);
+                        contentValues.put(CompanyEntry.COLUMN_CALL_STATUS, callStatus);
+                        contentValues.put(CompanyEntry.COLUMN_DATE_INFO, dateInfo);
+                        CompanyDbHelper companyDbHelper = new CompanyDbHelper(this);
+                        SQLiteDatabase database = companyDbHelper.getWritableDatabase();
+                        database.insert(CompanyEntry.TABLE_NAME, null, contentValues);
                     }
                 }
             }
@@ -108,26 +129,6 @@ public class OverlayService extends Service {
             }
         }
         return super.onStartCommand(intent, flags, startId);
-    }
-
-    @Override
-    public void onTaskRemoved(Intent rootIntent) {
-        Log.d("TAG", "onTaskRemoved");
-        Intent restartServiceIntent = new Intent(getApplicationContext(), this.getClass());
-        restartServiceIntent.putExtra("After onTaskRemoved", "true");
-        restartServiceIntent.setPackage(getPackageName());
-        PendingIntent restartServicePendingIntent = PendingIntent.getService(
-                                                    getApplicationContext(),
-                                                            1,
-                                                    restartServiceIntent,
-                                                    PendingIntent.FLAG_ONE_SHOT);
-        AlarmManager alarmManager = (AlarmManager) getApplicationContext().getSystemService(ALARM_SERVICE);
-        alarmManager.set(
-                AlarmManager.ELAPSED_REALTIME,
-                SystemClock.elapsedRealtime() + 1000,
-                restartServicePendingIntent
-        );
-        super.onTaskRemoved(rootIntent);
     }
 
     private void setupViews() {
