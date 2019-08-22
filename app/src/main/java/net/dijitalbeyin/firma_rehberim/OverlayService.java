@@ -1,7 +1,6 @@
 package net.dijitalbeyin.firma_rehberim;
 
 import android.app.AlarmManager;
-import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -12,7 +11,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.SystemClock;
-import android.os.UserManager;
 import android.provider.Settings;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
@@ -21,12 +19,14 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 public class OverlayService extends Service {
     RelativeLayout root_overlaying_view;
-    TextView tv_caller_name;
+    TextView tv_company_name;
+    TextView tv_authoritative_name;
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -77,13 +77,15 @@ public class OverlayService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent != null) {
-            if (intent.hasExtra("username")) {
+            if (intent.hasExtra("userName")) {
                 if (intent.getExtras() != null) {
                     Log.d("TAG", "Intent has extra");
                     if (root_overlaying_view != null) {
                         root_overlaying_view.setVisibility(View.VISIBLE);
-                        String username = intent.getExtras().getString("username");
-                        tv_caller_name.setText(username);
+                        String userName = intent.getExtras().getString("userName");
+                        String authoritativeName = intent.getExtras().getString("authoritativeName");
+                        tv_company_name.setText(userName);
+                        tv_authoritative_name.setText(authoritativeName);
                     }
                 }
             }
@@ -167,21 +169,12 @@ public class OverlayService extends Service {
         );
         root_overlaying_view.addView(bottom_overlay_layout, relativeLayoutParams);
 
-//        root_overlaying_view.setLayoutParams(relativeLayoutParams);
+//        LinearLayout linearLayout = root_overlaying_view.findViewById(R.id.linear_layout);
+        //TODO: Set OnClickListener for linear layout once API gets configured.
 
-//        tv_caller_name = new TextView(this);
-        tv_caller_name = root_overlaying_view.findViewById(R.id.tv_user_name);
-//        Typeface typeface = ResourcesCompat.getFont(getApplicationContext(), R.font.righteous_regular);
-//        tv_caller_name.setTypeface(typeface);
-//        tv_caller_name.setTextColor(Color.WHITE);
-//        tv_caller_name.setTextSize(32);
-//        root_overlaying_view.addView(tv_caller_name, relativeLayoutParams);
-//
-//        ImageButton ib_btn_close_panel = new ImageButton(this);
-//        ib_btn_close_panel.setImageDrawable(getDrawable(R.drawable.ic_close));
-//        ib_btn_close_panel.setBackground(null);
-//        root_overlaying_view.addView(ib_btn_close_panel, relativeLayoutParams);
-//
+        tv_company_name = root_overlaying_view.findViewById(R.id.tv_company_name);
+        tv_authoritative_name = root_overlaying_view.findViewById(R.id.tv_authoritative_name);
+
         ImageButton ib_btn_close_panel = bottom_overlay_layout.findViewById(R.id.ib_close_panel);
         ib_btn_close_panel.setOnClickListener(new View.OnClickListener() {
             @Override

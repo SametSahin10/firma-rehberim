@@ -37,15 +37,8 @@ public class OverlayActivity extends AppCompatActivity {
         }
 
         if (Build.VERSION.SDK_INT >= 23) {
-            Intent intent;
             if (!Settings.canDrawOverlays(this)) {
-                if (Build.BRAND.equalsIgnoreCase("xiaomi")) {
-                    Toast.makeText(this, "Lütfen ayarlardan \"Otomatik başlatma\" seçeneğini etkinleştiriniz.", Toast.LENGTH_LONG).show();
-                } else {
-                    intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                            Uri.parse("package" + getApplicationContext().getPackageName()));
-                    startActivity(intent);
-                }
+                Toast.makeText(this, "Lütfen ayarlardan \"Otomatik başlatma\" seçeneğini etkinleştiriniz.", Toast.LENGTH_LONG).show();
             }
         }
 

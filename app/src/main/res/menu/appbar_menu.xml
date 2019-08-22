@@ -39,4 +39,8 @@
     <item android:id="@+id/item_caller_detection"
           android:title="@string/arayan_firma_tespiti"
           app:showAsAction="never"/>
+
+    <item android:id="@+id/item_about"
+        android:title="@string/hakkinda"
+        app:showAsAction="never"/>
 </menu>

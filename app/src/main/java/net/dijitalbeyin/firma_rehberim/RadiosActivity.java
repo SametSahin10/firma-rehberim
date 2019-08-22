@@ -548,6 +548,10 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
                 return true;
             case R.id.item_contact:
                 return true;
+            case R.id.item_about:
+                Intent privacyPolicyIntent = new Intent(this, AboutActivity.class);
+                startActivity(privacyPolicyIntent);
+                return true;
             case R.id.item_caller_detection:
                 Intent intent = new Intent(this, OverlayActivity.class);
                 startActivity(intent);

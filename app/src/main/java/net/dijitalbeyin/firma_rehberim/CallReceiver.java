@@ -3,6 +3,7 @@ package net.dijitalbeyin.firma_rehberim;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.widget.Toast;
@@ -25,10 +26,9 @@ public class CallReceiver extends PhoneCallReceiver {
 
     @Override
     protected void onIncomingCallReceived(final Context context, String number, Date callStartTime) {
-        Toast.makeText(context, "onIncomingCallReceived: " + number, Toast.LENGTH_SHORT).show();
+        Toast.makeText(context, "Arayan numara: " + number, Toast.LENGTH_SHORT).show();
         Log.d("TAG", "Incoming call received");
         query = formatNumber(number);
-
         if (query != null) {
             new Thread(new Runnable() {
                 @Override
@@ -37,7 +37,10 @@ public class CallReceiver extends PhoneCallReceiver {
                     if (user != null) {
                         Log.d("TAG", "Username: " + user.getUserName());
                         Intent intent = new Intent(context, OverlayService.class);
-                        intent.putExtra("username", user.getUserName());
+                        Bundle extras = new Bundle();
+                        extras.putString("userName", user.getUserName());
+                        extras.putString("authoritativeName", user.getAuthoritativeName());
+                        intent.putExtras(extras);
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                             context.startForegroundService(intent);
                         } else {
@@ -51,27 +54,22 @@ public class CallReceiver extends PhoneCallReceiver {
 
     @Override
     protected void onIncomingCallAnswered(Context context, String number, Date callStartTime) {
-        Toast.makeText(context, "onIncomingCallAnswered: " + number, Toast.LENGTH_SHORT).show();
     }
 
     @Override
     protected void onIncomingCallEnded(Context context, String number, Date callStartTime, Date callEndTime) {
-        Toast.makeText(context, "onIncomingCallEnded: " + number, Toast.LENGTH_SHORT).show();
     }
 
     @Override
     protected void onOutgoingCallStarted(Context context, String number, Date callStartTime) {
-        Toast.makeText(context, "onOutgoingCallStarted: " + number, Toast.LENGTH_SHORT).show();
     }
 
     @Override
     protected void onOutGoingCallEnded(Context context, String number, Date callStartTime, Date callEndTime) {
-        Toast.makeText(context, "onOutgoingCallEnded: " + number, Toast.LENGTH_SHORT).show();
     }
 
     @Override
     protected void onMissedCall(Context context, String number, Date callStartTime) {
-        Toast.makeText(context, "onMissedCall: " + number, Toast.LENGTH_SHORT).show();
     }
 
     private String formatNumber(String number) {
