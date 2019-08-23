@@ -3,6 +3,7 @@ package net.dijitalbeyin.firma_rehberim;
 import android.Manifest;
 import android.content.ComponentName;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
@@ -29,6 +30,8 @@ public class OverlayActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_overlay);
+
+        ActivityCompat.requestPermissions(OverlayActivity.this, new String[]{Manifest.permission.READ_CALL_LOG}, 0);
 
         if (Build.BRAND.equalsIgnoreCase("xiaomi")) {
             Intent autoStartintent = new Intent();

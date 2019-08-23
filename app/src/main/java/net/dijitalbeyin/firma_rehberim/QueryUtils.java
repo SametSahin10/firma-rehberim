@@ -402,11 +402,13 @@ public class QueryUtils {
         User user = null;
         try {
             JSONObject callerObject = new JSONObject(callerJsonResponse);
+            String userWebpageLink = callerObject.getString("seo");
             String userName = callerObject.getString("isim");
             String userPhotoLink = callerObject.getString("resim");
+            String authoritativeWebpageLink = callerObject.getString("yetkiliseo");
             String userId = callerObject.getString("id");
             String authoritativeName = callerObject.getString("authoritative");
-            user = new User(userName, userPhotoLink, userId, authoritativeName);
+            user = new User(userWebpageLink, userName, userPhotoLink, authoritativeWebpageLink, userId, authoritativeName);
         } catch (JSONException e) {
             Log.e(LOG_TAG, "Problem occured while parsing caller JSON response");
         }

@@ -22,15 +22,17 @@ public abstract class PhoneCallReceiver extends BroadcastReceiver {
         } else {
             String stateAsString = intent.getExtras().getString(TelephonyManager.EXTRA_STATE);
             String number = intent.getExtras().getString(TelephonyManager.EXTRA_INCOMING_NUMBER);
-            int stateAsInt = 0;
-            if (stateAsString.equals(TelephonyManager.EXTRA_STATE_IDLE)) {
-                stateAsInt = TelephonyManager.CALL_STATE_IDLE;
-            } else if (stateAsString.equals(TelephonyManager.EXTRA_STATE_OFFHOOK)) {
-                stateAsInt = TelephonyManager.CALL_STATE_OFFHOOK;
-            } else if (stateAsString.equals(TelephonyManager.EXTRA_STATE_RINGING)) {
-                stateAsInt = TelephonyManager.CALL_STATE_RINGING;
+            if (number != null) {
+                int stateAsInt = 0;
+                if (stateAsString.equals(TelephonyManager.EXTRA_STATE_IDLE)) {
+                    stateAsInt = TelephonyManager.CALL_STATE_IDLE;
+                } else if (stateAsString.equals(TelephonyManager.EXTRA_STATE_OFFHOOK)) {
+                    stateAsInt = TelephonyManager.CALL_STATE_OFFHOOK;
+                } else if (stateAsString.equals(TelephonyManager.EXTRA_STATE_RINGING)) {
+                    stateAsInt = TelephonyManager.CALL_STATE_RINGING;
+                }
+                onCallStatedChanged(context, stateAsInt, number);
             }
-            onCallStatedChanged(context, stateAsInt, number);
         }
     }
 

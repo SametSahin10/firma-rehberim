@@ -6,7 +6,7 @@ android {
         applicationId "net.dijitalbeyin.firma_rehberim"
         minSdkVersion 21
         targetSdkVersion 28
-        versionCode 2
+        versionCode 4
         versionName "1.1"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }

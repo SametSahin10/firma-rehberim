@@ -1,10 +1,14 @@
 package net.dijitalbeyin.firma_rehberim;
 
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -18,6 +22,7 @@ import java.util.ArrayList;
 public class CallLogsActivity extends AppCompatActivity {
     private static String USER_REQUEST_URL = "https://firmarehberim.com/inc/telephone.php?no=";
 
+    SwipeRefreshLayout swipeRefreshLayout;
     ListView lw_call_log;
     ProgressBar pb_loading_call_logs;
     TextView tv_cannot_find_logs_text;
@@ -31,13 +36,14 @@ public class CallLogsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_call_logs);
 
         CompanyDbHelper dbHelper = new CompanyDbHelper(this);
-        SQLiteDatabase database = dbHelper.getWritableDatabase();
-        String[] projection = {CompanyEntry._ID,
+        final SQLiteDatabase database = dbHelper.getWritableDatabase();
+        final String[] projection = {CompanyEntry._ID,
+                                CompanyEntry.COLUMN_WEBPAGE_LINK,
                                 CompanyEntry.COLUMN_COMPANY_NAME,
                                 CompanyEntry.COLUMN_AUTHORITATIVE_NAME,
                                 CompanyEntry.COLUMN_CALL_STATUS,
                                 CompanyEntry.COLUMN_DATE_INFO};
-        Cursor cursor = database.query(CompanyEntry.TABLE_NAME,
+        final Cursor cursor = database.query(CompanyEntry.TABLE_NAME,
                                         projection,
                                         null,
                                         null,
@@ -50,6 +56,35 @@ public class CallLogsActivity extends AppCompatActivity {
         tv_cannot_find_logs_text = findViewById(R.id.tv_cannot_find_logs_text);
         lw_call_log.setEmptyView(tv_cannot_find_logs_text);
         lw_call_log.setAdapter(callLogCursorAdapter);
+        lw_call_log.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                if (cursor.moveToPosition(position)) {
+                    int webpageLinkColumnIndex = cursor.getColumnIndex(CompanyEntry.COLUMN_WEBPAGE_LINK);
+                    String webpageLink = cursor.getString(webpageLinkColumnIndex);
+                    Uri webPageUri = Uri.parse("https://firmarehberim.com/" + webpageLink);
+                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                    intent.setData(webPageUri);
+                    startActivity(intent);
+                }
+            }
+        });
+        swipeRefreshLayout = findViewById(R.id.swipe_refresh_layout);
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                Cursor cursor = database.query(CompanyEntry.TABLE_NAME,
+                        projection,
+                        null,
+                        null,
+                        null,
+                        null,
+                        CompanyEntry._ID + " DESC",
+                        null);
+                callLogCursorAdapter.swapCursor(cursor);
+                swipeRefreshLayout.setRefreshing(false);
+            }
+        });
 
 
 //        boolean permissionGranted = ContextCompat.checkSelfPermission(
@@ -120,27 +155,6 @@ public class CallLogsActivity extends AppCompatActivity {
 //            Log.d("TAG", "permission not granted");
 //            ActivityCompat.requestPermissions(CallLogsActivity.this, new String[]{Manifest.permission.READ_CALL_LOG}, 0);
 //        }
-    }
-
-    private String formatNumber(String number) {
-        //+905433723255
-        if (number.length() < 13) {
-            Log.d("TAG", "Length of number is not long enough");
-            return null;
-        }
-        String zero = number.substring(2, 3);
-        String firstPart = "(" + number.substring(3, 6) + ")";
-        String secondPart = number.substring(6, 9);
-        String thirdPart = number.substring(9, 11);
-        String fourthPart = number.substring(11, 13);
-        String formattedNumber = zero
-                + "+"
-                + firstPart + "+"
-                + secondPart + "+"
-                + thirdPart + "+"
-                + fourthPart;
-        Log.d("TAG", "Formatted number: " + formattedNumber);
-        return formattedNumber;
     }
 }
 

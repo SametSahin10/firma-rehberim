@@ -27,6 +27,12 @@ import android.widget.TextView;
 import net.dijitalbeyin.firma_rehberim.data.CompanyContract.CompanyEntry;
 import net.dijitalbeyin.firma_rehberim.data.CompanyDbHelper;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
+
 public class OverlayService extends Service {
     RelativeLayout root_overlaying_view;
     TextView tv_company_name;
@@ -85,8 +91,10 @@ public class OverlayService extends Service {
                     Log.d("TAG", "Intent has extra");
                     boolean newEntryAvailable = intent.getExtras().getBoolean("newEntryAvailable");
                     boolean showOverlay = intent.getExtras().getBoolean("showOverlay");
+                    String userWebpageLink = intent.getExtras().getString("userWebpageLink");
                     String userName = intent.getExtras().getString("userName");
                     String authoritativeName = intent.getExtras().getString("authoritativeName");
+                    String authoritativeWebpageLink = intent.getExtras().getString("authoritativeWebpageLink");
                     int callStatus = intent.getExtras().getInt("callStatus");
                     String dateInfo = intent.getExtras().getString("dateInfo");
                     if (showOverlay) {
@@ -98,8 +106,10 @@ public class OverlayService extends Service {
                     }
                     if (newEntryAvailable) {
                         ContentValues contentValues = new ContentValues();
+                        contentValues.put(CompanyEntry.COLUMN_WEBPAGE_LINK, userWebpageLink);
                         contentValues.put(CompanyEntry.COLUMN_COMPANY_NAME, userName);
                         contentValues.put(CompanyEntry.COLUMN_AUTHORITATIVE_NAME, authoritativeName);
+                        contentValues.put(CompanyEntry.COLUMN_AUTHORITATIVE_WEBPAGE_LINK, authoritativeWebpageLink);
                         contentValues.put(CompanyEntry.COLUMN_CALL_STATUS, callStatus);
                         contentValues.put(CompanyEntry.COLUMN_DATE_INFO, dateInfo);
                         CompanyDbHelper companyDbHelper = new CompanyDbHelper(this);

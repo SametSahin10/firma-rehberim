@@ -17,8 +17,10 @@ public class CompanyDbHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         String SQL_CREATE_COMPANIES_TABLE = "CREATE TABLE " + CompanyEntry.TABLE_NAME + " ("
                 + CompanyEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+                + CompanyEntry.COLUMN_WEBPAGE_LINK + " TEXT, "
                 + CompanyEntry.COLUMN_COMPANY_NAME + " TEXT, "
                 + CompanyEntry.COLUMN_AUTHORITATIVE_NAME + " TEXT, "
+                + CompanyEntry.COLUMN_AUTHORITATIVE_WEBPAGE_LINK + " TEXT, "
                 + CompanyEntry.COLUMN_CALL_STATUS + " INTEGER DEFAULT 1, "
                 + CompanyEntry.COLUMN_DATE_INFO + " TEXT);";
         db.execSQL(SQL_CREATE_COMPANIES_TABLE);
