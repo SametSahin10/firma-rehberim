@@ -109,12 +109,14 @@ public class OverlayService extends Service {
                         contentValues.put(CompanyEntry.COLUMN_WEBPAGE_LINK, userWebpageLink);
                         contentValues.put(CompanyEntry.COLUMN_COMPANY_NAME, userName);
                         contentValues.put(CompanyEntry.COLUMN_AUTHORITATIVE_NAME, authoritativeName);
+                        Log.d("TAG", "authoritativeName: " + authoritativeName);
                         contentValues.put(CompanyEntry.COLUMN_AUTHORITATIVE_WEBPAGE_LINK, authoritativeWebpageLink);
                         contentValues.put(CompanyEntry.COLUMN_CALL_STATUS, callStatus);
                         contentValues.put(CompanyEntry.COLUMN_DATE_INFO, dateInfo);
                         CompanyDbHelper companyDbHelper = new CompanyDbHelper(this);
                         SQLiteDatabase database = companyDbHelper.getWritableDatabase();
                         database.insert(CompanyEntry.TABLE_NAME, null, contentValues);
+                        Log.d("TAG", "New Entry inserted");
                     }
                 }
             }

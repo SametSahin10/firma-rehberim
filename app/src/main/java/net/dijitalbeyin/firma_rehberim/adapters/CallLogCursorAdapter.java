@@ -50,7 +50,6 @@ public class CallLogCursorAdapter extends CursorAdapter {
         int callSatusColumnIndex = cursor.getColumnIndex(CompanyEntry.COLUMN_CALL_STATUS);
         int dateInfoColumnIndex = cursor.getColumnIndex(CompanyEntry.COLUMN_DATE_INFO);
 
-        int id = cursor.getInt(idColumnIndex);
         String companyName = cursor.getString(companyNameColumnIndex);
         String authoritativeName = cursor.getString(authoritativeNameColumnIndex);
         int callStatusAsInt = cursor.getInt(callSatusColumnIndex);
@@ -60,15 +59,19 @@ public class CallLogCursorAdapter extends CursorAdapter {
         switch (callStatusAsInt) {
             case CompanyEntry.CALL_STATUS_INCOMING:
                 callStatus = "Gelen Arama";
+                view.setBackgroundColor(context.getResources().getColor(R.color.incoming_call_log_item_color));
                 break;
             case CompanyEntry.CALL_STATUS_OUTGOING:
                 callStatus = "Giden Arama";
+                view.setBackgroundColor(context.getResources().getColor(R.color.outgoing_call_log_item_color));
                 break;
             case CompanyEntry.CALL_STATUS_MISSED:
                 callStatus = "Cevapsız Arama";
+                view.setBackgroundColor(context.getResources().getColor(R.color.missed_call_log_item_color));
                 break;
             default:
                 callStatus = "Bilinmeyen arama tipi";
+                view.setBackgroundColor(context.getResources().getColor(R.color.unknown_call_log_item_color));
                 break;
         }
 
@@ -81,12 +84,12 @@ public class CallLogCursorAdapter extends CursorAdapter {
         }
 
         tv_company_name.setText(companyName);
-        tv_authoritative_name.setText(authoritativeName);
-        tv_call_status.setText(callStatus);
-
-        if (id % 2 == 0) {
-            view.setBackgroundColor(context.getResources().getColor(R.color.call_log_item_alternating_color));
+        if (authoritativeName.equals("")) {
+            tv_authoritative_name.setText("Yetkili adı bulunamadı");
+        } else {
+            tv_authoritative_name.setText(authoritativeName);
         }
+        tv_call_status.setText(callStatus);
     }
 
     @Override

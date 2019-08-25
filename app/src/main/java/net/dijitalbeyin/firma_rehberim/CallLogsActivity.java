@@ -12,6 +12,7 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import net.dijitalbeyin.firma_rehberim.adapters.CallLogCursorAdapter;
 import net.dijitalbeyin.firma_rehberim.data.CompanyContract.CompanyEntry;
@@ -20,8 +21,6 @@ import net.dijitalbeyin.firma_rehberim.data.CompanyDbHelper;
 import java.util.ArrayList;
 
 public class CallLogsActivity extends AppCompatActivity {
-    private static String USER_REQUEST_URL = "https://firmarehberim.com/inc/telephone.php?no=";
-
     SwipeRefreshLayout swipeRefreshLayout;
     ListView lw_call_log;
     ProgressBar pb_loading_call_logs;
@@ -43,7 +42,7 @@ public class CallLogsActivity extends AppCompatActivity {
                                 CompanyEntry.COLUMN_AUTHORITATIVE_NAME,
                                 CompanyEntry.COLUMN_CALL_STATUS,
                                 CompanyEntry.COLUMN_DATE_INFO};
-        final Cursor cursor = database.query(CompanyEntry.TABLE_NAME,
+        Cursor cursor = database.query(CompanyEntry.TABLE_NAME,
                                         projection,
                                         null,
                                         null,
@@ -59,6 +58,7 @@ public class CallLogsActivity extends AppCompatActivity {
         lw_call_log.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Cursor cursor = callLogCursorAdapter.getCursor();
                 if (cursor.moveToPosition(position)) {
                     int webpageLinkColumnIndex = cursor.getColumnIndex(CompanyEntry.COLUMN_WEBPAGE_LINK);
                     String webpageLink = cursor.getString(webpageLinkColumnIndex);
