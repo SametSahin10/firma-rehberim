@@ -8,6 +8,6 @@
     <color name="radio_title_text_color">#FFFFFF</color>
     <color name="incoming_call_log_item_color">#b2d8b2</color>
     <color name="missed_call_log_item_color">#ff6666</color>
-    <color name="outgoing_call_log_item_color">#b2b2ff</color>
+    <color name="outgoing_call_log_item_color">#6666ff</color>
     <color name="unknown_call_log_item_color">#D0CCCC</color>
 </resources>

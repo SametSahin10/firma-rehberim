@@ -38,6 +38,8 @@ public class OverlayService extends Service {
     TextView tv_company_name;
     TextView tv_authoritative_name;
 
+    String companyWebPageLink = null;
+
     @Override
     public IBinder onBind(Intent intent) {
         return null;
@@ -99,9 +101,10 @@ public class OverlayService extends Service {
                     String dateInfo = intent.getExtras().getString("dateInfo");
                     if (showOverlay) {
                         if (root_overlaying_view != null) {
-                            root_overlaying_view.setVisibility(View.VISIBLE);
                             tv_company_name.setText(userName);
                             tv_authoritative_name.setText(authoritativeName);
+                            root_overlaying_view.setVisibility(View.VISIBLE);
+                            companyWebPageLink = userWebpageLink;
                         }
                     }
                     if (newEntryAvailable) {
@@ -173,6 +176,17 @@ public class OverlayService extends Service {
 
         LayoutInflater layoutInflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
         View bottom_overlay_layout = layoutInflater.inflate(R.layout.bottom_overlay_layout, root_overlaying_view, false);
+        bottom_overlay_layout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (companyWebPageLink != null) {
+                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                    Uri webpageUri = Uri.parse("https://firmarehberim.com/" + companyWebPageLink);
+                    intent.setData(webpageUri);
+                    startActivity(intent);
+                }
+            }
+        });
 
         RelativeLayout.LayoutParams relativeLayoutParams = new RelativeLayout.LayoutParams(
                 RelativeLayout.LayoutParams.WRAP_CONTENT,
