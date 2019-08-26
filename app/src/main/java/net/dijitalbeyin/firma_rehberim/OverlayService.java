@@ -12,7 +12,6 @@ import android.graphics.PixelFormat;
 import android.net.Uri;
 import android.os.Build;
 import android.os.IBinder;
-import android.os.SystemClock;
 import android.provider.Settings;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
@@ -26,12 +25,6 @@ import android.widget.TextView;
 
 import net.dijitalbeyin.firma_rehberim.data.CompanyContract.CompanyEntry;
 import net.dijitalbeyin.firma_rehberim.data.CompanyDbHelper;
-
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Locale;
 
 public class OverlayService extends Service {
     RelativeLayout root_overlaying_view;
@@ -102,7 +95,13 @@ public class OverlayService extends Service {
                     if (showOverlay) {
                         if (root_overlaying_view != null) {
                             tv_company_name.setText(userName);
-                            tv_authoritative_name.setText(authoritativeName);
+                            if (authoritativeName != null) {
+                                if (authoritativeName.equals("")) {
+                                    tv_authoritative_name.setText("Yetkili adı bulunamadı");
+                                } else {
+                                    tv_authoritative_name.setText(authoritativeName);
+                                }
+                            }
                             root_overlaying_view.setVisibility(View.VISIBLE);
                             companyWebPageLink = userWebpageLink;
                         }
@@ -176,6 +175,13 @@ public class OverlayService extends Service {
 
         LayoutInflater layoutInflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
         View bottom_overlay_layout = layoutInflater.inflate(R.layout.bottom_overlay_layout, root_overlaying_view, false);
+
+        RelativeLayout.LayoutParams relativeLayoutParams = new RelativeLayout.LayoutParams(
+                RelativeLayout.LayoutParams.WRAP_CONTENT,
+                RelativeLayout.LayoutParams.WRAP_CONTENT
+        );
+        root_overlaying_view.addView(bottom_overlay_layout, relativeLayoutParams);
+
         bottom_overlay_layout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -187,12 +193,6 @@ public class OverlayService extends Service {
                 }
             }
         });
-
-        RelativeLayout.LayoutParams relativeLayoutParams = new RelativeLayout.LayoutParams(
-                RelativeLayout.LayoutParams.WRAP_CONTENT,
-                RelativeLayout.LayoutParams.WRAP_CONTENT
-        );
-        root_overlaying_view.addView(bottom_overlay_layout, relativeLayoutParams);
 
 //        LinearLayout linearLayout = root_overlaying_view.findViewById(R.id.linear_layout);
         //TODO: Set OnClickListener for linear layout once API gets configured.

@@ -59,19 +59,19 @@ public class CallLogCursorAdapter extends CursorAdapter {
         switch (callStatusAsInt) {
             case CompanyEntry.CALL_STATUS_INCOMING:
                 callStatus = "Gelen Arama";
-                view.setBackgroundColor(context.getResources().getColor(R.color.incoming_call_log_item_color));
+                tv_call_status.setTextColor(context.getResources().getColor(R.color.incoming_call_log_item_color));
                 break;
             case CompanyEntry.CALL_STATUS_OUTGOING:
                 callStatus = "Giden Arama";
-                view.setBackgroundColor(context.getResources().getColor(R.color.outgoing_call_log_item_color));
+                tv_call_status.setTextColor(context.getResources().getColor(R.color.outgoing_call_log_item_color));
                 break;
             case CompanyEntry.CALL_STATUS_MISSED:
                 callStatus = "Cevapsız Arama";
-                view.setBackgroundColor(context.getResources().getColor(R.color.missed_call_log_item_color));
+                tv_call_status.setTextColor(context.getResources().getColor(R.color.missed_call_log_item_color));
                 break;
             default:
                 callStatus = "Bilinmeyen arama tipi";
-                view.setBackgroundColor(context.getResources().getColor(R.color.unknown_call_log_item_color));
+                tv_call_status.setTextColor(context.getResources().getColor(R.color.unknown_call_log_item_color));
                 break;
         }
 
