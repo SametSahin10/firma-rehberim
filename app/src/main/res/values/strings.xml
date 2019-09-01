@@ -38,4 +38,8 @@
     <string name="gizlilik_s_zle_mesi">Gizlilik Sözleşmesi</string>
     <string name="hakkinda">Hakkinda</string>
     <string name="arama_kayd_bulunamad">Arama kaydı bulunamadı.</string>
+    <string name="parola">Parola</string>
+    <string name="e_posta_veya_telefon_numaras">E-posta veya telefon numarası</string>
+    <string name="g_r_yap">Giriş Yap</string>
+    <string name="firma_rehberim_radyo">Firma\nRehberim\nRadyo</string>
 </resources>
