@@ -4,14 +4,18 @@ public class User {
     private String userWebpageLink;
     private String userName;
     private String userPhotoLink;
+    private boolean isVerified;
+    private int match;
     private String authoritativeWebpageLink;
     private String userId;
     private String authoritativeName;
 
-    public User(String userWebpageLink, String userName, String userPhotoLink, String authoritativeWebpageLink, String userId, String authoritativeName) {
+    public User(String userWebpageLink, String userName, String userPhotoLink, boolean isVerified, int match, String authoritativeWebpageLink, String userId, String authoritativeName) {
         this.userWebpageLink = userWebpageLink;
         this.userName = userName;
         this.userPhotoLink = userPhotoLink;
+        this.isVerified = isVerified;
+        this.match = match;
         this.authoritativeWebpageLink = authoritativeWebpageLink;
         this.userId = userId;
         this.authoritativeName = authoritativeName;
@@ -39,6 +43,22 @@ public class User {
 
     public void setUserPhotoLink(String userPhotoLink) {
         this.userPhotoLink = userPhotoLink;
+    }
+
+    public boolean isVerified() {
+        return isVerified;
+    }
+
+    public void setVerified(boolean verified) {
+        isVerified = verified;
+    }
+
+    public int getMatch() {
+        return match;
+    }
+
+    public void setMatch(int match) {
+        this.match = match;
     }
 
     public String getAuthoritativeWebpageLink() {
