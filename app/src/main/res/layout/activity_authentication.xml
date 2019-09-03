@@ -59,11 +59,11 @@
         android:id="@+id/btn_login"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
+        android:layout_above="@id/tv_continue_without_logging_in"
         android:gravity="center"
         android:layout_marginStart="10dp"
         android:layout_marginEnd="10dp"
-        android:layout_marginBottom="30dp"
+        android:layout_marginBottom="20dp"
         android:padding="10dp"
         android:background="@drawable/authentication_fields_backgorund"
         android:fontFamily="@font/righteous_regular"
@@ -71,4 +71,16 @@
         android:textColor="@color/colorPrimary"
         android:textSize="24sp"
         android:text="@string/g_r_yap"/>
+
+    <TextView
+        android:id="@+id/tv_continue_without_logging_in"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        android:padding="10dp"
+        android:fontFamily="@font/righteous_regular"
+        android:textColor="#FFFFFF"
+        android:textSize="18sp"
+        android:text="@string/giris_yapmadan_devam_et"/>
 </RelativeLayout>
