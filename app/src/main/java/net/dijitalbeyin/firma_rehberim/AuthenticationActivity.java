@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -47,30 +48,9 @@ public class AuthenticationActivity extends AppCompatActivity {
                 }
 
                 if (isEmail(userName)) {
-                    pb_verifying_user.setVisibility(View.VISIBLE);
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            User user = QueryUtils.fetchUserData(REQUEST_URL_EMAIL + userName + "&pass=" + password);
-                            if (user != null) {
-                                if (user.isVerified() && (user.getMatch() == 0)) {
-                                    //Authenticate user.
-                                    Intent intent = new Intent(AuthenticationActivity.this, RadiosActivity.class);
-                                    startActivity(intent);
-                                } else {
-                                    Toast.makeText(getApplicationContext(), "Lütfen doğru parolayı girdiğinizden emin olun", Toast.LENGTH_SHORT).show();
-                                }
-                            } else {
-                                Toast.makeText(getApplicationContext(), "Kullanıcı adı veya parola yanlış. Lütfen tekrar deneyiniz", Toast.LENGTH_SHORT).show();
-                            }
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    pb_verifying_user.setVisibility(View.INVISIBLE);
-                                }
-                            });
-                        }
-                    }).start();
+                    verifyUsingEmail(userName, password);
+                } else {
+                    verifyUsingPhoneNumber(userName, password);
                 }
             }
         });
@@ -85,10 +65,116 @@ public class AuthenticationActivity extends AppCompatActivity {
         });
     }
 
+    private void verifyUsingEmail(final String userName, final String password) {
+        pb_verifying_user.setVisibility(View.VISIBLE);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                User user = QueryUtils.fetchUserData(REQUEST_URL_EMAIL + userName + "&pass=" + password);
+                if (user != null) {
+                    if (user.isVerified() && (user.getMatch() == 0)) {
+                        //Authenticate user.
+                        Intent intent = new Intent(AuthenticationActivity.this, RadiosActivity.class);
+                        startActivity(intent);
+                    } else {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(getApplicationContext(), "Lütfen doğru parolayı girdiğinizden emin olun", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }
+                } else {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(getApplicationContext(), "Kullanıcı adı veya parola yanlış. Lütfen tekrar deneyiniz", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        pb_verifying_user.setVisibility(View.INVISIBLE);
+                    }
+                });
+            }
+        }).start();
+    }
+
+    private void verifyUsingPhoneNumber(final String userName, final String password) {
+        pb_verifying_user.setVisibility(View.VISIBLE);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                //The case where user wanted to use phone number to login.
+                String formattedUserName = formatNumber(userName);
+                User user = QueryUtils.fetchUserData(REQUEST_URL_PHONE_NUMBER + formattedUserName + "&pass=" + password);
+                if (user != null) {
+                    if (user.isVerified() && (user.getMatch() == 0)) {
+                        //Authenticate user.
+                        Intent intent = new Intent(AuthenticationActivity.this, RadiosActivity.class);
+                        startActivity(intent);
+                    } else {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(getApplicationContext(), "Lütfen doğru parolayı girdiğinizden emin olun", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }
+                } else {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(getApplicationContext(), "Kullanıcı adı veya parola yanlış. Lütfen tekrar deneyiniz", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        pb_verifying_user.setVisibility(View.INVISIBLE);
+                    }
+                });
+            }
+        }).start();
+    }
+
     private boolean isEmail(String userName) {
         if (userName.contains("@")) {
             return true;
         }
         return false;
+    }
+
+    private String formatNumber(String number) {
+        number = number.replaceAll("\\s", "");
+        if (!number.startsWith("+90")) {
+            if (number.substring(0, 1).equals("0")) {
+                //First case: 05433723255
+                number = "+9" + number;
+            } else {
+                //Second case: 5433723255
+                number = "+90" + number;
+            }
+        }
+        if (number.length() < 13) {
+            Log.d("TAG", "Length of number is not long enough");
+            return null;
+        }
+        String zero = number.substring(2, 3);
+        String firstPart = "(" + number.substring(3, 6) + ")";
+        String secondPart = number.substring(6, 9);
+        String thirdPart = number.substring(9, 11);
+        String fourthPart = number.substring(11, 13);
+        String formattedNumber = zero
+                                + "+"
+                                + firstPart + "+"
+                                + secondPart + "+"
+                                + thirdPart + "+"
+                                + fourthPart;
+        Log.d("TAG", "Formatted number: " + formattedNumber);
+        return formattedNumber;
     }
 }
