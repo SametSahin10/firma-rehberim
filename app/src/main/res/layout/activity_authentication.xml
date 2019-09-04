@@ -36,7 +36,7 @@
             android:background="@drawable/authentication_fields_backgorund"
             android:fontFamily="@font/righteous_regular"
             android:hint="@string/e_posta_veya_telefon_numaras"
-            android:textColorHint="@color/colorPrimary"
+            android:textColorHint="@color/authentication_fields_hint_text_color"
             android:textColor="@color/colorPrimary"
             android:textSize="20sp" />
 
@@ -50,7 +50,7 @@
             android:background="@drawable/authentication_fields_backgorund"
             android:fontFamily="@font/righteous_regular"
             android:hint="@string/parola"
-            android:textColorHint="@color/colorPrimary"
+            android:textColorHint="@color/authentication_fields_hint_text_color"
             android:textColor="@color/colorPrimary"
             android:textSize="20sp"/>
     </LinearLayout>
@@ -87,10 +87,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:layout_alignParentEnd="true"
+        android:layout_centerHorizontal="true"
         android:padding="10dp"
         android:fontFamily="@font/righteous_regular"
         android:textColor="#FFFFFF"
-        android:textSize="18sp"
+        android:textSize="16sp"
         android:text="@string/giris_yapmadan_devam_et"/>
 </RelativeLayout>

@@ -10,4 +10,5 @@
     <color name="missed_call_log_item_color">#ff6666</color>
     <color name="outgoing_call_log_item_color">#6666ff</color>
     <color name="unknown_call_log_item_color">#D0CCCC</color>
+    <color name="authentication_fields_hint_text_color">#BBF87D2F</color>
 </resources>
