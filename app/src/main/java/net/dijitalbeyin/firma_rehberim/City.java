@@ -4,24 +4,24 @@ public class City {
     private int cityId;
     private String cityName;
 
-    public City(int cityId, String cityName) {
-        this.cityId = cityId;
-        this.cityName = cityName;
+    public City(int i, String str) {
+        this.cityId = i;
+        this.cityName = str;
     }
 
     public int getCityId() {
-        return cityId;
+        return this.cityId;
     }
 
-    public void setCityId(int cityId) {
-        this.cityId = cityId;
+    public void setCityId(int i) {
+        this.cityId = i;
     }
 
     public String getCityName() {
-        return cityName;
+        return this.cityName;
     }
 
-    public void setCityName(String cityName) {
-        this.cityName = cityName;
+    public void setCityName(String str) {
+        this.cityName = str;
     }
 }
