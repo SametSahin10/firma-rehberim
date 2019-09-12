@@ -4,6 +4,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
+import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -20,8 +21,10 @@ import android.support.p003v7.app.AppCompatActivity;
 import android.support.p003v7.widget.Toolbar;
 import android.support.p003v7.widget.helper.ItemTouchHelper.Callback;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -30,9 +33,10 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.PopupWindow;
 import android.widget.SearchView;
-import android.widget.SearchView.OnQueryTextListener;
+import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.TimePicker;
 import android.widget.Toast;
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayer.EventListener;
@@ -72,9 +76,18 @@ import net.dijitalbeyin.firma_rehberim.data.RadioDbHelper;
 import okhttp3.Call.Factory;
 import okhttp3.OkHttpClient;
 
-public class RadiosActivity extends AppCompatActivity implements OnEventFromRadiosFragmentListener, OnEventFromFavRadiosFragment, OnRadioItemClickListener, OnRadioLoadingCompleteListener, OnFavRadioItemClickListener, OnFilterRespectToCityListener, OnFilterRespectToCategoryListener, LoaderCallbacks<List<Object>> {
-    private static final int CATEGORIES_FRAGMENT_ID = 6;
-    private static final int CATEGORY_LOADER_ID = 2;
+public class RadiosActivity extends AppCompatActivity implements RadiosFragment.OnEventFromRadiosFragmentListener,
+                                                                FavouriteRadiosFragment.OnEventFromFavRadiosFragment,
+                                                                RadiosFragment.OnRadioItemClickListener,
+                                                                RadiosFragment.OnRadioLoadingCompleteListener,
+                                                                RadiosFragment.OnRadioLoadingStartListener,
+                                                                FavouriteRadiosFragment.OnFavRadioItemClickListener,
+                                                                CitiesFragment.OnFilterRespectToCityListener,
+                                                                CategoriesFragment.OnFilterRespectToCategoryListener,
+                                                                TimerFragment.OnCountdownFinishedListener,
+                                                                LoaderManager.LoaderCallbacks<List<Object>> {
+    private static final String LOG_TAG = RadiosActivity.class.getSimpleName();
+    private static final String CITIES_REQUEST_URL = "https://firmarehberim.com/sayfalar/radyo/json/iller.php";
     private static final String CATEGORY_REQUEST_URL = "https://firmarehberim.com/sayfalar/radyo/json/kategoriler.php";
     private static final int CITIES_FRAGMENT_ID = 7;
     private static final String CITIES_REQUEST_URL = "https://firmarehberim.com/sayfalar/radyo/json/iller.php";
@@ -94,37 +107,61 @@ public class RadiosActivity extends AppCompatActivity implements OnEventFromRadi
     private static final String RADIO_REQUEST_URL = "https://firmarehberim.com/sayfalar/radyo/json/radyolar_arama.php?q=";
     private static final int STATE_BUFFERING = 10;
     private static final int STATE_IDLE = 12;
-    private static final int STATE_READY = 11;
-    private static final int TV_FRAGMENT_ID = 2;
-    /* access modifiers changed from: private */
-    public int ACTIVE_FRAGMENT_ID;
-    private DefaultBandwidthMeter BANDWIDTH_METER = new DefaultBandwidthMeter();
-    Category allTheCategories;
-    City allTheCities;
+    private static final int NUM_PAGES = 2;
+    private final static int FILTER_TYPE_RADIO = 1;
+    private final static int FILTER_TYPE_CITY = 2;
+    private final static int FILTER_TYPE_CATEGORY = 3;
+
+    private final static int RADIOS_FRAGMENT_ID = 1;
+    private final static int TV_FRAGMENT_ID = 2;
+    private final static int CONTACTS_FRAGMENT_ID = 3;
+    private final static int NEWSPAPER_FRAGMENT_ID = 4;
+    private final static int FAV_RADIOS_FRAGMENT_ID = 5;
+    private final static int CATEGORIES_FRAGMENT_ID = 6;
+    private final static int CITIES_FRAGMENT_ID = 7;
+    private final static int GLOBAL_FRAGMENT_ID = 8;
+    private final static int TIMER_FRAGMENT_ID = 9;
+    private int ACTIVE_FRAGMENT_ID;
+
+    private Toolbar toolbar;
+    private SearchView sw_searchForRadios;
+    private ImageView iv_searchIcon;
+    private EditText et_queryText;
+    private Spinner spinner_cities;
+    private Spinner spinner_categories;
+    private CityAdapter cityAdapter;
+    private CategoryAdapter categoryAdapter;
+    private ViewPager viewPager;
+    private PagerAdapter pagerAdapter;
+    private TabLayout tabLayout;
+    private RadiosFragment radiosFragment;
+    private FavouriteRadiosFragment favouriteRadiosFragment;
+    private TimerFragment timerFragment;
+
+    private Button btn_nav_radios;
+    private Button btn_nav_tv;
+    private Button btn_nav_contacts;
+    private Button btn_nav_newspaper;
+    private Button btn_nav_fav_radios;
     private Button btn_nav_categories;
     private Button btn_nav_cities;
     private Button btn_nav_contacts;
     private Button btn_nav_fav_radios;
     private Button btn_nav_global;
-    private Button btn_nav_newspaper;
-    private Button btn_nav_radios;
-    private Button btn_nav_tv;
-    private CategoryAdapter categoryAdapter;
-    private CityAdapter cityAdapter;
-    private DefaultDataSourceFactory dataSourceFactory;
-    private EditText et_queryText;
-    private EventListener eventListener;
-    /* access modifiers changed from: private */
-    public SimpleExoPlayer exoPlayer;
-    /* access modifiers changed from: private */
-    public FavouriteRadiosFragment favouriteRadiosFragment;
-    /* access modifiers changed from: private */
-    public ImageButton ib_playPauseRadio;
-    private ImageButton ib_player_menu;
-    boolean isFromFavouriteRadiosFragment = false;
-    boolean isRadioLoadingCompleted = false;
+    private ImageButton ib_timer;
+    private ImageButton ib_volume_control;
+    private SeekBar sb_volume_control;
+    private ImageButton ib_playPauseRadio;
+
     private ImageView iv_radioIcon;
-    private ImageView iv_searchIcon;
+    private TextView  tv_radioTitle;
+    private ImageButton ib_share_radio;
+    private ImageButton ib_player_add_to_fav;
+//    private ImageButton ib_player_menu;
+
+    private AudioManager audioManager;
+    private SimpleExoPlayer exoPlayer;
+
     private MediaSource mediaSource;
     private PagerAdapter pagerAdapter;
     PopupWindow popupWindow;
@@ -143,10 +180,11 @@ public class RadiosActivity extends AppCompatActivity implements OnEventFromRadi
     private static class SpinnerLoader extends AsyncTaskLoader<List<Object>> {
         private String requestUrl;
 
-        public SpinnerLoader(@NonNull Context context, String str) {
-            super(context);
-            this.requestUrl = str;
-        }
+    Radio radioCurrentlyPlaying;
+    boolean isFromFavouriteRadiosFragment = false;
+    boolean isRadioLoadingCompleted = false;
+    boolean isAudioStreamMuted = false;
+
 
         public List<Object> loadInBackground() {
             String str = this.requestUrl;
@@ -255,25 +293,30 @@ public class RadiosActivity extends AppCompatActivity implements OnEventFromRadi
                 }
             }
         });
-        this.btn_nav_global = (Button) findViewById(C0662R.C0664id.btn_nav_global);
-        this.btn_nav_global.setOnClickListener(new OnClickListener() {
-            public void onClick(View view) {
-                if (RadiosActivity.this.ACTIVE_FRAGMENT_ID != 8) {
-                    Fragment findFragmentById = RadiosActivity.this.getSupportFragmentManager().findFragmentById(C0662R.C0664id.fragment_container);
-                    FragmentManager supportFragmentManager = RadiosActivity.this.getSupportFragmentManager();
-                    RadiosActivity.this.getSupportActionBar().setTitle((CharSequence) "Ulusal");
-                    RadiosActivity.this.radiosFragment.setFilteringRespectToCityEnabled(false);
-                    RadiosActivity.this.radiosFragment.setFilteringRespectToCategoryEnabled(false);
-                    RadiosActivity.this.radiosFragment.restartLoader();
-                    String str = "TAG";
-                    if (RadiosActivity.this.ACTIVE_FRAGMENT_ID == 1) {
-                        Log.d(str, "Refreshing radios fragment");
-                        supportFragmentManager.beginTransaction().detach(findFragmentById).attach(findFragmentById).commit();
+
+        btn_nav_global = findViewById(R.id.btn_nav_global);
+        btn_nav_global.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (ACTIVE_FRAGMENT_ID != GLOBAL_FRAGMENT_ID) {
+                    Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+                    FragmentManager fragmentManager = getSupportFragmentManager();
+                    getSupportActionBar().setTitle("Ulusal");
+                    radiosFragment.setFilteringRespectToCityEnabled(false);
+                    radiosFragment.setFilteringRespectToCategoryEnabled(false);
+                    radiosFragment.restartLoader();
+                    if (ACTIVE_FRAGMENT_ID == RADIOS_FRAGMENT_ID) {
+                        fragmentManager.beginTransaction()
+                                       .detach(fragment)
+                                       .attach(fragment)
+                                       .commit();
                     } else {
-                        Log.d(str, "Not Refreshing radios fragment");
-                        supportFragmentManager.beginTransaction().replace(C0662R.C0664id.fragment_container, RadiosActivity.this.radiosFragment).commit();
+                        fragmentManager.beginTransaction()
+                                       .replace(R.id.fragment_container, radiosFragment)
+                                       .commit();
                     }
-                    RadiosActivity.this.ACTIVE_FRAGMENT_ID = 8;
+                    ACTIVE_FRAGMENT_ID = GLOBAL_FRAGMENT_ID;
+
                 }
             }
         });
@@ -284,50 +327,185 @@ public class RadiosActivity extends AppCompatActivity implements OnEventFromRadi
                 CC.$default$onLoadingChanged(this, z);
             }
 
-            public /* synthetic */ void onPlaybackParametersChanged(PlaybackParameters playbackParameters) {
-                CC.$default$onPlaybackParametersChanged(this, playbackParameters);
+//        allTheCities = new City(301, getString(R.string.city_spinner_default_value_text));
+//        allTheCategories = new Category(301, getString(R.string.category_spinner_default_value_text));
+
+//        setupSearchView();
+//        sw_searchForRadios.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+//            @Override
+//            public boolean onQueryTextSubmit(String cityToFilter) {
+//                return false;
+//            }
+//
+//            @Override
+//            public boolean onQueryTextChange(String newText) {
+//                Log.d("TAG", "onQueryTextChange: ");
+//                if (isRadioLoadingCompleted) {
+//                    radiosFragment.radioAdapter.getFilter().filter(newText);
+//                }
+//                return false;
+//            }
+//        });
+//        ArrayList<Object> defaultCityList = new ArrayList<>();
+//        defaultCityList.add(allTheCities);
+//        cityAdapter = new CityAdapter(this, R.layout.item_city, defaultCityList);
+//        cityAdapter.setDropDownViewResource(R.layout.item_city);
+//        spinner_cities = findViewById(R.id.spinner_cities);
+//        setupSpinner(spinner_cities, 300, 170);
+//        spinner_cities.setAdapter(cityAdapter);
+//        getSupportLoaderManager().initLoader(CITY_LOADER_ID, null, this).forceLoad();
+//
+//        spinner_cities.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+//            @Override
+//            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+//                if (isRadioLoadingCompleted) {
+//                    radiosFragment.radioAdapter.setFilteringSelection(FILTER_TYPE_CITY);
+//                    City selectedCity = (City) parent.getItemAtPosition(position);
+//                    radiosFragment.radioAdapter.getFilter().filter(selectedCity.getCityName());
+//                }
+//            }
+//
+//            @Override
+//            public void onNothingSelected(AdapterView<?> parent) {
+//
+//            }
+//        });
+//
+//        ArrayList<Object> defaultCategoryList = new ArrayList<>();
+//        defaultCategoryList.add(allTheCategories);
+//        categoryAdapter = new CategoryAdapter(this, R.layout.item_category, defaultCategoryList);
+//        categoryAdapter.setDropDownViewResource(R.layout.item_category);
+////        spinner_categories = findViewById(R.id.spinner_categories);
+////        setupSpinner(spinner_categories, 300, 170);
+//        spinner_categories.setAdapter(categoryAdapter);
+//        getSupportLoaderManager().initLoader(CATEGORY_LOADER_ID, null, this);
+//
+//        spinner_categories.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+//            @Override
+//            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+//                if (isRadioLoadingCompleted) {
+//                    radiosFragment.radioAdapter.setFilteringSelection(FILTER_TYPE_CATEGORY);
+//                    Category selectedCategory = (Category) parent.getItemAtPosition(position);
+//                    radiosFragment.radioAdapter.getFilter().filter(selectedCategory.getCategoryName());
+//                }
+//            }
+//
+//            @Override
+//            public void onNothingSelected(AdapterView<?> parent) {
+//
+//            }
+//        });
+
+        iv_radioIcon = findViewById(R.id.iv_radio_icon);
+        tv_radioTitle = findViewById(R.id.tv_radio_title);
+
+        eventListener = new ExoPlayer.EventListener() {
+            @Override
+            public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
+                switch (playbackState) {
+                    case ExoPlayer.STATE_BUFFERING:
+                        Log.d("TAG", "STATE_BUFFERING");
+                        if (isFromFavouriteRadiosFragment) {
+                            favouriteRadiosFragment.setCurrentRadioStatus(STATE_BUFFERING, radioCurrentlyPlaying);
+                        } else {
+                            radiosFragment.setCurrentRadioStatus(STATE_BUFFERING, radioCurrentlyPlaying);
+                        }
+                        break;
+                    case ExoPlayer.STATE_READY:
+                        if (isFromFavouriteRadiosFragment) {
+                            favouriteRadiosFragment.setCurrentRadioStatus(STATE_READY, radioCurrentlyPlaying);
+                        } else {
+                            radiosFragment.setCurrentRadioStatus(STATE_READY, radioCurrentlyPlaying);
+                        }
+                        if (isPlaying()) {
+                            ib_playPauseRadio.setImageDrawable(getResources().getDrawable(R.drawable.ic_pause_radio));
+                        }
+                        sb_volume_control.setMax(audioManager.getStreamMaxVolume(exoPlayer.getAudioStreamType()));
+                        sb_volume_control.setProgress(audioManager.getStreamVolume(exoPlayer.getAudioStreamType()));
+                        Log.d("TAG", "STATE_READY");
+                        break;
+                    case ExoPlayer.STATE_IDLE:
+                        Log.d("TAG", "STATE_IDLE");
+                        exoPlayer.release();
+                        if (isFromFavouriteRadiosFragment) {
+                            favouriteRadiosFragment.setCurrentRadioStatus(STATE_IDLE, radioCurrentlyPlaying);
+                        } else {
+                            radiosFragment.setCurrentRadioStatus(STATE_IDLE, radioCurrentlyPlaying);
+                        }
+                        break;
+                    case ExoPlayer.STATE_ENDED:
+                        Log.d("TAG", "STATE_ENDED");
+                        break;
+                }
             }
 
             public /* synthetic */ void onPositionDiscontinuity(int i) {
                 CC.$default$onPositionDiscontinuity(this, i);
             }
 
-            public /* synthetic */ void onRepeatModeChanged(int i) {
-                CC.$default$onRepeatModeChanged(this, i);
+        timerFragment = new TimerFragment();
+        ib_timer = findViewById(R.id.ib_timer);
+        ib_timer.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (ACTIVE_FRAGMENT_ID != TIMER_FRAGMENT_ID) {
+                    FragmentManager fragmentManager = getSupportFragmentManager();
+                    FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+                    fragmentTransaction.replace(R.id.fragment_container, timerFragment).commit();
+                    getSupportActionBar().setTitle("Zamanlayıcı");
+                    ACTIVE_FRAGMENT_ID = TIMER_FRAGMENT_ID;
+                }
+            }
+        });
+
+        ib_volume_control = findViewById(R.id.ib_volume_control);
+        ib_volume_control.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (isAudioStreamMuted) {
+                    audioManager.setStreamMute(AudioManager.STREAM_MUSIC, false);
+                    ib_volume_control.setImageDrawable(getDrawable(R.drawable.ic_volume_control));
+                    isAudioStreamMuted = false;
+                } else {
+                    audioManager.setStreamMute(AudioManager.STREAM_MUSIC, true);
+                    ib_volume_control.setImageDrawable(getDrawable(R.drawable.ic_volume_control_muted));
+                    isAudioStreamMuted = true;
+                }
+            }
+        });
+
+        audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        sb_volume_control = findViewById(R.id.sb_volume_control_bar);
+        sb_volume_control.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (exoPlayer != null) {
+                    audioManager.setStreamVolume(exoPlayer.getAudioStreamType(), progress, 0);
+                }
             }
 
-            public /* synthetic */ void onSeekProcessed() {
-                CC.$default$onSeekProcessed(this);
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
             }
 
-            public /* synthetic */ void onShuffleModeEnabledChanged(boolean z) {
-                CC.$default$onShuffleModeEnabledChanged(this, z);
-            }
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
 
-            public /* synthetic */ void onTimelineChanged(Timeline timeline, @Nullable Object obj, int i) {
-                CC.$default$onTimelineChanged(this, timeline, obj, i);
             }
+        });
 
-            public /* synthetic */ void onTracksChanged(TrackGroupArray trackGroupArray, TrackSelectionArray trackSelectionArray) {
-                CC.$default$onTracksChanged(this, trackGroupArray, trackSelectionArray);
-            }
-
-            public void onPlayerStateChanged(boolean z, int i) {
-                String str = "TAG";
-                if (i == 1) {
-                    Log.d(str, "STATE_IDLE");
-                    RadiosActivity.this.exoPlayer.release();
-                    if (RadiosActivity.this.isFromFavouriteRadiosFragment) {
-                        RadiosActivity.this.favouriteRadiosFragment.setCurrentRadioStatus(12, RadiosActivity.this.radioCurrentlyPlaying);
-                    } else {
-                        RadiosActivity.this.radiosFragment.setCurrentRadioStatus(12, RadiosActivity.this.radioCurrentlyPlaying);
-                    }
-                } else if (i == 2) {
-                    Log.d(str, "STATE_BUFFERING");
-                    if (RadiosActivity.this.isFromFavouriteRadiosFragment) {
-                        RadiosActivity.this.favouriteRadiosFragment.setCurrentRadioStatus(10, RadiosActivity.this.radioCurrentlyPlaying);
-                    } else {
-                        RadiosActivity.this.radiosFragment.setCurrentRadioStatus(10, RadiosActivity.this.radioCurrentlyPlaying);
+        ib_playPauseRadio = findViewById(R.id.ib_play_radio);
+        ib_playPauseRadio.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (isPlaying()) {
+                    exoPlayer.setPlayWhenReady(false);
+                    ib_playPauseRadio.setImageDrawable(getResources().getDrawable(R.drawable.ic_play_radio));
+                } else {
+                    if (exoPlayer != null) {
+                        exoPlayer.setPlayWhenReady(true);
+                        ib_playPauseRadio.setImageDrawable(getResources().getDrawable(R.drawable.ic_pause_radio));
                     }
                 } else if (i == 3) {
                     if (RadiosActivity.this.isFromFavouriteRadiosFragment) {
@@ -344,45 +522,117 @@ public class RadiosActivity extends AppCompatActivity implements OnEventFromRadi
                 }
             }
 
-            public void onPlayerError(ExoPlaybackException exoPlaybackException) {
-                Toast.makeText(RadiosActivity.this.getApplicationContext(), C0662R.string.cannot_stream_radio_text, 0).show();
-                Log.e(RadiosActivity.LOG_TAG, "onPlayerError: ", exoPlaybackException);
-            }
-        };
-        this.ib_playPauseRadio = (ImageButton) findViewById(C0662R.C0664id.ib_play_radio);
-        this.ib_playPauseRadio.setOnClickListener(new OnClickListener() {
-            public void onClick(View view) {
-                if (RadiosActivity.this.isPlaying()) {
-                    RadiosActivity.this.exoPlayer.setPlayWhenReady(false);
-                    RadiosActivity.this.ib_playPauseRadio.setImageDrawable(RadiosActivity.this.getResources().getDrawable(C0662R.C0663drawable.ic_play_radio));
-                } else if (RadiosActivity.this.exoPlayer != null) {
-                    RadiosActivity.this.exoPlayer.setPlayWhenReady(true);
-                    RadiosActivity.this.ib_playPauseRadio.setImageDrawable(RadiosActivity.this.getResources().getDrawable(C0662R.C0663drawable.ic_pause_radio));
-                }
-            }
-        });
-        setupPopupWindow();
-        this.ib_player_menu = (ImageButton) findViewById(C0662R.C0664id.ib_player_menu);
-        this.ib_player_menu.setOnClickListener(new OnClickListener() {
-            public void onClick(View view) {
-                RadiosActivity.this.popupWindow.showAsDropDown(view, 0, -500);
-            }
-        });
+//        setupPopupWindow();
+
+//        ib_player_menu = findViewById(R.id.ib_player_menu);
+//        ib_player_menu.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                popupWindow.showAsDropDown(view, 0, -500);
+//            }
+//        });
     }
 
-    /* access modifiers changed from: protected */
-    public void onPause() {
-        SimpleExoPlayer simpleExoPlayer = this.exoPlayer;
-        if (simpleExoPlayer != null) {
-            simpleExoPlayer.setPlayWhenReady(false);
-            this.exoPlayer.release();
+    @Override
+    protected void onPause() {
+        if (exoPlayer != null) {
+            exoPlayer.setPlayWhenReady(false);
+            exoPlayer.release();
         }
         super.onPause();
     }
 
-    /* access modifiers changed from: protected */
-    public void onStop() {
-        super.onStop();
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        super.onCreateOptionsMenu(menu);
+        getMenuInflater().inflate(R.menu.appbar_menu, menu);
+        SearchView searchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                if (ACTIVE_FRAGMENT_ID == 1 || ACTIVE_FRAGMENT_ID == 8) {
+                    radiosFragment.lw_radios.setVisibility(View.INVISIBLE);
+                    radiosFragment.pb_loadingRadios.setVisibility(View.VISIBLE);
+                    radiosFragment.setQueryFromSearchView(newText);
+                    radiosFragment.setFilteringThroughSearchViewEnabled(true);
+                    radiosFragment.restartLoader();
+                } else {
+                    Toast.makeText(RadiosActivity.this.getApplicationContext(), "Arama yapmak için Radyolar sekmesine geçiniz.", Toast.LENGTH_SHORT).show();
+                }
+                return false;
+            }
+        });
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.item_notifications:
+                return true;
+            case R.id.item_timer:
+                return true;
+            case R.id.item_add_your_company:
+                return true;
+            case R.id.item_go_to_website:
+                return true;
+            case R.id.item_radios:
+                return true;
+            case R.id.item_add_your_radio:
+                return true;
+            case R.id.item_contact:
+                return true;
+            case R.id.item_about:
+                Intent privacyPolicyIntent = new Intent(this, AboutActivity.class);
+                startActivity(privacyPolicyIntent);
+                return true;
+            case R.id.item_caller_detection:
+                Intent intent = new Intent(this, OverlayActivity.class);
+                startActivity(intent);
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (event.getKeyCode() == KeyEvent.KEYCODE_VOLUME_DOWN) {
+            if (exoPlayer != null) {
+                sb_volume_control.setProgress(audioManager.getStreamVolume(exoPlayer.getAudioStreamType()));
+            }
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
+    @Override
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
+        if (event.getKeyCode() == KeyEvent.KEYCODE_VOLUME_UP) {
+            if (exoPlayer != null) {
+                sb_volume_control.setProgress(audioManager.getStreamVolume(exoPlayer.getAudioStreamType()));
+            }
+        }
+        return super.onKeyUp(keyCode, event);
+    }
+
+    @NonNull
+    @Override
+    public Loader<List<Object>> onCreateLoader(int loaderId, @Nullable Bundle bundle) {
+        SpinnerLoader spinnerLoader = null;
+        switch (loaderId) {
+            case 1:
+                spinnerLoader = new SpinnerLoader(this, CITIES_REQUEST_URL);
+                break;
+            case 2:
+                spinnerLoader = new SpinnerLoader(this, CATEGORY_REQUEST_URL);
+                break;
+        }
+        return spinnerLoader;
     }
 
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -462,34 +712,138 @@ public class RadiosActivity extends AppCompatActivity implements OnEventFromRadi
         if (fragment instanceof CategoriesFragment) {
             ((CategoriesFragment) fragment).setOnFilterRespectToCategoryListener(this);
         }
+        if (fragment instanceof TimerFragment) {
+            TimerFragment timerFragment = (TimerFragment) fragment;
+            timerFragment.setOnCountdownFinishedListener(this);
+        }
     }
 
-    private void setupPopupWindow() {
-        View inflate = ((LayoutInflater) getApplicationContext().getSystemService("layout_inflater")).inflate(C0662R.layout.list_popup_window, null);
-        ((ImageButton) inflate.findViewById(C0662R.C0664id.ib_popup_window_share)).setOnClickListener(new OnClickListener() {
-            public void onClick(View view) {
-                if (RadiosActivity.this.radioCurrentlyPlaying != null) {
-                    RadiosActivity radiosActivity = RadiosActivity.this;
-                    radiosActivity.shareRadio(radiosActivity.radioCurrentlyPlaying);
-                }
-            }
-        });
-        ((ImageButton) inflate.findViewById(C0662R.C0664id.ib_popup_window_fav)).setOnClickListener(new OnClickListener() {
-            public void onClick(View view) {
-                if (RadiosActivity.this.radioCurrentlyPlaying != null) {
-                    Log.d(RadiosActivity.LOG_TAG, "radio currently playing is not null");
-                    RadiosActivity.this.radioCurrentlyPlaying.setLiked(true);
-                    RadiosActivity radiosActivity = RadiosActivity.this;
-                    radiosActivity.addToFavourites(radiosActivity.radioCurrentlyPlaying);
-                    return;
-                }
-                Log.d(RadiosActivity.LOG_TAG, "radio currently playing is null");
-            }
-        });
-        float f = getApplicationContext().getResources().getDisplayMetrics().density;
-        this.popupWindow = new PopupWindow(inflate, (int) ((60.0f * f) + 0.5f), (int) ((f * 120.0f) + 0.5f), true);
-        updatePopupWindow();
-    }
+//    private class ScreenSlidePagerAdapter extends FragmentStatePagerAdapter {
+//        public ScreenSlidePagerAdapter(FragmentManager fm) {
+//            super(fm);
+//        }
+//
+//        @Override
+//        public Fragment getItem(int position) {
+//            switch (position) {
+//                case 0:
+//                    return new RadiosFragment();
+//                case 1:
+//                    return new FavouriteRadiosFragment();
+//                default:
+//                    return null;
+//            }
+//        }
+//
+//        @NonNull
+//        @Override
+//        public Object instantiateItem(@NonNull ViewGroup container, int position) {
+//            Fragment createdFragment = (Fragment) super.instantiateItem(container, position);
+//            switch (position) {
+//                case 0:
+//                    radiosFragment = (RadiosFragment) createdFragment;
+//                    break;
+//                case 1:
+//                    favouriteRadiosFragment = (FavouriteRadiosFragment) createdFragment;
+//                    break;
+//            }
+//            return createdFragment;
+//        }
+//
+//        @Override
+//        public int getCount() {
+//            return NUM_PAGES;
+//        }
+//
+//        @Nullable
+//        @Override
+//        public CharSequence getPageTitle(int position) {
+//            switch (position) {
+//                case 0:
+//                    return getString(R.string.all_the_radios_tab_title);
+//                case 1:
+//                    return getString(R.string.favourite_radios_tab_title);
+//                default:
+//                    return "Unknown tab title";
+//            }
+//        }
+//    }
+
+//    private void setupSearchView() {
+//        sw_searchForRadios = findViewById(R.id.sw_searchForRadios);
+//        int searchIconId = sw_searchForRadios
+//                .getContext()
+//                .getResources()
+//                .getIdentifier("android:id/search_mag_icon", null, null);
+//        iv_searchIcon = sw_searchForRadios.findViewById(searchIconId);
+//        iv_searchIcon.setImageResource(R.drawable.ic_search);
+//
+//        int queryTextId = sw_searchForRadios
+//                .getContext()
+//                .getResources()
+//                .getIdentifier("android:id/search_src_text", null, null);
+//        et_queryText = sw_searchForRadios.findViewById(queryTextId);
+//        et_queryText.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+//
+//        Typeface righteous_regular = ResourcesCompat.getFont(this, R.font.righteous_regular_res);
+//        et_queryText.setTypeface(righteous_regular);
+//        et_queryText.setTextColor(getResources().getColor(R.color.radio_item_background_color));
+//        et_queryText.setHintTextColor(getResources().getColor(R.color.radio_item_background_color));
+//    }
+
+//    private void setupSpinner(Spinner spinner, int height, int width) {
+//        final float scale = getApplicationContext().getResources().getDisplayMetrics().density;
+//        try {
+//            Field popup = Spinner.class.getDeclaredField("mPopup");
+//            popup.setAccessible(true);
+//            android.widget.ListPopupWindow popupWindow = (android.widget.ListPopupWindow) popup.get(spinner);
+//            int heightAsDp = (int) (scale * height + 0.5f);
+//            int widthAsDp = (int) (scale * width + 0.5f);
+//            popupWindow.setHeight(heightAsDp);
+//            popupWindow.setWidth(widthAsDp);
+//        } catch (NoClassDefFoundError | ClassCastException | NoSuchFieldException | IllegalAccessException e) {
+//
+//        }
+//    }
+
+//    private void setupPopupWindow() {
+//        LayoutInflater layoutInflater = (LayoutInflater) getApplicationContext().getSystemService(LAYOUT_INFLATER_SERVICE);
+//        View view = layoutInflater.inflate(R.layout.list_popup_window, null);
+//        ImageButton ib_popup_window_share = view.findViewById(R.id.ib_popup_window_share);
+//        ib_popup_window_share.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                //share currently playing radio
+//                if (radioCurrentlyPlaying != null) {
+//                    shareRadio(radioCurrentlyPlaying);
+//                }
+//            }
+//        });
+//        ImageButton ib_popup_window_fav = view.findViewById(R.id.ib_popup_window_fav);
+//        ib_popup_window_fav.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                //Add currently playing radio to favourites.
+//                if (radioCurrentlyPlaying != null) {
+//                    Log.d(LOG_TAG, "radio currently playing is not null");
+//                    radioCurrentlyPlaying.setLiked(true);
+//                    addToFavourites(radioCurrentlyPlaying);
+////                    favouriteRadiosFragment.updateFavouriteRadiosList();
+//                } else {
+//                    Log.d(LOG_TAG, "radio currently playing is null");
+//                }
+//            }
+//        });
+//        final float scale = getApplicationContext().getResources().getDisplayMetrics().density;
+//        int width = (int) (60 * scale + 0.5f);
+//        int height = (int) (120 * scale + 0.5f);
+//        popupWindow = new PopupWindow(view,
+//                width,
+//                height,
+//                true);
+//        updatePopupWindow();
+//    }
+
 
     private void prepareExoPlayer(Uri uri) {
         String str = "exoPlayerSimple";
@@ -513,16 +867,12 @@ public class RadiosActivity extends AppCompatActivity implements OnEventFromRadi
         return true;
     }
 
-    private void playRadio(Radio radio) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Radio stream link: ");
-        sb.append(radio.getStreamLink());
-        Log.d("TAG", sb.toString());
-        this.radioCurrentlyPlaying = radio;
-        updatePopupWindow();
-        SimpleExoPlayer simpleExoPlayer = this.exoPlayer;
-        if (simpleExoPlayer != null) {
-            simpleExoPlayer.release();
+    private void playRadio(Radio radioClicked) {
+        Log.d("TAG", "Radio stream link: " + radioClicked.getStreamLink());
+        radioCurrentlyPlaying = radioClicked;
+//        updatePopupWindow();
+        if (exoPlayer != null) {
+            exoPlayer.release();
             if (isPlaying()) {
                 this.exoPlayer.setPlayWhenReady(false);
                 this.exoPlayer.stop(true);
@@ -585,25 +935,29 @@ public class RadiosActivity extends AppCompatActivity implements OnEventFromRadi
         FavouriteRadiosFragment favouriteRadiosFragment2 = this.favouriteRadiosFragment;
     }
 
-    public void onEventFromRadiosFragment(int i, boolean z) {
-        Radio radio = this.radioCurrentlyPlaying;
-        if (radio != null && i == radio.getRadioId()) {
-            if (z) {
-                this.radioCurrentlyPlaying.setLiked(true);
-                updatePopupWindow();
-            } else {
-                this.radioCurrentlyPlaying.setLiked(false);
-                updatePopupWindow();
+    @Override
+    public void onEventFromRadiosFragment(int radioId, boolean isLiked) {
+        if (radioCurrentlyPlaying != null) {
+            if (radioId == radioCurrentlyPlaying.getRadioId()) {
+                if (isLiked) {
+                    radioCurrentlyPlaying.setLiked(true);
+//                    updatePopupWindow();
+                } else {
+                    radioCurrentlyPlaying.setLiked(false);
+//                    updatePopupWindow();
+                }
             }
         }
         notifyFavouriteRadiosFragment();
     }
 
-    public void onEventFromFavRadiosFragment(int i) {
-        Radio radio = this.radioCurrentlyPlaying;
-        if (radio != null && i == radio.getRadioId()) {
-            this.radioCurrentlyPlaying.setLiked(false);
-            updatePopupWindow();
+    @Override
+    public void onEventFromFavRadiosFragment(int radioId) {
+        if (radioCurrentlyPlaying != null) {
+            if (radioId == radioCurrentlyPlaying.getRadioId()) {
+                radioCurrentlyPlaying.setLiked(false);
+//                updatePopupWindow();
+            }
         }
         this.radiosFragment.refreshRadiosList(i);
     }
@@ -638,5 +992,21 @@ public class RadiosActivity extends AppCompatActivity implements OnEventFromRadi
         this.radiosFragment.setFilteringRespectToCityEnabled(false);
         this.radiosFragment.setFilteringRespectToCategoryEnabled(true);
         this.radiosFragment.setCategoryToFilter(i);
+    }
+
+    @Override
+    public void onRadioLoadingStart() {
+        radiosFragment.pb_loadingRadios.setVisibility(View.VISIBLE);
+    }
+
+    @Override
+    public void onCountDownFinished() {
+        if (isPlaying()) {
+            if (exoPlayer != null) {
+                exoPlayer.setPlayWhenReady(false);
+                ib_playPauseRadio.setImageDrawable(getResources().getDrawable(R.drawable.ic_play_radio));
+                Toast.makeText(this, "Radyo durduruldu", Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 }

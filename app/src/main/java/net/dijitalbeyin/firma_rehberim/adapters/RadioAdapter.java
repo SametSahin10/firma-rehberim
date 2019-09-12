@@ -162,9 +162,9 @@ public class RadioAdapter extends ArrayAdapter<Radio> {
                         }
                     }
                 }
-                filterResults.count = arrayList.size();
-                filterResults.values = arrayList;
-                return filterResults;
+                results.count = filteredRadios.size();
+                results.values = filteredRadios;
+                return results;
             }
 
             /* access modifiers changed from: protected */

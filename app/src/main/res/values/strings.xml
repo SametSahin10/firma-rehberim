@@ -28,4 +28,19 @@
     <string name="t_r" translatable="false">Tür</string>
     <string name="yerel" translatable="false">Yerel</string>
     <string name="ulusal" translatable="false">Ulusal</string>
+    <string name="radyo_ne_zaman_kapans_n">Radyo ne zaman kapansın?</string>
+    <string name="tamam">TAMAM</string>
+    <string name="radyonun_kapanmas_na">Radyonun kapanmasına</string>
+    <string name="ptal_et">İptal et</string>
+    <string name="arayan_firma_numaras_tespitini_aktifle_tir">Arayan firma numarası tespitini aktifleştir</string>
+    <string name="arayan_firma_numaras_tespitini_devre_d_b_rak">Arayan firma numarası tespitini devre dışı bırak</string>
+    <string name="arayan_firma_tespiti">Arayan firma tespiti</string>
+    <string name="gizlilik_s_zle_mesi">Gizlilik Sözleşmesi</string>
+    <string name="hakkinda">Hakkinda</string>
+    <string name="arama_kayd_bulunamad">Arama kaydı bulunamadı.</string>
+    <string name="parola">Parola</string>
+    <string name="e_posta_veya_telefon_numaras">E-posta veya telefon numarası</string>
+    <string name="g_r_yap">Giriş Yap</string>
+    <string name="firma_rehberim_radyo">Firma\nRehberim\nRadyo</string>
+    <string name="giris_yapmadan_devam_et">Giriş yapmadan devam et</string>
 </resources>
