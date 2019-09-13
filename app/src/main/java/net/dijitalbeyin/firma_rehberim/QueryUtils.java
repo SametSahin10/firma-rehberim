@@ -3,11 +3,11 @@ package net.dijitalbeyin.firma_rehberim;
 import android.net.Uri;
 import android.text.TextUtils;
 import android.util.Log;
-import com.google.android.exoplayer2.C0514C;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
@@ -116,7 +116,7 @@ public class QueryUtils {
     private static URL createURL(String stringUrl) {
         URL url = null;
         try {
-            return new URL(str);
+            return new URL(stringUrl);
         } catch (MalformedURLException e) {
             String str2 = LOG_TAG;
             StringBuilder sb = new StringBuilder();
@@ -153,92 +153,43 @@ public class QueryUtils {
     /* JADX WARNING: Removed duplicated region for block: B:35:0x0079  */
     /* JADX WARNING: Unknown variable types count: 7 */
     /* Code decompiled incorrectly, please refer to instructions dump. */
-    private static java.lang.String makeHttpRequest(java.net.URL r7) throws java.io.IOException {
-        /*
-            java.lang.String r0 = ""
-            if (r7 != 0) goto L_0x0005
-            return r0
-        L_0x0005:
-            r1 = 0
-            java.net.URLConnection r7 = r7.openConnection()     // Catch:{ IOException -> 0x005a, all -> 0x0057 }
-            java.net.HttpURLConnection r7 = (java.net.HttpURLConnection) r7     // Catch:{ IOException -> 0x005a, all -> 0x0057 }
-            java.lang.String r2 = "GET"
-            r7.setRequestMethod(r2)     // Catch:{ IOException -> 0x0052, all -> 0x0050 }
-            r2 = 10000(0x2710, float:1.4013E-41)
-            r7.setReadTimeout(r2)     // Catch:{ IOException -> 0x0052, all -> 0x0050 }
-            r2 = 15000(0x3a98, float:2.102E-41)
-            r7.setConnectTimeout(r2)     // Catch:{ IOException -> 0x0052, all -> 0x0050 }
-            r7.connect()     // Catch:{ IOException -> 0x0052, all -> 0x0050 }
-            int r2 = r7.getResponseCode()     // Catch:{ IOException -> 0x0052, all -> 0x0050 }
-            r3 = 200(0xc8, float:2.8E-43)
-            if (r2 != r3) goto L_0x002f
-            java.io.InputStream r1 = r7.getInputStream()     // Catch:{ IOException -> 0x0052, all -> 0x0050 }
-            java.lang.String r0 = readFromStream(r1)     // Catch:{ IOException -> 0x0052, all -> 0x0050 }
-            goto L_0x0045
-        L_0x002f:
-            java.lang.String r3 = LOG_TAG     // Catch:{ IOException -> 0x0052, all -> 0x0050 }
-            java.lang.StringBuilder r4 = new java.lang.StringBuilder     // Catch:{ IOException -> 0x0052, all -> 0x0050 }
-            r4.<init>()     // Catch:{ IOException -> 0x0052, all -> 0x0050 }
-            java.lang.String r5 = "Http response code "
-            r4.append(r5)     // Catch:{ IOException -> 0x0052, all -> 0x0050 }
-            r4.append(r2)     // Catch:{ IOException -> 0x0052, all -> 0x0050 }
-            java.lang.String r2 = r4.toString()     // Catch:{ IOException -> 0x0052, all -> 0x0050 }
-            android.util.Log.e(r3, r2)     // Catch:{ IOException -> 0x0052, all -> 0x0050 }
-        L_0x0045:
-            if (r7 == 0) goto L_0x004a
-            r7.disconnect()
-        L_0x004a:
-            if (r1 == 0) goto L_0x006d
-            r1.close()
-            goto L_0x006d
-        L_0x0050:
-            r0 = move-exception
-            goto L_0x0072
-        L_0x0052:
-            r2 = move-exception
-            r6 = r1
-            r1 = r7
-            r7 = r6
-            goto L_0x005c
-        L_0x0057:
-            r0 = move-exception
-            r7 = r1
-            goto L_0x0072
-        L_0x005a:
-            r2 = move-exception
-            r7 = r1
-        L_0x005c:
-            java.lang.String r3 = LOG_TAG     // Catch:{ all -> 0x006e }
-            java.lang.String r4 = "Problem retrieving the JSON results"
-            android.util.Log.e(r3, r4, r2)     // Catch:{ all -> 0x006e }
-            if (r1 == 0) goto L_0x0068
-            r1.disconnect()
-        L_0x0068:
-            if (r7 == 0) goto L_0x006d
-            r7.close()
-        L_0x006d:
-            return r0
-        L_0x006e:
-            r0 = move-exception
-            r6 = r1
-            r1 = r7
-            r7 = r6
-        L_0x0072:
-            if (r7 == 0) goto L_0x0077
-            r7.disconnect()
-        L_0x0077:
-            if (r1 == 0) goto L_0x007c
-            r1.close()
-        L_0x007c:
-            throw r0
-        */
-        throw new UnsupportedOperationException("Method not decompiled: net.dijitalbeyin.firma_rehberim.QueryUtils.makeHttpRequest(java.net.URL):java.lang.String");
+    private static String makeHttpRequest(URL url) throws IOException {
+        String jsonResponse = "";
+        if (url == null) {
+            return jsonResponse;
+        }
+        HttpURLConnection urlConnection = null;
+        InputStream inputStream = null;
+        try {
+            urlConnection = (HttpURLConnection) url.openConnection();
+            urlConnection.setRequestMethod("GET");
+            urlConnection.setReadTimeout(10000);
+            urlConnection.setConnectTimeout(15000);
+            urlConnection.connect();
+            int httpResponseCode = urlConnection.getResponseCode();
+            if (httpResponseCode == 200) {
+                inputStream = urlConnection.getInputStream();
+                jsonResponse = readFromStream(inputStream);
+            } else {
+                Log.e(LOG_TAG, "Http response code " + httpResponseCode);
+            }
+        } catch (IOException e) {
+            Log.e(LOG_TAG, "Problem retrieving the JSON results", e);
+        } finally {
+            if (urlConnection != null) {
+                urlConnection.disconnect();
+            }
+            if (inputStream != null) {
+                inputStream.close();
+            }
+        }
+        return jsonResponse;
     }
 
     private static String readFromStream(InputStream inputStream) throws IOException {
         StringBuilder sb = new StringBuilder();
         if (inputStream != null) {
-            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream, Charset.forName(C0514C.UTF8_NAME)));
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream, Charset.forName("UTF-8")));
             for (String readLine = bufferedReader.readLine(); readLine != null; readLine = bufferedReader.readLine()) {
                 sb.append(readLine);
             }
@@ -284,11 +235,11 @@ public class QueryUtils {
         return arrayList;
     }
 
-    private static ArrayList<Radio> extractRadiosFromJson(String str) {
-        if (TextUtils.isEmpty(str)) {
+    private static ArrayList<Radio> extractRadiosFromJson(String radiosJSONResponse) {
+        if (TextUtils.isEmpty(radiosJSONResponse)) {
             return null;
         }
-        ArrayList<Radio> arrayList = new ArrayList<>();
+        ArrayList<Radio> radios = new ArrayList<>();
         try {
             JSONArray rootJSONArray = new JSONArray(radiosJSONResponse);
             for (int i = 0; i < rootJSONArray.length(); i++) {
@@ -332,7 +283,7 @@ public class QueryUtils {
         } catch (JSONException unused) {
             Log.e(LOG_TAG, "Problem occured while parsing radio JSON response ");
         }
-        return arrayList;
+        return radios;
     }
 
     private static ArrayList<Radio> extractFavouriteRadiosFromJson(String str) {

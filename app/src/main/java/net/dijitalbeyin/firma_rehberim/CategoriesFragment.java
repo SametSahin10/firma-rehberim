@@ -6,10 +6,10 @@ import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.p000v4.app.Fragment;
-import android.support.p000v4.app.LoaderManager.LoaderCallbacks;
-import android.support.p000v4.content.AsyncTaskLoader;
-import android.support.p000v4.content.Loader;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.AsyncTaskLoader;
+import android.support.v4.content.Loader;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import net.dijitalbeyin.firma_rehberim.adapters.CategoryAdapter;
 
-public class CategoriesFragment extends Fragment implements LoaderCallbacks<List<Object>> {
+public class CategoriesFragment extends Fragment implements LoaderManager.LoaderCallbacks<List<Object>> {
     private static final int CATEGORY_LOADER_ID = 1;
     private static final String CATEGORY_REQUEST_URL = "https://firmarehberim.com/sayfalar/radyo/json/kategoriler.php";
     CategoryAdapter categoryAdapter;
