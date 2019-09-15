@@ -4,163 +4,343 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.LoaderManager.LoaderCallbacks;
-import android.support.v4.content.AsyncTaskLoader;
-import android.support.v4.content.Loader;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+
+import androidx.fragment.app.Fragment;
+import androidx.loader.app.LoaderManager;
+import androidx.loader.content.AsyncTaskLoader;
+import androidx.loader.content.Loader;
+
+import net.dijitalbeyin.firma_rehberim.adapters.RadioAdapter;
 import java.util.ArrayList;
 import java.util.List;
-import net.dijitalbeyin.firma_rehberim.adapters.RadioAdapter;
 
-public class FavouriteRadiosFragment extends Fragment implements LoaderCallbacks<List<Radio>> {
-    private static final int FAVOURITE_RADIO_LOADER_ID = 1;
+public class FavouriteRadiosFragment extends Fragment implements LoaderManager.LoaderCallbacks<List<Radio>> {
+    private static final String LOG_TAG = FavouriteRadiosFragment.class.getSimpleName();
     private static final String FAVOURITE_RADIO_REQUEST_URL = "https://firmarehberim.com/sayfalar/radyo/json/radyolar_favori.php";
-    private static final String LOG_TAG = "FavouriteRadiosFragment";
-    private ListView lw_radios;
+    private static final int FAVOURITE_RADIO_LOADER_ID = 1;
+
     OnEventFromFavRadiosFragment onEventFromFavRadiosFragment;
     OnFavRadioItemClickListener onFavRadioItemClickListener;
-    private ProgressBar pb_bufferingRadio;
-    private ProgressBar pb_loadingRadios;
-    RadioAdapter radioAdapter;
-    Radio radioClicked;
-    private TextView tv_emptyView;
 
-    public interface OnEventFromFavRadiosFragment {
-        void onEventFromFavRadiosFragment(int i);
+    public void setOnEventFromFavRadiosFragment(OnEventFromFavRadiosFragment onEventFromFavRadiosFragment) {
+        this.onEventFromFavRadiosFragment = onEventFromFavRadiosFragment;
     }
 
-    public interface OnFavRadioItemClickListener {
-        void onFavRadioItemClick(Radio radio);
+    public void setOnFavRadioItemClickListener(OnFavRadioItemClickListener onFavRadioItemClickListener) {
+        this.onFavRadioItemClickListener = onFavRadioItemClickListener;
+    }
+
+//    RadioDbHelper dbHelper;
+
+    private ListView lw_radios;
+    //    private RadioCursorAdapter radioCursorAdapter;
+    RadioAdapter radioAdapter;
+    private TextView tv_emptyView;
+    private ProgressBar pb_loadingRadios;
+    private ProgressBar pb_bufferingRadio;
+
+    Radio radioClicked;
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        ViewGroup rootView = (ViewGroup) inflater.inflate(
+                R.layout.fragment_favourite_radios, container, false);
+        return rootView;
+    }
+
+    @Override
+    public void onViewCreated(View view, Bundle savedInstanceState) {
+        ConnectivityManager cm = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        boolean isConnected = activeNetwork != null
+                && activeNetwork.isConnectedOrConnecting();
+
+        pb_loadingRadios = view.findViewById(R.id.pb_loadingRadios);
+        pb_bufferingRadio = view.findViewById(R.id.pb_buffering_radio);
+        lw_radios = view.findViewById(R.id.lw_radios);
+        tv_emptyView = view.findViewById(R.id.tv_emptyRadioView);
+        lw_radios.setEmptyView(tv_emptyView);
+        radioAdapter = new RadioAdapter(getContext(),
+                R.layout.item_radio,
+                new ArrayList<Radio>(),
+                null,
+                null);
+        lw_radios.setAdapter(radioAdapter);
+        if (isConnected) {
+            getLoaderManager().initLoader(FAVOURITE_RADIO_LOADER_ID, null, this).forceLoad();
+        } else {
+            Log.d("TAG", "No Network Connection");
+            tv_emptyView.setText(getString(R.string.no_internet_connection_text));
+            pb_loadingRadios.setVisibility(View.GONE);
+        }
+//        final Cursor cursor = queryAllTheRadios(getContext());
+//        radioCursorAdapter = new RadioCursorAdapter(getContext(), cursor, this);
+        lw_radios.setAdapter(radioAdapter);
+        if (isConnected) {
+            getLoaderManager().initLoader(FAVOURITE_RADIO_LOADER_ID, null, this).forceLoad();
+        } else {
+            tv_emptyView.setText(getString(R.string.no_internet_connection_text));
+            pb_loadingRadios.setVisibility(View.GONE);
+        }
+
+        //////////////////////////////////////////////////////////////////////////////
+        lw_radios.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
+                if (radioClicked != null) {
+                    onFavRadioItemClickListener.onFavRadioItemClick(radioClicked);
+                    radioClicked.setBeingBuffered(false);
+//                    radioCursorAdapter.notifyDataSetChanged();
+                    radioAdapter.notifyDataSetChanged();
+                }
+//                Cursor radioCursor = (Cursor) adapterView.getItemAtPosition(position);
+//                Radio radioFromCursor = retireveRadioFromCursor(radioCursor, position);
+//                radioClicked = radioFromCursor;
+                radioClicked = (Radio) adapterView.getItemAtPosition(position);
+                radioClicked.setBeingBuffered(true);
+                radioAdapter.notifyDataSetChanged();
+            }
+        });
+    }
+
+    @Override
+    public Loader<List<Radio>> onCreateLoader(int i, Bundle bundle) {
+        return new RadioLoader(getContext(), FAVOURITE_RADIO_REQUEST_URL);
+    }
+
+    @Override
+    public void onLoadFinished(Loader<List<Radio>> loader, List<Radio> radios) {
+        radioAdapter.setPermanentRadiosList(radios);
+        radioAdapter.clear();
+        if (radios != null) {
+            radioAdapter.addAll(radios);
+        }
+        tv_emptyView.setText(getString(R.string.empty_radios_text));
+        pb_loadingRadios.setVisibility(View.GONE);
+    }
+
+    @Override
+    public void onLoaderReset(Loader<List<Radio>> loader) {
+        radioAdapter.clear();
     }
 
     private static class RadioLoader extends AsyncTaskLoader<List<Radio>> {
         private String requestUrl;
 
-        public RadioLoader(@NonNull Context context, String str) {
+        public RadioLoader(Context context, String requestUrl) {
             super(context);
-            this.requestUrl = str;
+            this.requestUrl = requestUrl;
         }
 
+        @Override
         public List<Radio> loadInBackground() {
-            return QueryUtils.fetchFavouriteRadioData(this.requestUrl);
+            ArrayList<Radio> radios = QueryUtils.fetchFavouriteRadioData(requestUrl);
+            return radios;
         }
 
-        /* access modifiers changed from: protected */
-        public void onStartLoading() {
+        @Override
+        protected void onStartLoading() {
             forceLoad();
         }
     }
 
-    public void setOnEventFromFavRadiosFragment(OnEventFromFavRadiosFragment onEventFromFavRadiosFragment2) {
-        this.onEventFromFavRadiosFragment = onEventFromFavRadiosFragment2;
-    }
+//    public Cursor queryAllTheRadios(Context context) {
+//        dbHelper = new RadioDbHelper(context);
+//        SQLiteDatabase sqLiteDatabase = dbHelper.getReadableDatabase();
+//        String[] projection = {
+//                RadioEntry._ID,
+//                RadioEntry.COLUMN_RADIO_ID,
+//                RadioEntry.COLUMN_RADIO_NAME,
+//                RadioEntry.COLUMN_RADIO_CATEGORY,
+//                RadioEntry.COLUMN_RADIO_ICON_URL,
+//                RadioEntry.COLUMN_RADIO_STREAM_LINK,
+//                RadioEntry.COLUMN_RADIO_SHAREABLE_LINK,
+//                RadioEntry.COLUMN_RADIO_HIT,
+//                RadioEntry.COLUMN_NUM_OF_ONLINE_LISTENERS,
+//                RadioEntry.COLUMN_RADIO_IS_BEING_BUFFERED,
+//                RadioEntry.COLUMN_RADIO_IS_LIKED};
+//        Cursor cursor = sqLiteDatabase.cityToFilter(RadioEntry.TABLE_NAME,
+//                projection,
+//                null,
+//                null,
+//                null,
+//                null,
+//                null);
+//        return cursor;
+//    }
 
-    public void setOnFavRadioItemClickListener(OnFavRadioItemClickListener onFavRadioItemClickListener2) {
-        this.onFavRadioItemClickListener = onFavRadioItemClickListener2;
-    }
+//    private Radio retireveRadioFromCursor(Cursor cursor, int position) {
+//        int idColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_ID);
+//        int cityIdColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_CITY_ID);
+//        int townIdColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_TOWN_ID);
+//        int neighbourhoodIdColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_NEIGHBOURHOOD_ID);
+//        int categoryIdColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_CATEGORY_ID);
+//        int userIdColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_USER_ID);
+//        int nameColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_NAME);
+//        int categoryColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_CATEGORY);
+//        int iconUrlColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_ICON_URL);
+//        int streamLinkColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_STREAM_LINK);
+//        int shareableLinkColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_SHAREABLE_LINK);
+//        int numOfOnlineListenersColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_NUM_OF_ONLINE_LISTENERS);
+//        int hitColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_HIT);
+//        int isBeingBufferedColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_IS_BEING_BUFFERED);
+//        int isLikedColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_IS_LIKED);
+//
+//        cursor.moveToPosition(position);
+//        int radioId = cursor.getInt(idColumnIndex);
+//        int cityId = cursor.getInt(cityIdColumnIndex);
+//        int townId = cursor.getInt(townIdColumnIndex);
+//        int neighbourhoodId = cursor.getInt(neighbourhoodIdColumnIndex);
+//        String categoryId = cursor.getString(categoryIdColumnIndex);
+//        int userId = cursor.getInt(userIdColumnIndex);
+//        String radioName = cursor.getString(nameColumnIndex);
+//        String category = cursor.getString(categoryColumnIndex);
+//        String radioIconUrl = cursor.getString(iconUrlColumnIndex);
+//        String streamLink = cursor.getString(streamLinkColumnIndex);
+//        String shareableLink = cursor.getString(shareableLinkColumnIndex);
+//        int hit = cursor.getInt(hitColumnIndex);
+//        int numOfOnlineListeners = cursor.getInt(numOfOnlineListenersColumnIndex);
+//        boolean isBeingBuffered = false;
+//        if (cursor.getInt(isBeingBufferedColumnIndex) == 1) {
+//            isBeingBuffered = true;
+//        }
+//        boolean isLiked = false;
+//        if (cursor.getInt(isLikedColumnIndex) == 1) {
+//            isLiked = true;
+//        }
+//
+//        Radio radio = new Radio(radioId,
+//                                radioName,
+//                                cityId,
+//                                townId,
+//                                neighbourhoodId,
+//                                categoryId,
+//                                userId,
+//                                category,
+//                                radioIconUrl,
+//                                streamLink,
+//                                shareableLink,
+//                                hit,
+//                                numOfOnlineListeners,
+//                                false,
+//                                false);
+//        return radio;
+//    }
 
-    @Nullable
-    public View onCreateView(@NonNull LayoutInflater layoutInflater, @Nullable ViewGroup viewGroup, @Nullable Bundle bundle) {
-        return (ViewGroup) layoutInflater.inflate(C0662R.layout.fragment_favourite_radios, viewGroup, false);
-    }
+//    protected void updateFavouriteRadiosList() {
+//        Cursor cursor = queryAllTheRadios(getContext());
+//        radioCursorAdapter.swapCursor(cursor);
+//    }
 
-    public void onViewCreated(@NonNull View view, @Nullable Bundle bundle) {
-        NetworkInfo activeNetworkInfo = ((ConnectivityManager) getActivity().getSystemService("connectivity")).getActiveNetworkInfo();
-        boolean z = activeNetworkInfo != null && activeNetworkInfo.isConnectedOrConnecting();
-        this.pb_loadingRadios = (ProgressBar) view.findViewById(C0662R.C0664id.pb_loadingRadios);
-        this.pb_bufferingRadio = (ProgressBar) view.findViewById(C0662R.C0664id.pb_buffering_radio);
-        this.lw_radios = (ListView) view.findViewById(C0662R.C0664id.lw_radios);
-        this.tv_emptyView = (TextView) view.findViewById(C0662R.C0664id.tv_emptyRadioView);
-        this.lw_radios.setEmptyView(this.tv_emptyView);
-        RadioAdapter radioAdapter2 = new RadioAdapter(getContext(), C0662R.layout.item_radio, new ArrayList(), null, null);
-        this.radioAdapter = radioAdapter2;
-        this.lw_radios.setAdapter(this.radioAdapter);
-        if (z) {
-            getLoaderManager().initLoader(1, null, this).forceLoad();
-        } else {
-            Log.d("TAG", "No Network Connection");
-            this.tv_emptyView.setText(getString(C0662R.string.no_internet_connection_text));
-            this.pb_loadingRadios.setVisibility(8);
-        }
-        this.lw_radios.setAdapter(this.radioAdapter);
-        if (z) {
-            getLoaderManager().initLoader(1, null, this).forceLoad();
-        } else {
-            this.tv_emptyView.setText(getString(C0662R.string.no_internet_connection_text));
-            this.pb_loadingRadios.setVisibility(8);
-        }
-        this.lw_radios.setOnItemClickListener(new OnItemClickListener() {
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long j) {
-                if (FavouriteRadiosFragment.this.radioClicked != null) {
-                    FavouriteRadiosFragment.this.onFavRadioItemClickListener.onFavRadioItemClick(FavouriteRadiosFragment.this.radioClicked);
-                    FavouriteRadiosFragment.this.radioClicked.setBeingBuffered(false);
-                    FavouriteRadiosFragment.this.radioAdapter.notifyDataSetChanged();
-                }
-                FavouriteRadiosFragment.this.radioClicked = (Radio) adapterView.getItemAtPosition(i);
-                FavouriteRadiosFragment.this.radioClicked.setBeingBuffered(true);
-                FavouriteRadiosFragment.this.radioAdapter.notifyDataSetChanged();
-            }
-        });
-    }
+    public void setCurrentRadioStatus(int statusCode, Radio radioCurrentlyPlaying) {
+//        Cursor cursor = queryAllTheRadios(getContext());
+//        int idColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_ID);
+//        int cityIdColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_CITY_ID);
+//        int townIdColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_TOWN_ID);
+//        int neighbourhoodIdColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_NEIGHBOURHOOD_ID);
+//        int categoryIdColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_CATEGORY_ID);
+//        int userIdColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_USER_ID);
+//        int nameColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_NAME);
+//        int categoryColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_CATEGORY);
+//        int iconUrlColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_ICON_URL);
+//        int streamLinkColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_STREAM_LINK);
+//        int shareableLinkColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_SHAREABLE_LINK);
+//        int numOfOnlineListenersColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_NUM_OF_ONLINE_LISTENERS);
+//        int hitColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_HIT);
+//        int isBeingBufferedColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_IS_BEING_BUFFERED);
+//        int isLikedColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_IS_LIKED);
 
-    public Loader<List<Radio>> onCreateLoader(int i, @Nullable Bundle bundle) {
-        return new RadioLoader(getContext(), FAVOURITE_RADIO_REQUEST_URL);
-    }
+//        while (cursor.moveToNext()) {
+//            int radioId = cursor.getInt(idColumnIndex);
+//            int cityId = cursor.getInt(cityIdColumnIndex);
+//            int townId = cursor.getInt(townIdColumnIndex);
+//            int neighbourhoodId = cursor.getInt(neighbourhoodIdColumnIndex);
+//            String categoryId = cursor.getString(categoryIdColumnIndex);
+//            int userId = cursor.getInt(userIdColumnIndex);
+//            String radioName = cursor.getString(nameColumnIndex);
+//            String category = cursor.getString(categoryColumnIndex);
+//            String radioIconUrl = cursor.getString(iconUrlColumnIndex);
+//            String streamLink = cursor.getString(streamLinkColumnIndex);
+//            String shareableLink = cursor.getString(shareableLinkColumnIndex);
+//            int hit = cursor.getInt(hitColumnIndex);
+//            int numOfOnlineListeners = cursor.getInt(numOfOnlineListenersColumnIndex);
+//            boolean isBeingBuffered = false;
+//            if (cursor.getInt(isBeingBufferedColumnIndex) == 1) {
+//                isBeingBuffered = true;
+//            }
+//            boolean isLiked = false;
+//
+//            if (cursor.getInt(isLikedColumnIndex) == 1) {
+//                isLiked = true;
+//            }
+//
+//            Radio radio = new Radio(radioId,
+//                    radioName,
+//                    cityId,
+//                    townId,
+//                    neighbourhoodId,
+//                    categoryId,
+//                    userId,
+//                    category,
+//                    radioIconUrl,
+//                    streamLink,
+//                    shareableLink,
+//                    hit,
+//                    numOfOnlineListeners,
+//                    false,
+//                    false);
+//            if (radio.getRadioId() == radioCurrentlyPlaying.getRadioId()) {
+//                radioClicked = radio;
+//            }
+//        }
+//        radioCursorAdapter.notifyDataSetChanged();
 
-    public void onLoadFinished(@NonNull Loader<List<Radio>> loader, List<Radio> list) {
-        this.radioAdapter.setPermanentRadiosList(list);
-        this.radioAdapter.clear();
-        if (list != null) {
-            this.radioAdapter.addAll(list);
-        }
-        this.tv_emptyView.setText(getString(C0662R.string.empty_radios_text));
-        this.pb_loadingRadios.setVisibility(8);
-    }
-
-    public void onLoaderReset(@NonNull Loader<List<Radio>> loader) {
-        this.radioAdapter.clear();
-    }
-
-    public void setCurrentRadioStatus(int i, Radio radio) {
-        for (Radio radio2 : this.radioAdapter.getItems()) {
-            if (radio2.getRadioId() == radio.getRadioId()) {
-                String str = "TAG";
-                switch (i) {
-                    case 10:
-                        radio2.setBeingBuffered(true);
-                        this.radioAdapter.notifyDataSetChanged();
-                        Log.d(str, "STATE_BUFFERING");
+        for (Radio radio: radioAdapter.getItems()) {
+            if (radio.getRadioId() == radioCurrentlyPlaying.getRadioId()) {
+                switch (statusCode) {
+                    case 10: //STATE_BUFFERING
+                        radio.setBeingBuffered(true);
+                        radioAdapter.notifyDataSetChanged();
+                        Log.d("TAG", "STATE_BUFFERING");
                         break;
-                    case 11:
-                        radio2.setBeingBuffered(false);
-                        this.radioAdapter.notifyDataSetChanged();
-                        Log.d(str, "STATE_READY");
+                    case 11: //STATE_READY
+                        radio.setBeingBuffered(false);
+                        radioAdapter.notifyDataSetChanged();
+                        Log.d("TAG", "STATE_READY");
                         break;
-                    case 12:
-                        radio2.setBeingBuffered(false);
-                        this.radioAdapter.notifyDataSetChanged();
-                        Log.d(str, "STATE_IDLE");
+                    case 12: //STATE_IDLE
+                        radio.setBeingBuffered(false);
+                        radioAdapter.notifyDataSetChanged();
+                        Log.d("TAG", "STATE_IDLE");
                         break;
                     default:
-                        String str2 = LOG_TAG;
-                        StringBuilder sb = new StringBuilder();
-                        sb.append("Unknown status code: ");
-                        sb.append(i);
-                        Log.e(str2, sb.toString());
-                        break;
+                        Log.e(LOG_TAG, "Unknown status code: " + statusCode);
                 }
             }
         }
+
+
+    }
+
+//    @Override
+//    public void onRadioDelete(int radioId) {
+//        updateFavouriteRadiosList();
+//        onEventFromFavRadiosFragment.onEventFromFavRadiosFragment(radioId);
+//    }
+
+    public interface OnEventFromFavRadiosFragment {
+        void onEventFromFavRadiosFragment(int radioId);
+    }
+
+    public interface OnFavRadioItemClickListener {
+        void onFavRadioItemClick(Radio currentFavRadio);
     }
 }

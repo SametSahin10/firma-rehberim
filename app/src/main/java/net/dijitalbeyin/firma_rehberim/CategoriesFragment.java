@@ -4,105 +4,123 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.AsyncTaskLoader;
-import android.support.v4.content.Loader;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
 import android.widget.GridView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import java.util.ArrayList;
-import java.util.List;
+
+import androidx.fragment.app.Fragment;
+import androidx.loader.app.LoaderManager;
+import androidx.loader.content.AsyncTaskLoader;
+import androidx.loader.content.Loader;
+
 import net.dijitalbeyin.firma_rehberim.adapters.CategoryAdapter;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class CategoriesFragment extends Fragment implements LoaderManager.LoaderCallbacks<List<Object>> {
-    private static final int CATEGORY_LOADER_ID = 1;
     private static final String CATEGORY_REQUEST_URL = "https://firmarehberim.com/sayfalar/radyo/json/kategoriler.php";
-    CategoryAdapter categoryAdapter;
+    private static final int CATEGORY_LOADER_ID = 1;
+
+    //    ListView lw_categories;
     GridView gv_categories;
-    OnFilterRespectToCategoryListener onFilterRespectToCategoryListener;
-    ProgressBar pb_loadingCategories;
     TextView tv_emptyCatView;
+    CategoryAdapter categoryAdapter;
+    ProgressBar pb_loadingCategories;
+
+    OnFilterRespectToCategoryListener onFilterRespectToCategoryListener;
+
+    public void setOnFilterRespectToCategoryListener(OnFilterRespectToCategoryListener onFilterRespectToCategoryListener) {
+        this.onFilterRespectToCategoryListener = onFilterRespectToCategoryListener;
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        ViewGroup rootView = (ViewGroup) inflater.inflate(
+                R.layout.fragment_categories, container, false);
+        return rootView;
+    }
+
+    @Override
+    public void onViewCreated( View view,  Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        ConnectivityManager cm = (ConnectivityManager) getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        boolean isConnected = activeNetwork != null
+                && activeNetwork.isConnectedOrConnecting();
+
+        pb_loadingCategories = view.findViewById(R.id.pb_loadingCategories);
+//        lw_categories = view.findViewById(R.id.lw_categories);
+        gv_categories = view.findViewById(R.id.gv_categories);
+        tv_emptyCatView = view.findViewById(R.id.tv_emptyCatView);
+        gv_categories.setEmptyView(tv_emptyCatView);
+        if (isConnected) {
+            getLoaderManager().initLoader(CATEGORY_LOADER_ID, null, this).forceLoad();
+        } else {
+            tv_emptyCatView.setText(getString(R.string.no_internet_connection_text));
+            pb_loadingCategories.setVisibility(View.GONE);
+        }
+        categoryAdapter = new CategoryAdapter(getContext(), R.layout.item_category, new ArrayList<>());
+        gv_categories.setAdapter(categoryAdapter);
+
+        gv_categories.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Category currentCategory = (Category) parent.getItemAtPosition(position);
+                onFilterRespectToCategoryListener.OnFilterRespectToCategory(currentCategory.getCategoryId());
+            }
+        });
+    }
+
+    @Override
+    public Loader<List<Object>> onCreateLoader(int i, Bundle bundle) {
+        return new CategoryLoader(getContext(), CATEGORY_REQUEST_URL);
+    }
+
+    @Override
+    public void onLoadFinished(Loader<List<Object>> loader, List<Object> categories) {
+        categoryAdapter.clear();
+        if (categories != null) {
+            categoryAdapter.addAll(categories);
+        }
+        tv_emptyCatView.setText(getString(R.string.empty_categories_text));
+        pb_loadingCategories.setVisibility(View.GONE);
+    }
+
+    @Override
+    public void onLoaderReset(Loader<List<Object>> loader) {
+        categoryAdapter.clear();
+    }
 
     private static class CategoryLoader extends AsyncTaskLoader<List<Object>> {
         private String requestUrl;
 
-        public CategoryLoader(@NonNull Context context, String str) {
+        public CategoryLoader(Context context, String requestUrl) {
             super(context);
-            this.requestUrl = str;
+            this.requestUrl = requestUrl;
         }
 
+        @Override
         public List<Object> loadInBackground() {
-            String str = this.requestUrl;
-            if (str == null) {
+            if (requestUrl == null) {
                 return null;
             }
-            return QueryUtils.fetchCategoryData(str);
+            ArrayList<Object> categories = QueryUtils.fetchCategoryData(requestUrl);
+            return categories;
         }
 
-        /* access modifiers changed from: protected */
-        public void onStartLoading() {
+        @Override
+        protected void onStartLoading() {
             forceLoad();
         }
     }
 
     public interface OnFilterRespectToCategoryListener {
-        void OnFilterRespectToCategory(int i);
-    }
-
-    public void setOnFilterRespectToCategoryListener(OnFilterRespectToCategoryListener onFilterRespectToCategoryListener2) {
-        this.onFilterRespectToCategoryListener = onFilterRespectToCategoryListener2;
-    }
-
-    @Nullable
-    public View onCreateView(@NonNull LayoutInflater layoutInflater, @Nullable ViewGroup viewGroup, @Nullable Bundle bundle) {
-        return (ViewGroup) layoutInflater.inflate(C0662R.layout.fragment_categories, viewGroup, false);
-    }
-
-    public void onViewCreated(@NonNull View view, @Nullable Bundle bundle) {
-        super.onViewCreated(view, bundle);
-        NetworkInfo activeNetworkInfo = ((ConnectivityManager) getContext().getSystemService("connectivity")).getActiveNetworkInfo();
-        boolean z = activeNetworkInfo != null && activeNetworkInfo.isConnectedOrConnecting();
-        this.pb_loadingCategories = (ProgressBar) view.findViewById(C0662R.C0664id.pb_loadingCategories);
-        this.gv_categories = (GridView) view.findViewById(C0662R.C0664id.gv_categories);
-        this.tv_emptyCatView = (TextView) view.findViewById(C0662R.C0664id.tv_emptyCatView);
-        this.gv_categories.setEmptyView(this.tv_emptyCatView);
-        if (z) {
-            getLoaderManager().initLoader(1, null, this).forceLoad();
-        } else {
-            this.tv_emptyCatView.setText(getString(C0662R.string.no_internet_connection_text));
-            this.pb_loadingCategories.setVisibility(8);
-        }
-        this.categoryAdapter = new CategoryAdapter(getContext(), C0662R.layout.item_category, new ArrayList());
-        this.gv_categories.setAdapter(this.categoryAdapter);
-        this.gv_categories.setOnItemClickListener(new OnItemClickListener() {
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long j) {
-                CategoriesFragment.this.onFilterRespectToCategoryListener.OnFilterRespectToCategory(((Category) adapterView.getItemAtPosition(i)).getCategoryId());
-            }
-        });
-    }
-
-    public Loader<List<Object>> onCreateLoader(int i, Bundle bundle) {
-        return new CategoryLoader(getContext(), CATEGORY_REQUEST_URL);
-    }
-
-    public void onLoadFinished(Loader<List<Object>> loader, List<Object> list) {
-        this.categoryAdapter.clear();
-        if (list != null) {
-            this.categoryAdapter.addAll(list);
-        }
-        this.tv_emptyCatView.setText(getString(C0662R.string.empty_categories_text));
-        this.pb_loadingCategories.setVisibility(8);
-    }
-
-    public void onLoaderReset(Loader<List<Object>> loader) {
-        this.categoryAdapter.clear();
+        void OnFilterRespectToCategory(int categoryIdToFilter);
     }
 }
