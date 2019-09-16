@@ -148,6 +148,7 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     private ImageButton ib_player_add_to_fav;
 //    private ImageButton ib_player_menu;
 
+    //Transferred to Service
     private AudioManager audioManager;
     private SimpleExoPlayer exoPlayer;
     private MediaSource mediaSource;
@@ -156,6 +157,7 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     private DefaultBandwidthMeter BANDWIDTH_METER = new DefaultBandwidthMeter();
 
     TrackSelector trackSelector = new DefaultTrackSelector();
+    //Transferred to Service
 
     PopupWindow popupWindow;
 

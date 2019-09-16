@@ -51,6 +51,7 @@
         </receiver>
 
         <service android:name=".OverlayService" />
+        <service android:name=".PlayRadioService"/>
     </application>
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.PROCESS_OUTGOING_CALLS" />
