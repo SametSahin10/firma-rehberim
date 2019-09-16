@@ -1,17 +1,25 @@
 package net.dijitalbeyin.firma_rehberim;
 
+import android.Manifest;
+import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.sqlite.SQLiteDatabase;
 import android.media.AudioManager;
 import android.net.Uri;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.google.android.material.tabs.TabLayout;
+
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
+
+import android.os.Build;
 import android.os.Bundle;
 import androidx.loader.app.LoaderManager;
 import androidx.loader.content.AsyncTaskLoader;
@@ -20,6 +28,8 @@ import androidx.viewpager.widget.PagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+
+import android.provider.Settings;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -64,6 +74,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import okhttp3.OkHttpClient;
+
+import static net.dijitalbeyin.firma_rehberim.OverlayActivity.SERVICE_RUNNING;
+import static net.dijitalbeyin.firma_rehberim.OverlayActivity.SERVICE_STOPPED;
+import static net.dijitalbeyin.firma_rehberim.OverlayActivity.serviceState;
 
 public class RadiosActivity extends AppCompatActivity implements RadiosFragment.OnEventFromRadiosFragmentListener,
         FavouriteRadiosFragment.OnEventFromFavRadiosFragment,
@@ -551,8 +565,7 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
                 startActivity(privacyPolicyIntent);
                 return true;
             case R.id.item_caller_detection:
-                Intent intent = new Intent(this, OverlayActivity.class);
-                startActivity(intent);
+                toggleServiceStatus(item);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -813,6 +826,44 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
 //                true);
 //        updatePopupWindow();
 //    }
+
+    private void toggleServiceStatus(MenuItem menuItem) {
+        ActivityCompat.requestPermissions(RadiosActivity.this, new String[]{Manifest.permission.READ_CALL_LOG}, 0);
+
+        if (Build.BRAND.equalsIgnoreCase("xiaomi")) {
+            Intent autoStartintent = new Intent();
+            autoStartintent.setComponent(new ComponentName("com.miui.securitycenter", "com.miui.permcenter.autostart.AutoStartManagementActivity"));
+            startActivity(autoStartintent);
+        }
+
+        if (Build.VERSION.SDK_INT >= 23) {
+            if (!Settings.canDrawOverlays(this)) {
+                Toast.makeText(this, "Lütfen ayarlardan \"Otomatik başlatma\" seçeneğini etkinleştiriniz.", Toast.LENGTH_LONG).show();
+            }
+        }
+
+        if (serviceState == SERVICE_STOPPED) {
+            Log.d("TAG", "Starting Service");
+            boolean permissionGranted = ContextCompat.checkSelfPermission(
+                    getApplicationContext(),
+                    Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED;
+            if (permissionGranted) {
+                Intent intent = new Intent(getApplicationContext(), OverlayService.class);
+                intent.putExtra("Sender", "Activity Button");
+                startService(intent);
+                serviceState = SERVICE_RUNNING;
+                menuItem.setChecked(true);
+            } else {
+                ActivityCompat.requestPermissions(RadiosActivity.this, new String[]{Manifest.permission.READ_PHONE_STATE}, 0);
+            }
+        } else if (serviceState == SERVICE_RUNNING) {
+            Log.d("TAG", "Stopping Service");
+            Intent intent = new Intent(RadiosActivity.this, OverlayService.class);
+            stopService(intent);
+            serviceState = SERVICE_STOPPED;
+            menuItem.setChecked(false);
+        }
+    }
 
     private void prepareExoPlayer(Uri uri) {
         dataSourceFactory = new DefaultDataSourceFactory(getApplicationContext(), Util.getUserAgent(getApplicationContext(), "exoPlayerSimple"), BANDWIDTH_METER);

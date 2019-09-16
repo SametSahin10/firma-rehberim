@@ -1,12 +1,20 @@
 package net.dijitalbeyin.firma_rehberim;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
+
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
@@ -18,6 +26,10 @@ import net.dijitalbeyin.firma_rehberim.data.CompanyContract.CompanyEntry;
 import net.dijitalbeyin.firma_rehberim.data.CompanyDbHelper;
 
 import java.util.ArrayList;
+
+import static net.dijitalbeyin.firma_rehberim.OverlayActivity.SERVICE_RUNNING;
+import static net.dijitalbeyin.firma_rehberim.OverlayActivity.SERVICE_STOPPED;
+import static net.dijitalbeyin.firma_rehberim.OverlayActivity.serviceState;
 
 public class CallLogsActivity extends AppCompatActivity {
     SwipeRefreshLayout swipeRefreshLayout;
@@ -154,6 +166,52 @@ public class CallLogsActivity extends AppCompatActivity {
 //            Log.d("TAG", "permission not granted");
 //            ActivityCompat.requestPermissions(CallLogsActivity.this, new String[]{Manifest.permission.READ_CALL_LOG}, 0);
 //        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        super.onCreateOptionsMenu(menu);
+        getMenuInflater().inflate(R.menu.call_logs_menu, menu);
+        MenuItem menuItem = menu.findItem(R.id.item_toggle_caller_detection);
+        if (serviceState == SERVICE_STOPPED) {
+            menuItem.setChecked(false);
+        } else if (serviceState == SERVICE_RUNNING) {
+            menuItem.setChecked(true);
+        } else {
+            Log.d("TAG", "Cannot determine service status");
+        }
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.item_toggle_caller_detection:
+                if (serviceState == SERVICE_STOPPED) {
+                    Log.d("TAG", "Starting Service");
+                    boolean permissionGranted = ContextCompat.checkSelfPermission(
+                            getApplicationContext(),
+                            Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED;
+                    if (permissionGranted) {
+                        Intent intent = new Intent(getApplicationContext(), OverlayService.class);
+                        intent.putExtra("Sender", "Activity Button");
+                        startService(intent);
+                        serviceState = SERVICE_RUNNING;
+                        item.setChecked(true);
+                    } else {
+                        ActivityCompat.requestPermissions(CallLogsActivity.this, new String[]{Manifest.permission.READ_PHONE_STATE}, 0);
+                    }
+                } else if (serviceState == SERVICE_RUNNING) {
+                    Log.d("TAG", "Stopping Service");
+                    Intent intent = new Intent(CallLogsActivity.this, OverlayService.class);
+                    stopService(intent);
+                    serviceState = SERVICE_STOPPED;
+                    item.setChecked(false);
+                }
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 }
 

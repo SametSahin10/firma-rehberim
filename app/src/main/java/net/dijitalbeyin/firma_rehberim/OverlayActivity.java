@@ -19,9 +19,9 @@ public class OverlayActivity extends AppCompatActivity {
 
     Button btn_start_service;
     Button btn_stop_service;
-    private static int SERVICE_STOPPED = 0;
-    private static int SERVICE_RUNNING = 1;
-    int serviceState = SERVICE_STOPPED;
+    static int SERVICE_STOPPED = 0;
+    static int SERVICE_RUNNING = 1;
+    static int serviceState = SERVICE_STOPPED;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

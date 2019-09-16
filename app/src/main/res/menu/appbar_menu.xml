@@ -38,6 +38,7 @@
 
     <item android:id="@+id/item_caller_detection"
           android:title="@string/arayan_firma_tespiti"
+          android:checkable="true"
           app:showAsAction="never"/>
 
     <item android:id="@+id/item_about"
