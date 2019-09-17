@@ -1,7 +1,6 @@
 package net.dijitalbeyin.firma_rehberim;
 
 import android.Manifest;
-import android.app.Activity;
 import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Context;
@@ -405,7 +404,10 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
                             ib_playPauseRadio.setImageDrawable(getResources().getDrawable(R.drawable.ic_pause_radio));
                         }
                         sb_volume_control.setMax(audioManager.getStreamMaxVolume(exoPlayer.getAudioStreamType()));
-                        sb_volume_control.setProgress(audioManager.getStreamVolume(exoPlayer.getAudioStreamType()));
+                        int streamVolume = audioManager.getStreamVolume(exoPlayer.getAudioStreamType());
+                        Log.d("TAG", "stream volume: " + streamVolume);
+                        // Set manually for now. Should use system stream sound instead.
+                        sb_volume_control.setProgress(7);
                         Log.d("TAG", "STATE_READY");
                         break;
                     case ExoPlayer.STATE_IDLE:
@@ -467,6 +469,7 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 if (exoPlayer != null) {
+                    Log.d("TAG", "Progress changed");
                     audioManager.setStreamVolume(exoPlayer.getAudioStreamType(), progress, 0);
                 }
             }
