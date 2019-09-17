@@ -86,6 +86,7 @@ public class AuthenticationActivity extends AppCompatActivity {
                                 PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
                         SharedPreferences.Editor editor = sharedPreferences.edit();
                         editor.putString("username", user.getUserName());
+                        editor.putString("webpageLink", user.getUserWebpageLink());
                         editor.apply();
                         finish();
                     } else {
@@ -132,6 +133,7 @@ public class AuthenticationActivity extends AppCompatActivity {
                                 PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
                         SharedPreferences.Editor editor = sharedPreferences.edit();
                         editor.putString("username", user.getUserName());
+                        editor.putString("webpageLink", user.getUserWebpageLink());
                         editor.apply();
                         finish();
                     } else {

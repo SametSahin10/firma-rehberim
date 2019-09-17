@@ -5,8 +5,6 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.Toast;
-
 import net.dijitalbeyin.firma_rehberim.data.CompanyContract;
 
 import java.text.DateFormat;
@@ -29,8 +27,6 @@ public class CallReceiver extends PhoneCallReceiver {
 
     @Override
     protected void onIncomingCallReceived(final Context context, String number, final Date callStartTime) {
-        Toast.makeText(context, "Gelen Arama", Toast.LENGTH_SHORT).show();
-        Toast.makeText(context, "Arayan numara: " + number, Toast.LENGTH_SHORT).show();
         Log.d("TAG", "Incoming call received number: " + number);
         query = formatNumber(number);
         if (query != null) {
@@ -69,7 +65,6 @@ public class CallReceiver extends PhoneCallReceiver {
 
     @Override
     protected void onIncomingCallEnded(final Context context, String number, final Date callStartTime, Date callEndTime) {
-        Toast.makeText(context, "Gelen Arama bitirildi", Toast.LENGTH_SHORT).show();
         Log.d("TAG", "Incoming call ended number: " + number);
         query = formatNumber(number);
         if (query != null) {
@@ -109,7 +104,6 @@ public class CallReceiver extends PhoneCallReceiver {
 
     @Override
     protected void onOutGoingCallEnded(final Context context, String number, final Date callStartTime, Date callEndTime) {
-        Toast.makeText(context, "Giden Arama bitirildi", Toast.LENGTH_SHORT).show();
         Log.d("TAG", "Outgoing call ended number: " + number);
         query = formatNumber(number);
         if (query != null) {
@@ -144,7 +138,6 @@ public class CallReceiver extends PhoneCallReceiver {
 
     @Override
     protected void onMissedCall(final Context context, String number, final Date callStartTime) {
-        Toast.makeText(context, "Cevapsiz Arama", Toast.LENGTH_SHORT).show();
         Log.d("TAG", "onMissedCall number: " + number);
         query = formatNumber(number);
         if (query != null) {

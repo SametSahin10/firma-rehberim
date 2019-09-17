@@ -8,6 +8,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 
+import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
@@ -29,6 +30,7 @@ import net.dijitalbeyin.firma_rehberim.adapters.CallLogCursorAdapter;
 import net.dijitalbeyin.firma_rehberim.data.CompanyContract.CompanyEntry;
 import net.dijitalbeyin.firma_rehberim.data.CompanyDbHelper;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 
 public class CallLogsActivity extends AppCompatActivity {
@@ -52,6 +54,8 @@ public class CallLogsActivity extends AppCompatActivity {
                 PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         String userName = sharedPreferences.getString("username", "Kullanıcı adı bulunamadı");
         getSupportActionBar().setTitle(userName);
+
+        final String webpageLink = sharedPreferences.getString("webpageLink", "firmarehberim.com");
 
         CompanyDbHelper dbHelper = new CompanyDbHelper(this);
         final SQLiteDatabase database = dbHelper.getWritableDatabase();
