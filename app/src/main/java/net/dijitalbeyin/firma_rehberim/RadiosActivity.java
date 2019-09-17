@@ -1,6 +1,7 @@
 package net.dijitalbeyin.firma_rehberim;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Context;
@@ -524,6 +525,7 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
 
         SharedPreferences sharedPreferences =
                 PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        SharedPreferences.Editor editor = sharedPreferences.edit();
         int serviceState = sharedPreferences.getInt("serviceState", SERVICE_STOPPED);
 
         MenuItem menuItem = menu.findItem(R.id.item_caller_detection);
@@ -548,11 +550,13 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
         String userName = sharedPreferences.getString("username", "Kullanıcı adı bulunamadı");
         if (userName.equals("Kullanıcı adı bulunamadı")) {
             //User is not logged in.
+            Log.d("TAG", "setting title as Giris yap");
             menu.findItem(R.id.item_show_call_logs).setEnabled(false);
+            menu.findItem(R.id.item_login).setTitle("Giriş yap");
         } else {
-            //User is logged in.
-            menu.findItem(R.id.item_login).setEnabled(false);
-
+            // User is logged in.
+            Log.d("TAG", "setting title as Cikis yap");
+            menu.findItem(R.id.item_login).setTitle("Çıkış yap");
         }
 
         SearchView searchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
@@ -619,19 +623,27 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
                 if (item.isChecked()) {
                     disableCallLogsActivity();
                     editor.putBoolean("callLogsActivityEnabled", false);
-                    Toast.makeText(this, "CallLogsActivity is disabled", Toast.LENGTH_SHORT).show();
                     item.setChecked(false);
                 } else {
                     enableCallLogsActivity();
                     editor.putBoolean("callLogsActivityEnabled", true);
-                    Toast.makeText(this, "CallLogsActivity is enabled", Toast.LENGTH_SHORT).show();
                     item.setChecked(true);
                 }
                 editor.apply();
                 return true;
             case R.id.item_login:
-                Intent loginIntent = new Intent(RadiosActivity.this, AuthenticationActivity.class);
-                startActivity(loginIntent);
+                String userName = sharedPreferences.getString("username", "Kullanıcı adı bulunamadı");
+                if (userName.equals("Kullanıcı adı bulunamadı")) {
+                    // User is not logged in.
+                    Intent loginIntent = new Intent(RadiosActivity.this, AuthenticationActivity.class);
+                    startActivity(loginIntent);
+                } else {
+                    // User is logged in.
+                    editor.putString("username", "Kullanıcı adı bulunamadı");
+                    editor.apply();
+                    Toast.makeText(getApplicationContext(), "Başarıyla çıkış yapıldı", Toast.LENGTH_SHORT).show();
+                    recreate();
+                }
                 return true;
             case R.id.item_about:
                 Intent privacyPolicyIntent = new Intent(this, AboutActivity.class);
