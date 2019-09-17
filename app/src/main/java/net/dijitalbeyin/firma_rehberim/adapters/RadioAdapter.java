@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import androidx.core.content.ContextCompat;
+
+import android.net.Uri;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -73,11 +75,23 @@ public class RadioAdapter extends ArrayAdapter<Radio> {
     public View getView(int position, View convertView, ViewGroup parent) {
         View row = convertView;
         RadioHolder holder;
+        final Radio currentRadio = radios.get(position);
         if (row == null) {
             LayoutInflater layoutInflater = LayoutInflater.from(context);
             row = layoutInflater.inflate(R.layout.item_radio, parent, false);
             holder = new RadioHolder();
             holder.iv_item_radio_icon = row.findViewById(R.id.iv_item_radio_icon);
+            holder.iv_item_radio_icon.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                    intent.setData(Uri.parse(currentRadio.getShareableLink()));
+                    if (intent.resolveActivity(getContext().getPackageManager()) != null) {
+                        context.startActivity(intent);
+                    }
+                }
+            });
+
             holder.tv_radio_name = row.findViewById(R.id.tv_radio_name);
             holder.pb_buffering_radio = row.findViewById(R.id.pb_buffering_radio);
 //            holder.ib_share_radio = row.findViewById(R.id.ib_share_radio);
@@ -86,7 +100,6 @@ public class RadioAdapter extends ArrayAdapter<Radio> {
         } else {
             holder = (RadioHolder) row.getTag();
         }
-        final Radio currentRadio = radios.get(position);
         String iconUrl = currentRadio.getRadioIconUrl();
         float scale = getContext().getResources().getDisplayMetrics().density;
         int width = (int) (50 * scale + 0.5f);
