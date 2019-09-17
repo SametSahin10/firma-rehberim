@@ -41,6 +41,10 @@
           android:checkable="true"
           app:showAsAction="never"/>
 
+    <item android:id="@+id/item_login"
+          android:title="@string/giri"
+          app:showAsAction="never"/>
+
     <item android:id="@+id/item_about"
         android:title="@string/hakkinda"
         app:showAsAction="never"/>

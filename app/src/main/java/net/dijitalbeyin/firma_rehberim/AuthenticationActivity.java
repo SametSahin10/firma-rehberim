@@ -60,7 +60,9 @@ public class AuthenticationActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(AuthenticationActivity.this, RadiosActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                 startActivity(intent);
+                finish();
             }
         });
     }
@@ -75,7 +77,9 @@ public class AuthenticationActivity extends AppCompatActivity {
                     if (user.isVerified() && (user.getMatch() == 0)) {
                         //Authenticate user.
                         Intent intent = new Intent(AuthenticationActivity.this, RadiosActivity.class);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                         startActivity(intent);
+                        finish();
                     } else {
                         runOnUiThread(new Runnable() {
                             @Override
@@ -114,7 +118,9 @@ public class AuthenticationActivity extends AppCompatActivity {
                     if (user.isVerified() && (user.getMatch() == 0)) {
                         //Authenticate user.
                         Intent intent = new Intent(AuthenticationActivity.this, RadiosActivity.class);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                         startActivity(intent);
+                        finish();
                     } else {
                         runOnUiThread(new Runnable() {
                             @Override

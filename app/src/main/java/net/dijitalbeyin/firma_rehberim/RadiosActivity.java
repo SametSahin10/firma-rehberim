@@ -572,12 +572,16 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
                 return true;
             case R.id.item_contact:
                 return true;
+            case R.id.item_caller_detection:
+                toggleServiceStatus(item);
+                return true;
+            case R.id.item_login:
+                Intent loginIntent = new Intent(RadiosActivity.this, AuthenticationActivity.class);
+                startActivity(loginIntent);
+                return true;
             case R.id.item_about:
                 Intent privacyPolicyIntent = new Intent(this, AboutActivity.class);
                 startActivity(privacyPolicyIntent);
-                return true;
-            case R.id.item_caller_detection:
-                toggleServiceStatus(item);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
