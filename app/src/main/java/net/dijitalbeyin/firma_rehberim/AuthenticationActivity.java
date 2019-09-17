@@ -2,7 +2,10 @@ package net.dijitalbeyin.firma_rehberim;
 
 import android.content.Intent;
 import androidx.appcompat.app.AppCompatActivity;
+
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
@@ -79,6 +82,11 @@ public class AuthenticationActivity extends AppCompatActivity {
                         Intent intent = new Intent(AuthenticationActivity.this, RadiosActivity.class);
                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                         startActivity(intent);
+                        SharedPreferences sharedPreferences =
+                                PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                        SharedPreferences.Editor editor = sharedPreferences.edit();
+                        editor.putString("username", user.getUserName());
+                        editor.apply();
                         finish();
                     } else {
                         runOnUiThread(new Runnable() {
@@ -120,6 +128,11 @@ public class AuthenticationActivity extends AppCompatActivity {
                         Intent intent = new Intent(AuthenticationActivity.this, RadiosActivity.class);
                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                         startActivity(intent);
+                        SharedPreferences sharedPreferences =
+                                PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                        SharedPreferences.Editor editor = sharedPreferences.edit();
+                        editor.putString("username", user.getUserName());
+                        editor.apply();
                         finish();
                     } else {
                         runOnUiThread(new Runnable() {

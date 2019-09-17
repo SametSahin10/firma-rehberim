@@ -2,6 +2,7 @@ package net.dijitalbeyin.firma_rehberim;
 
 import android.Manifest;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -12,6 +13,7 @@ import androidx.core.content.ContextCompat;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -46,6 +48,11 @@ public class CallLogsActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_call_logs);
+
+        SharedPreferences sharedPreferences =
+                PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        String userName = sharedPreferences.getString("username", "Kullanıcı adı bulunamadı");
+        getSupportActionBar().setTitle(userName);
 
         CompanyDbHelper dbHelper = new CompanyDbHelper(this);
         final SQLiteDatabase database = dbHelper.getWritableDatabase();
