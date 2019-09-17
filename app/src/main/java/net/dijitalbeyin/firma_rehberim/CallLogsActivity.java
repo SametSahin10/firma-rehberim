@@ -31,11 +31,10 @@ import net.dijitalbeyin.firma_rehberim.data.CompanyDbHelper;
 
 import java.util.ArrayList;
 
-import static net.dijitalbeyin.firma_rehberim.OverlayActivity.SERVICE_RUNNING;
-import static net.dijitalbeyin.firma_rehberim.OverlayActivity.SERVICE_STOPPED;
-import static net.dijitalbeyin.firma_rehberim.OverlayActivity.serviceState;
-
 public class CallLogsActivity extends AppCompatActivity {
+    static int SERVICE_STOPPED = 0;
+    static int SERVICE_RUNNING = 1;
+
     SwipeRefreshLayout swipeRefreshLayout;
     ListView lw_call_log;
     ProgressBar pb_loading_call_logs;
@@ -182,6 +181,12 @@ public class CallLogsActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
         getMenuInflater().inflate(R.menu.call_logs_menu, menu);
+
+        final SharedPreferences sharedPreferences =
+                PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        final SharedPreferences.Editor editor = sharedPreferences.edit();
+        final int serviceState = sharedPreferences.getInt("serviceState", SERVICE_STOPPED);
+
         CheckBox enableCallerDetection = (CheckBox) menu.findItem(R.id.item_toggle_caller_detection).getActionView();
         enableCallerDetection.setText(R.string.arayan_firma_tespiti_call_logs);
         if (serviceState == SERVICE_STOPPED) {
@@ -198,29 +203,26 @@ public class CallLogsActivity extends AppCompatActivity {
             @Override
             public void onCheckedChanged(CompoundButton checkbox, boolean isChecked) {
                 if (!isChecked) {
-                    if (serviceState == SERVICE_RUNNING) {
-                        Log.d("TAG", "Stopping Service");
-                        Intent intent = new Intent(CallLogsActivity.this, OverlayService.class);
-                        stopService(intent);
-                        serviceState = SERVICE_STOPPED;
-                    }
+                    Log.d("TAG", "Stopping Service");
+                    Intent intent = new Intent(CallLogsActivity.this, OverlayService.class);
+                    stopService(intent);
+                    editor.putInt("serviceState", SERVICE_STOPPED);
                 } else {
-                    if (serviceState == SERVICE_STOPPED) {
-                        Log.d("TAG", "Starting Service");
-                        boolean permissionGranted = ContextCompat.checkSelfPermission(
-                                getApplicationContext(),
-                                Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED;
-                        if (permissionGranted) {
-                            Intent intent = new Intent(getApplicationContext(), OverlayService.class);
-                            intent.putExtra("Sender", "Activity Button");
-                            Log.d("TAG", "Sending intent");
-                            startService(intent);
-                            serviceState = SERVICE_RUNNING;
-                        } else {
-                            ActivityCompat.requestPermissions(CallLogsActivity.this, new String[]{Manifest.permission.READ_PHONE_STATE}, 0);
-                        }
+                    Log.d("TAG", "Starting Service");
+                    boolean permissionGranted = ContextCompat.checkSelfPermission(
+                            getApplicationContext(),
+                            Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED;
+                    if (permissionGranted) {
+                        Intent intent = new Intent(getApplicationContext(), OverlayService.class);
+                        intent.putExtra("Sender", "Activity Button");
+                        Log.d("TAG", "Sending intent");
+                        startService(intent);
+                        editor.putInt("serviceState", SERVICE_RUNNING);
+                    } else {
+                        ActivityCompat.requestPermissions(CallLogsActivity.this, new String[]{Manifest.permission.READ_PHONE_STATE}, 0);
                     }
                 }
+                editor.apply();
             }
         });
 

@@ -5,12 +5,14 @@ import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.sqlite.SQLiteDatabase;
 import android.media.AudioManager;
 import android.net.Uri;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
 import com.google.android.material.tabs.TabLayout;
 
 import androidx.core.app.ActivityCompat;
@@ -29,6 +31,7 @@ import androidx.viewpager.widget.ViewPager;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -36,7 +39,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -76,10 +78,6 @@ import java.util.List;
 
 import okhttp3.OkHttpClient;
 
-import static net.dijitalbeyin.firma_rehberim.OverlayActivity.SERVICE_RUNNING;
-import static net.dijitalbeyin.firma_rehberim.OverlayActivity.SERVICE_STOPPED;
-import static net.dijitalbeyin.firma_rehberim.OverlayActivity.serviceState;
-
 public class RadiosActivity extends AppCompatActivity implements RadiosFragment.OnEventFromRadiosFragmentListener,
         FavouriteRadiosFragment.OnEventFromFavRadiosFragment,
         RadiosFragment.OnRadioItemClickListener,
@@ -113,6 +111,9 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     private final static int GLOBAL_FRAGMENT_ID = 8;
     private final static int TIMER_FRAGMENT_ID = 9;
     private int ACTIVE_FRAGMENT_ID;
+
+    static int SERVICE_STOPPED = 0;
+    static int SERVICE_RUNNING = 1;
 
     private Toolbar toolbar;
     private SearchView sw_searchForRadios;
@@ -520,6 +521,11 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
         getMenuInflater().inflate(R.menu.appbar_menu, menu);
+
+        SharedPreferences sharedPreferences =
+                PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        int serviceState = sharedPreferences.getInt("serviceState", SERVICE_STOPPED);
+
         MenuItem menuItem = menu.findItem(R.id.item_caller_detection);
         if (serviceState == SERVICE_STOPPED) {
             Log.d("TAG", "checking it false");
@@ -529,6 +535,24 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
             menuItem.setChecked(true);
         } else {
             Log.d("TAG", "Cannot determine service status");
+        }
+
+        boolean callLogsActivityEnabled = sharedPreferences.getBoolean("callLogsActivityEnabled", false);
+        MenuItem item_show_call_logs = menu.findItem(R.id.item_show_call_logs);
+        if (callLogsActivityEnabled) {
+            item_show_call_logs.setChecked(true);
+        } else {
+            item_show_call_logs.setChecked(false);
+        }
+
+        String userName = sharedPreferences.getString("username", "Kullanıcı adı bulunamadı");
+        if (userName.equals("Kullanıcı adı bulunamadı")) {
+            //User is not logged in.
+            menu.findItem(R.id.item_show_call_logs).setEnabled(false);
+        } else {
+            //User is logged in.
+            menu.findItem(R.id.item_login).setEnabled(false);
+
         }
 
         SearchView searchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
@@ -557,6 +581,9 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        SharedPreferences sharedPreferences =
+                PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        SharedPreferences.Editor editor = sharedPreferences.edit();
         switch (item.getItemId()) {
             case R.id.item_notifications:
                 return true;
@@ -573,7 +600,34 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
             case R.id.item_contact:
                 return true;
             case R.id.item_caller_detection:
+                boolean phoneStatepermissionGranted = ContextCompat.checkSelfPermission(
+                        getApplicationContext(),
+                        Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED;
+                if (!phoneStatepermissionGranted) {
+                    ActivityCompat.requestPermissions(RadiosActivity.this, new String[]{Manifest.permission.READ_PHONE_STATE}, 0);
+                }
+
+                boolean callLogPermissionGranted = ContextCompat.checkSelfPermission(
+                        getApplicationContext(),
+                        Manifest.permission.READ_CALL_LOG) == PackageManager.PERMISSION_GRANTED;
+                if (!callLogPermissionGranted) {
+                    ActivityCompat.requestPermissions(RadiosActivity.this, new String[]{Manifest.permission.READ_CALL_LOG}, 0);
+                }
                 toggleServiceStatus(item);
+                return true;
+            case R.id.item_show_call_logs:
+                if (item.isChecked()) {
+                    disableCallLogsActivity();
+                    editor.putBoolean("callLogsActivityEnabled", false);
+                    Toast.makeText(this, "CallLogsActivity is disabled", Toast.LENGTH_SHORT).show();
+                    item.setChecked(false);
+                } else {
+                    enableCallLogsActivity();
+                    editor.putBoolean("callLogsActivityEnabled", true);
+                    Toast.makeText(this, "CallLogsActivity is enabled", Toast.LENGTH_SHORT).show();
+                    item.setChecked(true);
+                }
+                editor.apply();
                 return true;
             case R.id.item_login:
                 Intent loginIntent = new Intent(RadiosActivity.this, AuthenticationActivity.class);
@@ -844,8 +898,6 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
 //    }
 
     private void toggleServiceStatus(MenuItem menuItem) {
-        ActivityCompat.requestPermissions(RadiosActivity.this, new String[]{Manifest.permission.READ_CALL_LOG}, 0);
-
         if (Build.BRAND.equalsIgnoreCase("xiaomi")) {
             Intent autoStartintent = new Intent();
             autoStartintent.setComponent(new ComponentName("com.miui.securitycenter", "com.miui.permcenter.autostart.AutoStartManagementActivity"));
@@ -854,9 +906,14 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
 
         if (Build.VERSION.SDK_INT >= 23) {
             if (!Settings.canDrawOverlays(this)) {
-                Toast.makeText(this, "Lütfen ayarlardan \"Otomatik başlatma\" seçeneğini etkinleştiriniz.", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "Lütfen ayarlardan \"Diğer uygulamaların üzerinde göster\" seçeneğini etkinleştiriniz.", Toast.LENGTH_LONG).show();
             }
         }
+
+        SharedPreferences sharedPreferences =
+                PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        int serviceState = sharedPreferences.getInt("serviceState", SERVICE_STOPPED);
 
         if (serviceState == SERVICE_STOPPED) {
             Log.d("TAG", "Starting Service");
@@ -867,7 +924,7 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
                 Intent intent = new Intent(getApplicationContext(), OverlayService.class);
                 intent.putExtra("Sender", "Activity Button");
                 startService(intent);
-                serviceState = SERVICE_RUNNING;
+                editor.putInt("serviceState", SERVICE_RUNNING);
                 menuItem.setChecked(true);
             } else {
                 Log.d("TAG", "Requesting permissions");
@@ -877,9 +934,26 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
             Log.d("TAG", "Stopping Service");
             Intent intent = new Intent(RadiosActivity.this, OverlayService.class);
             stopService(intent);
-            serviceState = SERVICE_STOPPED;
+            editor.putInt("serviceState", SERVICE_STOPPED);
             menuItem.setChecked(false);
         }
+        editor.apply();
+    }
+
+    private void enableCallLogsActivity() {
+        PackageManager packageManager = getPackageManager();
+        packageManager.setComponentEnabledSetting(
+                new ComponentName(RadiosActivity.this, CallLogsActivity.class),
+                PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                PackageManager.DONT_KILL_APP);
+    }
+
+    private void disableCallLogsActivity() {
+        PackageManager packageManager = getPackageManager();
+        packageManager.setComponentEnabledSetting(
+                new ComponentName(RadiosActivity.this, CallLogsActivity.class),
+                PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                PackageManager.DONT_KILL_APP);
     }
 
     private void prepareExoPlayer(Uri uri) {
