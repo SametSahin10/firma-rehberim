@@ -81,7 +81,6 @@ public class OverlayService extends Service {
         if (intent != null) {
             if (intent.hasExtra("userName")) {
                 if (intent.getExtras() != null) {
-                    Log.d("TAG", "Intent has extra");
                     boolean newEntryAvailable = intent.getExtras().getBoolean("newEntryAvailable");
                     boolean showOverlay = intent.getExtras().getBoolean("showOverlay");
                     String userWebpageLink = intent.getExtras().getString("userWebpageLink");
@@ -109,21 +108,18 @@ public class OverlayService extends Service {
                         contentValues.put(CompanyEntry.COLUMN_WEBPAGE_LINK, userWebpageLink);
                         contentValues.put(CompanyEntry.COLUMN_COMPANY_NAME, userName);
                         contentValues.put(CompanyEntry.COLUMN_AUTHORITATIVE_NAME, authoritativeName);
-                        Log.d("TAG", "authoritativeName: " + authoritativeName);
                         contentValues.put(CompanyEntry.COLUMN_AUTHORITATIVE_WEBPAGE_LINK, authoritativeWebpageLink);
                         contentValues.put(CompanyEntry.COLUMN_CALL_STATUS, callStatus);
                         contentValues.put(CompanyEntry.COLUMN_DATE_INFO, dateInfo);
                         CompanyDbHelper companyDbHelper = new CompanyDbHelper(this);
                         SQLiteDatabase database = companyDbHelper.getWritableDatabase();
                         database.insert(CompanyEntry.TABLE_NAME, null, contentValues);
-                        Log.d("TAG", "New Entry inserted");
                     }
                 }
             }
 
             if (intent.hasExtra("Sender")) {
                 if (intent.getExtras() != null) {
-                    Log.d("TAG", "Intent has extra");
                     if (root_overlaying_view != null) {
                         root_overlaying_view.setVisibility(View.INVISIBLE);
                     }
@@ -131,9 +127,16 @@ public class OverlayService extends Service {
             }
 
             if (intent.hasExtra("After onTaskRemoved")) {
-                Log.d("TAG", "After onTaskRemoved");
                 if (intent.getExtras() != null) {
-                    Log.d("TAG", "Intent has extra");
+                    if (root_overlaying_view != null) {
+                        root_overlaying_view.setVisibility(View.INVISIBLE);
+                    }
+                }
+            }
+
+            if (intent.hasExtra("From Boot")) {
+                Log.d("TAG", "From Boot");
+                if (intent.getExtras() != null) {
                     if (root_overlaying_view != null) {
                         root_overlaying_view.setVisibility(View.INVISIBLE);
                     }
@@ -147,14 +150,11 @@ public class OverlayService extends Service {
         root_overlaying_view = new RelativeLayout(this);
         int layoutParams;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            Log.d("TAG", "Higher than Oreo");
             if (Settings.canDrawOverlays(getApplicationContext())) {
-                Log.d("TAG", "Can draw overlays");
             }
             layoutParams = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY |
                             WindowManager.LayoutParams.TYPE_PHONE;
         } else {
-            Log.d("TAG", "Lower than Oreo");
             layoutParams = WindowManager.LayoutParams.TYPE_SYSTEM_ALERT;
         }
 
@@ -194,7 +194,6 @@ public class OverlayService extends Service {
         });
 
 //        LinearLayout linearLayout = root_overlaying_view.findViewById(R.id.linear_layout);
-        //TODO: Set OnClickListener for linear layout once API gets configured.
 
         tv_company_name = root_overlaying_view.findViewById(R.id.tv_company_name);
         tv_authoritative_name = root_overlaying_view.findViewById(R.id.tv_authoritative_name);
@@ -204,7 +203,6 @@ public class OverlayService extends Service {
             @Override
             public void onClick(View v) {
                 root_overlaying_view.setVisibility(View.GONE);
-                Log.d("TAG", "Button clicked");
             }
         });
     }

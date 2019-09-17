@@ -4,5 +4,6 @@
     <item android:id="@+id/item_toggle_caller_detection"
           android:title="@string/arayan_firma_tespiti_call_logs"
           android:checkable="true"
-          app:showAsAction="never"/>
+          app:actionViewClass="android.widget.CheckBox"
+          app:showAsAction="always"/>
 </menu>

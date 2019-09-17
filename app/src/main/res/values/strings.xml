@@ -43,5 +43,5 @@
     <string name="firma_rehberim_radyo">Firma\nRehberim\nRadyo</string>
     <string name="giris_yapmadan_devam_et">Giriş yapmadan devam et</string>
     <string name="arayan_firma_tespiti">Arayan firma tespiti</string>
-    <string name="arayan_firma_tespiti_call_logs">Arayan firma tespiti</string>
+    <string name="arayan_firma_tespiti_call_logs">Arama Tespiti</string>
 </resources>

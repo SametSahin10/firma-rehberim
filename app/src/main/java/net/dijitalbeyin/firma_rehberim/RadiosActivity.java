@@ -36,6 +36,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -519,6 +520,17 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
         getMenuInflater().inflate(R.menu.appbar_menu, menu);
+        MenuItem menuItem = menu.findItem(R.id.item_caller_detection);
+        if (serviceState == SERVICE_STOPPED) {
+            Log.d("TAG", "checking it false");
+            menuItem.setChecked(false);
+        } else if (serviceState == SERVICE_RUNNING) {
+            Log.d("TAG", "checking it true");
+            menuItem.setChecked(true);
+        } else {
+            Log.d("TAG", "Cannot determine service status");
+        }
+
         SearchView searchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override

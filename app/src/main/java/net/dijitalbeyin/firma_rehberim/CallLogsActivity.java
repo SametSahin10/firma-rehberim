@@ -17,6 +17,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -98,6 +100,7 @@ public class CallLogsActivity extends AppCompatActivity {
         });
 
 
+
 //        boolean permissionGranted = ContextCompat.checkSelfPermission(
 //                this,
 //                Manifest.permission.READ_CALL_LOG) == PackageManager.PERMISSION_GRANTED;
@@ -172,46 +175,81 @@ public class CallLogsActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
         getMenuInflater().inflate(R.menu.call_logs_menu, menu);
-        MenuItem menuItem = menu.findItem(R.id.item_toggle_caller_detection);
+        CheckBox enableCallerDetection = (CheckBox) menu.findItem(R.id.item_toggle_caller_detection).getActionView();
+        enableCallerDetection.setText(R.string.arayan_firma_tespiti_call_logs);
         if (serviceState == SERVICE_STOPPED) {
-            menuItem.setChecked(false);
+            Log.d("TAG", "checking it false");
+            enableCallerDetection.setChecked(false);
         } else if (serviceState == SERVICE_RUNNING) {
-            menuItem.setChecked(true);
+            Log.d("TAG", "checking it true");
+            enableCallerDetection.setChecked(true);
         } else {
             Log.d("TAG", "Cannot determine service status");
         }
+
+        enableCallerDetection.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton checkbox, boolean isChecked) {
+                if (!isChecked) {
+                    if (serviceState == SERVICE_RUNNING) {
+                        Log.d("TAG", "Stopping Service");
+                        Intent intent = new Intent(CallLogsActivity.this, OverlayService.class);
+                        stopService(intent);
+                        serviceState = SERVICE_STOPPED;
+                    }
+                } else {
+                    if (serviceState == SERVICE_STOPPED) {
+                        Log.d("TAG", "Starting Service");
+                        boolean permissionGranted = ContextCompat.checkSelfPermission(
+                                getApplicationContext(),
+                                Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED;
+                        if (permissionGranted) {
+                            Intent intent = new Intent(getApplicationContext(), OverlayService.class);
+                            intent.putExtra("Sender", "Activity Button");
+                            Log.d("TAG", "Sending intent");
+                            startService(intent);
+                            serviceState = SERVICE_RUNNING;
+                        } else {
+                            ActivityCompat.requestPermissions(CallLogsActivity.this, new String[]{Manifest.permission.READ_PHONE_STATE}, 0);
+                        }
+                    }
+                }
+            }
+        });
+
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.item_toggle_caller_detection:
-                if (serviceState == SERVICE_STOPPED) {
-                    Log.d("TAG", "Starting Service");
-                    boolean permissionGranted = ContextCompat.checkSelfPermission(
-                            getApplicationContext(),
-                            Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED;
-                    if (permissionGranted) {
-                        Intent intent = new Intent(getApplicationContext(), OverlayService.class);
-                        intent.putExtra("Sender", "Activity Button");
-                        startService(intent);
-                        serviceState = SERVICE_RUNNING;
-                        item.setChecked(true);
-                    } else {
-                        ActivityCompat.requestPermissions(CallLogsActivity.this, new String[]{Manifest.permission.READ_PHONE_STATE}, 0);
-                    }
-                } else if (serviceState == SERVICE_RUNNING) {
-                    Log.d("TAG", "Stopping Service");
-                    Intent intent = new Intent(CallLogsActivity.this, OverlayService.class);
-                    stopService(intent);
-                    serviceState = SERVICE_STOPPED;
-                    item.setChecked(false);
-                }
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
-        }
+//        switch (item.getItemId()) {
+//            case R.id.item_toggle_caller_detection:
+//                if (serviceState == SERVICE_STOPPED) {
+//                    Log.d("TAG", "Starting Service");
+//                    boolean permissionGranted = ContextCompat.checkSelfPermission(
+//                            getApplicationContext(),
+//                            Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED;
+//                    if (permissionGranted) {
+//                        Intent intent = new Intent(getApplicationContext(), OverlayService.class);
+//                        intent.putExtra("Sender", "Activity Button");
+//                        startService(intent);
+//                        serviceState = SERVICE_RUNNING;
+//                        item.setChecked(true);
+//                    } else {
+//                        ActivityCompat.requestPermissions(CallLogsActivity.this, new String[]{Manifest.permission.READ_PHONE_STATE}, 0);
+//                    }
+//                } else if (serviceState == SERVICE_RUNNING) {
+//                    Log.d("TAG", "Stopping Service");
+//                    Intent intent = new Intent(CallLogsActivity.this, OverlayService.class);
+//                    stopService(intent);
+//                    serviceState = SERVICE_STOPPED;
+//                    item.setChecked(false);
+//                }
+//                return true;
+//            default:
+//                return super.onOptionsItemSelected(item);
+//        }
+        return super.onOptionsItemSelected(item);
     }
 }
 
