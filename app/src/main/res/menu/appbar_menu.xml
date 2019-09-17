@@ -41,6 +41,11 @@
           android:checkable="true"
           app:showAsAction="never"/>
 
+    <item android:id="@+id/item_show_call_logs"
+        android:title="@string/arayan_firma_listesini_g_ster"
+        android:checkable="true"
+        app:showAsAction="never"/>
+
     <item android:id="@+id/item_login"
           android:title="@string/giri"
           app:showAsAction="never"/>

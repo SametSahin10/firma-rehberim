@@ -42,7 +42,8 @@
     <string name="g_r_yap">Giriş Yap</string>
     <string name="firma_rehberim_radyo">Firma\nRehberim\nRadyo</string>
     <string name="giris_yapmadan_devam_et">Giriş yapmadan devam et</string>
-    <string name="arayan_firma_tespiti">Arayan firma tespiti</string>
+    <string name="arayan_firma_tespiti">Arama tespiti</string>
     <string name="arayan_firma_tespiti_call_logs">Arama Tespiti</string>
     <string name="giri">Giriş yap</string>
+    <string name="arayan_firma_listesini_g_ster">Arayan/Aranan Firma Listesi</string>
 </resources>

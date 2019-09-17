@@ -870,6 +870,7 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
                 serviceState = SERVICE_RUNNING;
                 menuItem.setChecked(true);
             } else {
+                Log.d("TAG", "Requesting permissions");
                 ActivityCompat.requestPermissions(RadiosActivity.this, new String[]{Manifest.permission.READ_PHONE_STATE}, 0);
             }
         } else if (serviceState == SERVICE_RUNNING) {
