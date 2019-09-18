@@ -1015,6 +1015,17 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
                 .placeholder(R.drawable.ic_placeholder_radio_black)
                 .error(R.drawable.ic_pause_radio)
                 .into(iv_radioIcon);
+
+        iv_radioIcon.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setData(Uri.parse(radioCurrentlyPlaying.getShareableLink()));
+                if (intent.resolveActivity(getPackageManager()) != null) {
+                    startActivity(intent);
+                }
+            }
+        });
     }
 
     private void updatePopupWindow() {
