@@ -176,17 +176,25 @@
             android:thumb="@drawable/seekbar_thumb"/>
 
         <ImageButton
-            android:id="@+id/ib_play_radio"
-            android:layout_width="35dp"
-            android:layout_height="35dp"
-            android:layout_alignParentEnd="true"
-            android:layout_marginStart="8dp"
+            android:id="@+id/ib_player_share_radio"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
             android:layout_centerVertical="true"
-            android:padding="0dp"
-            android:adjustViewBounds="true"
+            android:layout_toStartOf="@id/ib_player_add_to_fav"
+            android:layout_marginEnd="12dp"
             android:background="@null"
             android:scaleType="fitCenter"
-            android:src="@drawable/ic_play_radio"/>
+            android:src="@drawable/ic_share"/>
+
+        <ImageButton
+            android:id="@+id/ib_player_add_to_fav"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_centerVertical="true"
+            android:layout_alignParentEnd="true"
+            android:background="@null"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_favourite_empty"/>
 
     </RelativeLayout>
 
@@ -221,24 +229,17 @@
             android:text="Show Radyo"/>
 
         <ImageButton
-            android:id="@+id/ib_player_share_radio"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:layout_centerVertical="true"
-            android:layout_toStartOf="@id/ib_player_add_to_fav"
-            android:layout_marginEnd="12dp"
-            android:background="@null"
-            android:scaleType="fitCenter"
-            android:src="@drawable/ic_share"/>
-
-        <ImageButton
-            android:id="@+id/ib_player_add_to_fav"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:layout_centerVertical="true"
+            android:id="@+id/ib_play_radio"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
             android:layout_alignParentEnd="true"
+            android:layout_marginStart="8dp"
+            android:layout_centerVertical="true"
+            android:padding="0dp"
+            android:adjustViewBounds="true"
             android:background="@null"
             android:scaleType="fitCenter"
-            android:src="@drawable/ic_favourite_empty"/>
+            android:src="@drawable/ic_play_radio"/>
+
     </RelativeLayout>
 </RelativeLayout>
