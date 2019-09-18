@@ -138,6 +138,9 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     private Button btn_nav_categories;
     private Button btn_nav_cities;
     private Button btn_nav_global;
+    private ImageButton btn_search_for_radios;
+
+    private SearchView searchView;
 
     private ImageButton ib_timer;
     private ImageButton ib_volume_control;
@@ -307,6 +310,16 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
                     }
                     ACTIVE_FRAGMENT_ID = GLOBAL_FRAGMENT_ID;
                 }
+            }
+        });
+
+        btn_search_for_radios = findViewById(R.id.ib_search_for_radios);
+        btn_search_for_radios.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d("TAG", "Requesting focus");
+                searchView.requestFocus();
+                searchView.setIconified(false);
             }
         });
 
@@ -562,7 +575,7 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
             menu.findItem(R.id.item_login).setTitle("Çıkış yap");
         }
 
-        SearchView searchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
+        searchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
