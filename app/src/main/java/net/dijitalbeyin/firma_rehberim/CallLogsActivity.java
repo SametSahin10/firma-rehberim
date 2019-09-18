@@ -27,6 +27,7 @@ import android.widget.CompoundButton;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import net.dijitalbeyin.firma_rehberim.adapters.CallLogCursorAdapter;
 import net.dijitalbeyin.firma_rehberim.data.CompanyContract.CompanyEntry;
@@ -255,39 +256,43 @@ public class CallLogsActivity extends AppCompatActivity {
             }
         });
 
+        String userName = sharedPreferences.getString("username", "Kullanıcı adı bulunamadı");
+        if (userName.equals("Kullanıcı adı bulunamadı")) {
+            //User is not logged in.
+            Log.d("TAG", "setting title as Giris yap");
+            menu.findItem(R.id.item_call_logs_login).setTitle("Giriş yap");
+        } else {
+            // User is logged in.
+            Log.d("TAG", "setting title as Cikis yap");
+            menu.findItem(R.id.item_call_logs_login).setTitle("Çıkış yap");
+        }
+
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-//        switch (item.getItemId()) {
-//            case R.id.item_toggle_caller_detection:
-//                if (serviceState == SERVICE_STOPPED) {
-//                    Log.d("TAG", "Starting Service");
-//                    boolean permissionGranted = ContextCompat.checkSelfPermission(
-//                            getApplicationContext(),
-//                            Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED;
-//                    if (permissionGranted) {
-//                        Intent intent = new Intent(getApplicationContext(), OverlayService.class);
-//                        intent.putExtra("Sender", "Activity Button");
-//                        startService(intent);
-//                        serviceState = SERVICE_RUNNING;
-//                        item.setChecked(true);
-//                    } else {
-//                        ActivityCompat.requestPermissions(CallLogsActivity.this, new String[]{Manifest.permission.READ_PHONE_STATE}, 0);
-//                    }
-//                } else if (serviceState == SERVICE_RUNNING) {
-//                    Log.d("TAG", "Stopping Service");
-//                    Intent intent = new Intent(CallLogsActivity.this, OverlayService.class);
-//                    stopService(intent);
-//                    serviceState = SERVICE_STOPPED;
-//                    item.setChecked(false);
-//                }
-//                return true;
-//            default:
-//                return super.onOptionsItemSelected(item);
-//        }
-        return super.onOptionsItemSelected(item);
+        SharedPreferences sharedPreferences =
+                PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        switch (item.getItemId()) {
+            case R.id.item_call_logs_login:
+                String userName = sharedPreferences.getString("username", "Kullanıcı adı bulunamadı");
+                if (userName.equals("Kullanıcı adı bulunamadı")) {
+                    // User is not logged in.
+                    Intent loginIntent = new Intent(CallLogsActivity.this, AuthenticationActivity.class);
+                    startActivity(loginIntent);
+                } else {
+                    // User is logged in.
+                    editor.putString("username", "Kullanıcı adı bulunamadı");
+                    editor.apply();
+                    Toast.makeText(getApplicationContext(), "Başarıyla çıkış yapıldı", Toast.LENGTH_SHORT).show();
+                    recreate();
+                }
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 }
 
