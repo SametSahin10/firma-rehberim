@@ -16,6 +16,7 @@
         <activity android:name=".AboutActivity" />
         <activity
             android:name=".CallLogsActivity"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"
             android:icon="@mipmap/ic_second_launcher"
             android:label="Arama Listesi"
             android:enabled="false">

@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Color;
 import android.net.Uri;
 
 import androidx.appcompat.widget.Toolbar;
@@ -15,6 +16,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -37,6 +39,8 @@ public class CallLogsActivity extends AppCompatActivity {
     static int SERVICE_STOPPED = 0;
     static int SERVICE_RUNNING = 1;
 
+    Toolbar toolbar;
+    TextView tv_toolbar_title;
     SwipeRefreshLayout swipeRefreshLayout;
     ListView lw_call_log;
     ProgressBar pb_loading_call_logs;
@@ -53,9 +57,30 @@ public class CallLogsActivity extends AppCompatActivity {
         SharedPreferences sharedPreferences =
                 PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         String userName = sharedPreferences.getString("username", "Kullanıcı adı bulunamadı");
-        getSupportActionBar().setTitle(userName);
+
+        toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
 
         final String webpageLink = sharedPreferences.getString("webpageLink", "firmarehberim.com");
+
+        tv_toolbar_title = toolbar.findViewById(R.id.tv_toolbar_title);
+        tv_toolbar_title.setTextColor(Color.WHITE);
+        tv_toolbar_title.setText(userName);
+        tv_toolbar_title.setMovementMethod(LinkMovementMethod.getInstance());
+
+        tv_toolbar_title.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d("TAG", "Title is clicked");
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setData(Uri.parse(webpageLink));
+                if (intent.resolveActivity(getPackageManager()) != null) {
+                    startActivity(intent);
+                } else {
+                    Log.d("TAG", "Cannot find appropriate app to launch");
+                }
+            }
+        });
 
         CompanyDbHelper dbHelper = new CompanyDbHelper(this);
         final SQLiteDatabase database = dbHelper.getWritableDatabase();
@@ -192,7 +217,7 @@ public class CallLogsActivity extends AppCompatActivity {
         final int serviceState = sharedPreferences.getInt("serviceState", SERVICE_STOPPED);
 
         CheckBox enableCallerDetection = (CheckBox) menu.findItem(R.id.item_toggle_caller_detection).getActionView();
-        enableCallerDetection.setText(R.string.arayan_firma_tespiti_call_logs);
+        enableCallerDetection.setText("");
         if (serviceState == SERVICE_STOPPED) {
             Log.d("TAG", "checking it false");
             enableCallerDetection.setChecked(false);
