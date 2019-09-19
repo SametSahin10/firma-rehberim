@@ -1033,6 +1033,7 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(Intent.ACTION_VIEW);
+                Log.d("TAG", "Shareable link: " + radioCurrentlyPlaying.getShareableLink());
                 intent.setData(Uri.parse(radioCurrentlyPlaying.getShareableLink()));
                 if (intent.resolveActivity(getPackageManager()) != null) {
                     startActivity(intent);

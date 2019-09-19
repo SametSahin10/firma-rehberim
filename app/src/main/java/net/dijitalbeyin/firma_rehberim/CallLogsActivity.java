@@ -33,12 +33,13 @@ import net.dijitalbeyin.firma_rehberim.adapters.CallLogCursorAdapter;
 import net.dijitalbeyin.firma_rehberim.data.CompanyContract.CompanyEntry;
 import net.dijitalbeyin.firma_rehberim.data.CompanyDbHelper;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 
 public class CallLogsActivity extends AppCompatActivity {
     static int SERVICE_STOPPED = 0;
     static int SERVICE_RUNNING = 1;
+
+    private final static String rootURL = "https://firmarehberim.com/";
 
     Toolbar toolbar;
     TextView tv_toolbar_title;
@@ -72,13 +73,14 @@ public class CallLogsActivity extends AppCompatActivity {
         tv_toolbar_title.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.d("TAG", "Title is clicked");
-                Intent intent = new Intent(Intent.ACTION_VIEW);
-                intent.setData(Uri.parse(webpageLink));
-                if (intent.resolveActivity(getPackageManager()) != null) {
-                    startActivity(intent);
+                if (webpageLink.equals("firmarehberim.com")) {
+                    Toast.makeText(CallLogsActivity.this, "Kullanıcı bulunamadı", Toast.LENGTH_SHORT).show();
                 } else {
-                    Log.d("TAG", "Cannot find appropriate app to launch");
+                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                    intent.setData(Uri.parse(rootURL + webpageLink));
+                    if (intent.resolveActivity(getPackageManager()) != null) {
+                        startActivity(intent);
+                    }
                 }
             }
         });
