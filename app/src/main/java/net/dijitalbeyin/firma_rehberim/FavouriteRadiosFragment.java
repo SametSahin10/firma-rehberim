@@ -72,7 +72,8 @@ public class FavouriteRadiosFragment extends Fragment implements LoaderManager.L
                 R.layout.item_radio,
                 new ArrayList<Radio>(),
                 null,
-                null);
+                null,
+                        null);
         lw_radios.setAdapter(radioAdapter);
         if (isConnected) {
             getLoaderManager().initLoader(FAVOURITE_RADIO_LOADER_ID, null, this).forceLoad();

@@ -42,6 +42,8 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
     OnRadioItemClickListener onRadioItemClickListener;
     OnRadioLoadingCompleteListener onRadioLoadingCompleteListener;
     OnRadioLoadingStartListener onRadioLoadingStartListener;
+    View.OnClickListener onClickListener;
+//    RadioAdapter.OnRadioIconClickListener onRadioIconClickListener;
 
     public void setOnEventFromRadiosFragmentListener(OnEventFromRadiosFragmentListener onEventFromRadiosFragmentListener) {
         this.onEventFromRadiosFragmentListener = onEventFromRadiosFragmentListener;
@@ -58,6 +60,12 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
     public void setOnRadioLoadingStartListener(OnRadioLoadingStartListener onRadioLoadingStartListener) {
         this.onRadioLoadingStartListener = onRadioLoadingStartListener;
     }
+
+//    public void setOnRadioIconClickListener(RadioAdapter.OnRadioIconClickListener onRadioIconClickListener) {
+//        this.onRadioIconClickListener = onRadioIconClickListener;
+//    }
+
+
 
     String cityToFilter;
     int categoryIdToFilter;
@@ -113,6 +121,22 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
         boolean isConnected = activeNetwork != null
                 && activeNetwork.isConnectedOrConnecting();
 
+        onClickListener = new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                int position = (int) view.getTag();
+                Log.d("TAG", "" + position);
+                List<Radio> radios = radioAdapter.getItems();
+                Radio radio = radios.get(position);
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setData(Uri.parse(radio.getShareableLink()));
+                if (intent.resolveActivity(getContext().getPackageManager()) != null) {
+                    Log.d("TAG", radio.getShareableLink());
+                    startActivity(intent);
+                }
+            }
+        };
+
         pb_loadingRadios = view.findViewById(R.id.pb_loadingRadios);
         pb_bufferingRadio = view.findViewById(R.id.pb_buffering_radio);
         lw_radios = view.findViewById(R.id.lw_radios);
@@ -122,7 +146,8 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
                 R.layout.item_radio,
                 new ArrayList<Radio>(),
                 this,
-                this);
+                this,
+                        onClickListener);
         lw_radios.setAdapter(radioAdapter);
         if (isConnected) {
             getLoaderManager().initLoader(RADIO_LOADER_ID, null, this).forceLoad();
