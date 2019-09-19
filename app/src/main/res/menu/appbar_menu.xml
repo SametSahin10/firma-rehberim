@@ -5,6 +5,7 @@
     <item android:id="@+id/action_search"
           android:icon="@drawable/ic_search"
           android:title="@string/search"
+          android:visible="false"
           app:actionViewClass="android.widget.SearchView"
           app:showAsAction="always"/>
 
@@ -46,11 +47,11 @@
         android:checkable="true"
         app:showAsAction="never"/>
 
-    <item android:id="@+id/item_login"
-          android:title="@string/giri"
-          app:showAsAction="never"/>
-
     <item android:id="@+id/item_about"
         android:title="@string/hakkinda"
         app:showAsAction="never"/>
+
+    <item android:id="@+id/item_login_logout"
+          android:title="@string/giri"
+          app:showAsAction="never"/>
 </menu>

@@ -110,6 +110,15 @@
             android:textSize="15sp"
             android:text="@string/t_r"/>
 
+        <ImageButton
+            android:id="@+id/ib_search_for_radios"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_margin="1dp"
+            android:background="@color/colorPrimary"
+            android:scaleType="fitCenter"
+            android:src="@drawable/baseline_search_white_36"/>
+
         <Button
             android:id="@+id/btn_nav_cities"
             android:layout_width="0dp"
@@ -130,19 +139,9 @@
             android:layout_margin="1dp"
             android:background="@color/colorPrimary"
             android:fontFamily="@font/righteous_regular"
-            android:textColor="#FFFFFF"
+                android:textColor="#FFFFFF"
             android:textSize="15sp"
             android:text="@string/ulusal"/>
-
-        <ImageButton
-            android:id="@+id/ib_search_for_radios"
-            android:layout_width="35dp"
-            android:layout_height="35dp"
-            android:layout_margin="1dp"
-            android:background="@color/colorPrimary"
-            android:scaleType="fitCenter"
-            android:src="@drawable/baseline_search_white_36"/>
-
     </LinearLayout>
 
     <RelativeLayout

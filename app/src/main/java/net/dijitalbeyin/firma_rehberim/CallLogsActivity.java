@@ -219,7 +219,7 @@ public class CallLogsActivity extends AppCompatActivity {
         final SharedPreferences.Editor editor = sharedPreferences.edit();
         final int serviceState = sharedPreferences.getInt("serviceState", SERVICE_STOPPED);
 
-        CheckBox enableCallerDetection = (CheckBox) menu.findItem(R.id.item_toggle_caller_detection).getActionView();
+        CheckBox enableCallerDetection = (CheckBox) menu.findItem(R.id.item_call_logs_caller_detection).getActionView();
         enableCallerDetection.setText("");
         if (serviceState == SERVICE_STOPPED) {
             Log.d("TAG", "checking it false");

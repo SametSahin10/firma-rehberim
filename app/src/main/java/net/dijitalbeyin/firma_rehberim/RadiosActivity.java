@@ -1,6 +1,7 @@
 package net.dijitalbeyin.firma_rehberim;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Context;
@@ -38,6 +39,7 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -138,8 +140,9 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     private Button btn_nav_categories;
     private Button btn_nav_cities;
     private Button btn_nav_global;
-    private ImageButton btn_search_for_radios;
+    private ImageButton ib_search_for_radios;
 
+    private MenuItem action_search;
     private SearchView searchView;
 
     private ImageButton ib_timer;
@@ -313,11 +316,12 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
             }
         });
 
-        btn_search_for_radios = findViewById(R.id.ib_search_for_radios);
-        btn_search_for_radios.setOnClickListener(new View.OnClickListener() {
+        ib_search_for_radios = findViewById(R.id.ib_search_for_radios);
+        ib_search_for_radios.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Log.d("TAG", "Requesting focus");
+                action_search.setVisible(true);
                 searchView.requestFocus();
                 searchView.setIconified(false);
             }
@@ -539,6 +543,8 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
         super.onCreateOptionsMenu(menu);
         getMenuInflater().inflate(R.menu.appbar_menu, menu);
 
+        action_search = menu.findItem(R.id.action_search);
+
         SharedPreferences sharedPreferences =
                 PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -567,12 +573,13 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
         if (userName.equals("Kullanıcı adı bulunamadı")) {
             //User is not logged in.
             Log.d("TAG", "setting title as Giris yap");
-            menu.findItem(R.id.item_show_call_logs).setEnabled(false);
-            menu.findItem(R.id.item_login).setTitle("Giriş yap");
+            menu.findItem(R.id.item_show_call_logs).setVisible(false);
+            menu.findItem(R.id.item_caller_detection).setVisible(false);
+            menu.findItem(R.id.item_login_logout).setTitle("Giriş yap");
         } else {
             // User is logged in.
             Log.d("TAG", "setting title as Cikis yap");
-            menu.findItem(R.id.item_login).setTitle("Çıkış yap");
+            menu.findItem(R.id.item_login_logout).setTitle("Çıkış yap");
         }
 
         searchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
@@ -593,6 +600,15 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
                 } else {
                     Toast.makeText(RadiosActivity.this.getApplicationContext(), "Arama yapmak için Radyolar sekmesine geçiniz.", Toast.LENGTH_SHORT).show();
                 }
+                return false;
+            }
+        });
+
+        searchView.setOnCloseListener(new SearchView.OnCloseListener() {
+            @Override
+            public boolean onClose() {
+                action_search.setVisible(false);
+                hideKeyboard(RadiosActivity.this);
                 return false;
             }
         });
@@ -647,7 +663,7 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
                 }
                 editor.apply();
                 return true;
-            case R.id.item_login:
+            case R.id.item_login_logout:
                 String userName = sharedPreferences.getString("username", "Kullanıcı adı bulunamadı");
                 if (userName.equals("Kullanıcı adı bulunamadı")) {
                     // User is not logged in.
@@ -1172,5 +1188,15 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
                 Toast.makeText(this, "Radyo durduruldu", Toast.LENGTH_SHORT).show();
             }
         }
+    }
+
+    public static void hideKeyboard(Activity activity) {
+        InputMethodManager inputMethodManager =
+                (InputMethodManager) activity.getSystemService(INPUT_METHOD_SERVICE);
+        View view = activity.getCurrentFocus();
+        if (view == null) {
+            view = new View(activity);
+        }
+        inputMethodManager.hideSoftInputFromWindow(view.getWindowToken(), 0);
     }
 }
