@@ -38,8 +38,10 @@ import java.util.ArrayList;
 public class CallLogsActivity extends AppCompatActivity {
     static int SERVICE_STOPPED = 0;
     static int SERVICE_RUNNING = 1;
-
     private final static String rootURL = "https://firmarehberim.com/";
+
+    CompanyDbHelper dbHelper;
+    SQLiteDatabase database;
 
     Toolbar toolbar;
     TextView tv_toolbar_title;
@@ -85,8 +87,8 @@ public class CallLogsActivity extends AppCompatActivity {
             }
         });
 
-        CompanyDbHelper dbHelper = new CompanyDbHelper(this);
-        final SQLiteDatabase database = dbHelper.getWritableDatabase();
+        dbHelper = new CompanyDbHelper(this);
+        database = dbHelper.getWritableDatabase();
         final String[] projection = {CompanyEntry._ID,
                                 CompanyEntry.COLUMN_WEBPAGE_LINK,
                                 CompanyEntry.COLUMN_COMPANY_NAME,
@@ -210,6 +212,18 @@ public class CallLogsActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        refreshCallLogs();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        refreshCallLogs();
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
         getMenuInflater().inflate(R.menu.call_logs_menu, menu);
@@ -295,6 +309,26 @@ public class CallLogsActivity extends AppCompatActivity {
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    private void refreshCallLogs() {
+        swipeRefreshLayout.setRefreshing(true);
+        String[] projection = {CompanyEntry._ID,
+                CompanyEntry.COLUMN_WEBPAGE_LINK,
+                CompanyEntry.COLUMN_COMPANY_NAME,
+                CompanyEntry.COLUMN_AUTHORITATIVE_NAME,
+                CompanyEntry.COLUMN_CALL_STATUS,
+                CompanyEntry.COLUMN_DATE_INFO};
+        Cursor cursor = database.query(CompanyEntry.TABLE_NAME,
+                projection,
+                null,
+                null,
+                null,
+                null,
+                CompanyEntry._ID + " DESC",
+                null);
+        callLogCursorAdapter.swapCursor(cursor);
+        swipeRefreshLayout.setRefreshing(false);
     }
 }
 
