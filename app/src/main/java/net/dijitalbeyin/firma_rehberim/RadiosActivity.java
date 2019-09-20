@@ -667,7 +667,7 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
                 String userName = sharedPreferences.getString("username", "Kullanıcı adı bulunamadı");
                 if (userName.equals("Kullanıcı adı bulunamadı")) {
                     // User is not logged in.
-                    Intent loginIntent = new Intent(RadiosActivity.this, AuthenticationActivity.class);
+                    Intent loginIntent = new Intent(RadiosActivity.this, SignInActivity.class);
                     startActivity(loginIntent);
                 } else {
                     // User is logged in.

@@ -5,19 +5,20 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/colorPrimary"
-    tools:context=".AuthenticationActivity">
+    tools:context=".SignInActivity">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="40dp"
+        android:layout_marginStart="10dp"
         android:padding="10dp"
         android:background="@drawable/authentication_fields_backgorund"
         android:fontFamily="@font/righteous_regular"
         android:textColor="@color/colorPrimary"
         android:textSize="32sp"
-        android:text="@string/firma_rehberim_radyo"/>
+        android:text="@string/hesap_olu_tur"/>
 
     <LinearLayout
         android:orientation="vertical"
@@ -53,23 +54,35 @@
             android:textColorHint="@color/authentication_fields_hint_text_color"
             android:textColor="@color/colorPrimary"
             android:textSize="20sp"/>
+
+        <TextView
+            android:id="@+id/tv_launch_sign_in_activity"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="5dp"
+            android:padding="10dp"
+            android:fontFamily="@font/righteous_regular"
+            android:textColor="#FFFFFF"
+            android:textSize="18sp"
+            android:text="@string/hesab_n_var_m_giri_yap"/>
     </LinearLayout>
 
     <ProgressBar
-        android:id="@+id/pb_verifying_user"
+        android:id="@+id/pb_creating_account"
         android:layout_width="70dp"
         android:layout_height="70dp"
-        android:layout_above="@id/btn_login"
+        android:layout_above="@id/btn_create_account"
         android:layout_centerHorizontal="true"
-        android:layout_marginBottom="60dp"
-        android:visibility="gone"
-        android:theme="@style/AppTheme.WhiteAccent"/>
+        android:layout_marginBottom="50dp"
+        android:theme="@style/AppTheme.WhiteAccent"
+        android:visibility="gone"/>
 
     <Button
-        android:id="@+id/btn_login"
+        android:id="@+id/btn_create_account"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_above="@id/tv_skip_logging_in"
+        android:layout_alignParentBottom="true"
         android:gravity="center"
         android:layout_marginStart="10dp"
         android:layout_marginEnd="10dp"
@@ -80,17 +93,5 @@
         android:textAllCaps="false"
         android:textColor="@color/colorPrimary"
         android:textSize="24sp"
-        android:text="@string/g_r_yap"/>
-
-    <TextView
-        android:id="@+id/tv_skip_logging_in"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:padding="10dp"
-        android:fontFamily="@font/righteous_regular"
-        android:textColor="#FFFFFF"
-        android:textSize="16sp"
-        android:text="@string/giris_yapmadan_devam_et"/>
+        android:text="@string/hesap_olu_tur"/>
 </RelativeLayout>

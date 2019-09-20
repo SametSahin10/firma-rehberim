@@ -15,30 +15,49 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class AuthenticationActivity extends AppCompatActivity {
+import com.google.firebase.auth.FirebaseAuth;
+
+public class SignInActivity extends AppCompatActivity implements View.OnClickListener {
     private final static String REQUEST_URL_PHONE_NUMBER = "https://firmarehberim.com/inc/telephone.php?no=";
     private final static String REQUEST_URL_EMAIL = "https://firmarehberim.com/inc/telephone.php?mail=";
 
-    EditText et_username;
-    EditText et_password;
-    ProgressBar pb_verifying_user;
-    Button btn_login;
-    TextView tv_skip_logging_in;
+    private EditText et_username;
+    private EditText et_password;
+    private ProgressBar pb_verifying_user;
+    private Button btn_login;
+    private TextView tv_launch_sign_up_activity;
+    private TextView tv_skip_logging_in;
+
+    private FirebaseAuth firebaseAuth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_authentication);
+        setContentView(R.layout.activity_sign_in);
+
+        firebaseAuth = FirebaseAuth.getInstance();
 
         et_username = findViewById(R.id.et_username);
         et_password = findViewById(R.id.et_password);
+        tv_launch_sign_up_activity = findViewById(R.id.tv_launch_sign_up_activity);
         pb_verifying_user = findViewById(R.id.pb_verifying_user);
-
         btn_login = findViewById(R.id.btn_login);
-        btn_login.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //Implement authtentication logic.
+        tv_skip_logging_in = findViewById(R.id.tv_skip_logging_in);
+
+        tv_launch_sign_up_activity.setOnClickListener(this);
+        btn_login.setOnClickListener(this);
+        tv_skip_logging_in.setOnClickListener(this);
+    }
+
+    @Override
+    public void onClick(View view) {
+        switch (view.getId()) {
+            case R.id.tv_launch_sign_up_activity:
+                //Launch activity to create account
+                Intent launchSignUpIntent = new Intent(SignInActivity.this, SignUpActivity.class);
+                startActivity(launchSignUpIntent);
+                break;
+            case R.id.btn_login:
                 final String userName = et_username.getText().toString();
                 if (TextUtils.isEmpty(userName)) {
                     Toast.makeText(getApplicationContext(), "Telefon numarası veya e-posta giriniz", Toast.LENGTH_SHORT).show();
@@ -55,19 +74,14 @@ public class AuthenticationActivity extends AppCompatActivity {
                 } else {
                     verifyUsingPhoneNumber(userName, password);
                 }
-            }
-        });
-
-        tv_skip_logging_in = findViewById(R.id.tv_skip_logging_in);
-        tv_skip_logging_in.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(AuthenticationActivity.this, RadiosActivity.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                startActivity(intent);
+                break;
+            case R.id.tv_skip_logging_in:
+                Intent skipLoggingInIntent = new Intent(SignInActivity.this, RadiosActivity.class);
+                skipLoggingInIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(skipLoggingInIntent);
                 finish();
-            }
-        });
+                break;
+        }
     }
 
     private void verifyUsingEmail(final String userName, final String password) {
@@ -79,7 +93,7 @@ public class AuthenticationActivity extends AppCompatActivity {
                 if (user != null) {
                     if (user.isVerified() && (user.getMatch() == 0)) {
                         //Authenticate user.
-                        Intent intent = new Intent(AuthenticationActivity.this, RadiosActivity.class);
+                        Intent intent = new Intent(SignInActivity.this, RadiosActivity.class);
                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                         startActivity(intent);
                         SharedPreferences sharedPreferences =
@@ -126,7 +140,7 @@ public class AuthenticationActivity extends AppCompatActivity {
                 if (user != null) {
                     if (user.isVerified() && (user.getMatch() == 0)) {
                         //Authenticate user.
-                        Intent intent = new Intent(AuthenticationActivity.this, RadiosActivity.class);
+                        Intent intent = new Intent(SignInActivity.this, RadiosActivity.class);
                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                         startActivity(intent);
                         SharedPreferences sharedPreferences =
@@ -160,6 +174,10 @@ public class AuthenticationActivity extends AppCompatActivity {
                 });
             }
         }).start();
+    }
+
+    private void signIntoFirebase() {
+
     }
 
     private boolean isEmail(String userName) {
