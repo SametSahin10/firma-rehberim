@@ -6,7 +6,7 @@
           android:checkable="true"
           app:actionViewClass="android.widget.CheckBox"
           app:showAsAction="always"/>
-    <item android:id="@+id/item_call_logs_login"
+    <item android:id="@+id/item_call_logs_login_logout"
           android:title="@string/giri"
           app:showAsAction="never"/>
 </menu>

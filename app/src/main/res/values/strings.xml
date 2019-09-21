@@ -49,4 +49,7 @@
     <string name="hesab_n_yok_mu_hesap_olu_tur">Hesabın yok mu? Hesap oluştur</string>
     <string name="hesab_n_var_m_giri_yap">Hesabın var mı? Giriş yap</string>
     <string name="hesap_olu_tur">Hesap Oluştur</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

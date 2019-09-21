@@ -68,6 +68,7 @@ import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.upstream.TransferListener;
 import com.google.android.exoplayer2.util.EventLogger;
 import com.google.android.exoplayer2.util.Util;
+import com.google.firebase.auth.FirebaseAuth;
 import com.squareup.picasso.Picasso;
 
 import net.dijitalbeyin.firma_rehberim.adapters.CategoryAdapter;
@@ -175,10 +176,14 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     City allTheCities;
     Category allTheCategories;
 
+    FirebaseAuth firebaseAuth;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_radio);
+
+        firebaseAuth = FirebaseAuth.getInstance();
 
         ACTIVE_FRAGMENT_ID = RADIOS_FRAGMENT_ID;
         radiosFragment = new RadiosFragment();
@@ -667,10 +672,12 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
                 String userName = sharedPreferences.getString("username", "Kullanıcı adı bulunamadı");
                 if (userName.equals("Kullanıcı adı bulunamadı")) {
                     // User is not logged in.
-                    Intent loginIntent = new Intent(RadiosActivity.this, SignInActivity.class);
+                    Intent loginIntent = new Intent(RadiosActivity.this, AuthenticationActivity.class);
                     startActivity(loginIntent);
+
                 } else {
                     // User is logged in.
+                    firebaseAuth.signOut();
                     editor.putString("username", "Kullanıcı adı bulunamadı");
                     editor.apply();
                     Toast.makeText(getApplicationContext(), "Başarıyla çıkış yapıldı", Toast.LENGTH_SHORT).show();
