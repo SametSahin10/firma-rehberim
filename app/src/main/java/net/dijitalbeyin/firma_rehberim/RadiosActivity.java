@@ -14,6 +14,9 @@ import android.net.Uri;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.android.material.tabs.TabLayout;
 
 import androidx.core.app.ActivityCompat;
@@ -69,6 +72,9 @@ import com.google.android.exoplayer2.upstream.TransferListener;
 import com.google.android.exoplayer2.util.EventLogger;
 import com.google.android.exoplayer2.util.Util;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.GetTokenResult;
+import com.google.firebase.messaging.FirebaseMessaging;
 import com.squareup.picasso.Picasso;
 
 import net.dijitalbeyin.firma_rehberim.adapters.CategoryAdapter;
@@ -184,6 +190,29 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
         setContentView(R.layout.activity_radio);
 
         firebaseAuth = FirebaseAuth.getInstance();
+        FirebaseMessaging.getInstance().subscribeToTopic("number_transfer")
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Toast.makeText(getApplicationContext(), "Subscribing successful", Toast.LENGTH_SHORT).show();
+                    }
+                });
+
+        FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (firebaseUser != null) {
+            firebaseUser.getIdToken(true)
+                .addOnCompleteListener(new OnCompleteListener<GetTokenResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<GetTokenResult> task) {
+                        if (task.isSuccessful()) {
+                            String idToken = task.getResult().getToken();
+                            Log.d("TAG", "id token: " + idToken);
+                        } else {
+                            Log.e("TAG", "Task failed", task.getException());
+                        }
+                    }
+                });
+        }
 
         ACTIVE_FRAGMENT_ID = RADIOS_FRAGMENT_ID;
         radiosFragment = new RadiosFragment();
