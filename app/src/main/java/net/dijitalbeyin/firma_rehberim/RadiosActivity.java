@@ -194,7 +194,31 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
-                        Toast.makeText(getApplicationContext(), "Subscribing successful", Toast.LENGTH_SHORT).show();
+                        Log.d("TAG", "Subscription successful: number transfer");
+                    }
+                });
+
+        FirebaseMessaging.getInstance().subscribeToTopic("whatsapp_message")
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.d("TAG", "Subscription successful: whatsapp_message");
+                    }
+                });
+
+        FirebaseMessaging.getInstance().subscribeToTopic("sms")
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.d("TAG", "Subscription successful: sms");
+                    }
+                });
+
+        FirebaseMessaging.getInstance().subscribeToTopic("view_webpage")
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.d("TAG", "Subscription successful: view webpage");
                     }
                 });
 
