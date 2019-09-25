@@ -190,6 +190,14 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
         setContentView(R.layout.activity_radio);
 
         firebaseAuth = FirebaseAuth.getInstance();
+
+        FirebaseUser user = firebaseAuth.getCurrentUser();
+        if (user != null) {
+            Log.d(LOG_TAG, "User is logged in");
+        } else {
+            Log.d(LOG_TAG, "User does not exist");
+        }
+
         FirebaseMessaging.getInstance().subscribeToTopic("number_transfer")
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override

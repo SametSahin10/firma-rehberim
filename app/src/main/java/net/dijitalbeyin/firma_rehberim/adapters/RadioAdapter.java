@@ -75,7 +75,6 @@ public class RadioAdapter extends ArrayAdapter<Radio> {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        Log.d("TAG", "position: " + position);
         View row = convertView;
         RadioHolder holder;
         final Radio currentRadio = radios.get(position);
@@ -218,7 +217,6 @@ public class RadioAdapter extends ArrayAdapter<Radio> {
         contentValues.put(RadioEntry.COLUMN_RADIO_IS_BEING_BUFFERED, radio.isBeingBuffered());
         contentValues.put(RadioEntry.COLUMN_RADIO_IS_LIKED, radio.isLiked());
         long newRowId = sqLiteDatabase.insert(RadioEntry.TABLE_NAME, null, contentValues);
-        Log.d(LOG_TAG, "newRowId: " + newRowId);
     }
 
     private void deleteFromFavourites(Radio radio) {

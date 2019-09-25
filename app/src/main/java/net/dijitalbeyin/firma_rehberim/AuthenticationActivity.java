@@ -16,11 +16,16 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.SignInMethodQueryResult;
+
+import java.util.List;
 
 public class AuthenticationActivity extends AppCompatActivity implements SignInFragment.OnLaunchSignUpClickListener,
                                                                          SignInFragment.OnUserAuthorizedToSignInListener,
                                                                          SignUpFragment.OnLaunchSignInClickListener,
                                                                          SignUpFragment.OnUserAuthorizedToSignUpListener {
+
+    private final static String LOG_TAG = AuthenticationActivity.class.getSimpleName();
 
     SignInFragment signInFragment;
     SignUpFragment signUpFragment;
@@ -51,21 +56,52 @@ public class AuthenticationActivity extends AppCompatActivity implements SignInF
         }
     }
 
+    private void checkIfUserExists(final String email, final String password) {
+        FirebaseAuth firebaseAuth = FirebaseAuth.getInstance();
+        firebaseAuth.fetchSignInMethodsForEmail(email)
+                .addOnCompleteListener(new OnCompleteListener<SignInMethodQueryResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<SignInMethodQueryResult> task) {
+                        if (task.isSuccessful()) {
+                            SignInMethodQueryResult result = task.getResult();
+                            List<String> signInMethods = result.getSignInMethods();
+                            if (signInMethods.isEmpty()) {
+                                Log.d(LOG_TAG, "User does not have an account. Launch account creation process.");
+                                signUpToFirebase(email, password);
+                            } else {
+                                Log.d(LOG_TAG, "User has an account. Simply login.");
+                                signInToFirebase(email, password);
+                            }
+                        }
+                    }
+                });
+    }
+
     @Override
     public void onUserAuthorizedToSignIn(String userName, String password) {
-        // Authenticate user through Firebase.
-        Log.d("TAG", "User is authorized to sign in.");
-        firebaseAuth.signInWithEmailAndPassword(userName, password)
+        checkIfUserExists(userName, password);
+    }
+
+    @Override
+    public void onUserAuthorizedToSignUp(String userName, String password) {
+        // Create new account on Firebase.
+        Log.d(LOG_TAG, "User is authorized to sign up.");
+
+    }
+
+    private void signInToFirebase(String email, String password) {
+        Log.d(LOG_TAG, "User is authorized to sign in.");
+        firebaseAuth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
-                            Log.d("TAG", "Signing into firebase successful");
+                            Log.d(LOG_TAG, "Signing into firebase successful");
                             Intent intent = new Intent(AuthenticationActivity.this, RadiosActivity.class);
                             startActivity(intent);
                             finish();
                         } else {
-                            Log.d("TAG", "Signing into firebase failed");
+                            Log.d(LOG_TAG, "Signing into firebase failed");
                             Toast.makeText(getApplicationContext(), "Kullanıcı adı veya parola yanlış. Lütfen tekrar deneyiniz.", Toast.LENGTH_SHORT).show();
                         }
                         signInFragment.pb_verifying_user.setVisibility(View.GONE);
@@ -73,27 +109,21 @@ public class AuthenticationActivity extends AppCompatActivity implements SignInF
                 });
     }
 
-    @Override
-    public void onUserAuthorizedToSignUp(String userName, String password) {
-        // Create new account on Firebase.
-        Log.d("TAG", "User is authorized to sign up.");
-        firebaseAuth.createUserWithEmailAndPassword(userName, password)
+    private void signUpToFirebase(final String email, final String password) {
+        firebaseAuth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
-                            Log.d("TAG", "Signing up successful");
+                            Log.d(LOG_TAG, "Signing up successful");
                             Toast.makeText(AuthenticationActivity.this,
-                                            "Başarıyla hesap oluşturuldu",
-                                                    Toast.LENGTH_SHORT).show();
-                            getSupportFragmentManager().beginTransaction()
-                                                       .replace(R.id.fragment_container, signInFragment)
-                                                       .commit();
+                                    "Başarıyla hesap oluşturuldu",
+                                    Toast.LENGTH_SHORT).show();
+                            signInToFirebase(email, password);
                         } else {
-                            Log.d("TAG", "Signing up failed");
+                            Log.d(LOG_TAG, "Signing up failed");
                             Toast.makeText(getApplicationContext(), "Kullanıcı adı veya parola yanlış. Lütfen tekrar deneyiniz.\nHesap oluşturabilmeniz için firmarehberim.com'da bir hesabınız olmalıdır", Toast.LENGTH_SHORT).show();
                         }
-                        signUpFragment.pb_creating_account.setVisibility(View.GONE);
                     }
                 });
     }
