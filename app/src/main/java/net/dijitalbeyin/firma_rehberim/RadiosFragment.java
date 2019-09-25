@@ -17,13 +17,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-
-import com.google.android.gms.dynamic.IFragmentWrapper;
-
 import net.dijitalbeyin.firma_rehberim.adapters.RadioAdapter;
 
 import java.util.ArrayList;
@@ -34,8 +30,8 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
         RadioAdapter.OnDeleteFromFavouritesListener {
     private static final String LOG_TAG = RadiosFragment.class.getSimpleName();
     private static final String RADIO_REQUEST_URL = "https://firmarehberim.com/bolumler/radyolar/app-json/radyolar_arama.php?q=";
-    private static final String RADIO_REQUEST_URL_RESPECT_TO_CITY = "https://firmarehberim.com/sayfalar/radyo/json/radyolar_iller.php?q=";
-    private static final String RADIO_REQUEST_URL_RESPECT_TO_CATEGORY = "https://firmarehberim.com/sayfalar/radyo/json/radyolar_kategori.php?q=";
+    private static final String RADIO_REQUEST_URL_RESPECT_TO_CITY = "https://firmarehberim.com/bolumler/radyolar/app-json/radyolar_iller.php?q=";
+    private static final String RADIO_REQUEST_URL_RESPECT_TO_CATEGORY = "https://firmarehberim.com/bolumler/radyolar/app-json/radyolar_kategori.php?q=";
     private static final int RADIO_LOADER_ID = 1;
 
     OnEventFromRadiosFragmentListener onEventFromRadiosFragmentListener;
@@ -58,7 +54,7 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
     }
 
     public void setOnRadioLoadingStartListener(OnRadioLoadingStartListener onRadioLoadingStartListener) {
-        this.onRadioLoadingStartListener = onRadioLoadingStartListener;
+//        this.onRadioLoadingStartListener = onRadioLoadingStartListener;
     }
 
 //    public void setOnRadioIconClickListener(RadioAdapter.OnRadioIconClickListener onRadioIconClickListener) {
