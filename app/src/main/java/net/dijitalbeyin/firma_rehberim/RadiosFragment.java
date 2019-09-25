@@ -33,7 +33,7 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
         RadioAdapter.OnAddToFavouritesListener,
         RadioAdapter.OnDeleteFromFavouritesListener {
     private static final String LOG_TAG = RadiosFragment.class.getSimpleName();
-    private static final String RADIO_REQUEST_URL = "https://firmarehberim.com/sayfalar/radyo/json/radyolar_arama.php?q=";
+    private static final String RADIO_REQUEST_URL = "https://firmarehberim.com/bolumler/radyolar/app-json/radyolar_arama.php?q=";
     private static final String RADIO_REQUEST_URL_RESPECT_TO_CITY = "https://firmarehberim.com/sayfalar/radyo/json/radyolar_iller.php?q=";
     private static final String RADIO_REQUEST_URL_RESPECT_TO_CATEGORY = "https://firmarehberim.com/sayfalar/radyo/json/radyolar_kategori.php?q=";
     private static final int RADIO_LOADER_ID = 1;

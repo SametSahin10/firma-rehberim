@@ -1,6 +1,5 @@
 package net.dijitalbeyin.firma_rehberim;
 
-import android.net.Uri;
 import android.text.TextUtils;
 import android.util.Log;
 import java.io.BufferedReader;
