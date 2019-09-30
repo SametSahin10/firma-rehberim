@@ -1,15 +1,21 @@
 package net.dijitalbeyin.firma_rehberim;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.media.RingtoneManager;
 import android.net.Uri;
-import android.os.Handler;
-import android.os.Looper;
+import android.os.Build;
+import android.os.PowerManager;
+import android.os.PowerManager.WakeLock;
 import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.core.app.NotificationCompat;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -21,7 +27,8 @@ import java.net.URLEncoder;
 import java.util.Map;
 
 public class MyFirebaseMessagingService extends FirebaseMessagingService {
-    private static final String TAG = MyFirebaseMessagingService.class.getSimpleName();
+    private static final String LOG_TAG = MyFirebaseMessagingService.class.getSimpleName();
+    private static final String WAKE_LOG_TAG = MyFirebaseMessagingService.class.getSimpleName() + "MyLock";
     private static final String ROOT_URL_LITERAL = "https://firmarehberim.com/";
     private static final String TOPIC_NUMBER_TRANSFER = "/topics/number_transfer";
     private static final String TOPIC_WHATSAPP_MESSAGE = "/topics/whatsapp_message";
@@ -32,12 +39,12 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
     @Override
     public void onNewToken(@NonNull String token) {
-        Log.d(TAG, "New Token: " + token);
+        Log.d(LOG_TAG, "New Token: " + token);
     }
 
     @Override
     public void onMessageReceived(@NonNull RemoteMessage remoteMessage) {
-        Log.d(TAG, "Message received");
+        Log.d(LOG_TAG, "Message received");
         if (remoteMessage.getData().size() > 0) {
             firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
             if (firebaseUser != null) {
@@ -48,29 +55,85 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                     if (mailAddress.equals(userEmail)) {
                         String phoneNumber = dataPayload.get("number");
                         String topic = remoteMessage.getFrom();
-                        Log.d(TAG, "Topic: " + topic);
+                        Log.d(LOG_TAG, "Topic: " + topic);
                         switch (topic) {
                             case TOPIC_NUMBER_TRANSFER:
                                 handlePhoneNumber(phoneNumber);
+//                                sendNotification(phoneNumber);
+                                wakeUpScreen();
                                 break;
                             case TOPIC_WHATSAPP_MESSAGE:
                                 String whatsappMesageBody = dataPayload.get("whatsapp_message_body");
                                 sendWhatsappMessage(phoneNumber, whatsappMesageBody);
+//                                sendNotification("Sending Whatsapp message");
+                                wakeUpScreen();
                                 break;
                             case TOPIC_SMS:
                                 String smsBody = dataPayload.get("sms_body");
                                 sendSMS(phoneNumber, smsBody);
+//                                sendNotification("Sending SMS");
+                                wakeUpScreen();
                                 break;
                             case TOPIC_WEBPAGE:
                                 String webpageUrl = dataPayload.get("webpage_url");
                                 viewWebpage(webpageUrl);
+//                                sendNotification("View Webpage");
+                                wakeUpScreen();
                                 break;
                             default:
-                                Log.e(TAG, "Unknown topic");
+                                Log.e(LOG_TAG, "Unknown topic");
                         }
                     }
                 }
             }
+        }
+    }
+
+    private void sendNotification(String messageBody) {
+        Intent intent = new Intent(this, RadiosActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this,
+                                                                    0,
+                                                                    intent,
+                                                                    PendingIntent.FLAG_ONE_SHOT);
+
+        String channelId = getString(R.string.default_notification_channel_id);
+        Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+        NotificationCompat.Builder notificationBuilder =
+                new NotificationCompat.Builder(this, channelId)
+                    .setSmallIcon(R.mipmap.ic_launcher)
+                    .setContentTitle(getString(R.string.fcm_message))
+                    .setContentText(messageBody)
+                    .setAutoCancel(true)
+                    .setSound(defaultSoundUri)
+                    .setContentIntent(pendingIntent);
+
+        NotificationManager notificationManager =
+                (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel notificationChannel = new NotificationChannel(channelId,
+                                                "Best notification channel ever",
+                                                NotificationManager.IMPORTANCE_DEFAULT);
+            notificationManager.createNotificationChannel(notificationChannel);
+        }
+        notificationManager.notify(0, notificationBuilder.build());
+    }
+
+    private void wakeUpScreen() {
+        PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
+        boolean isInteractive = powerManager.isInteractive();
+        if (!isInteractive) {
+            WakeLock wakeLock = powerManager.newWakeLock(PowerManager.FULL_WAKE_LOCK
+                                                                | PowerManager.ACQUIRE_CAUSES_WAKEUP
+                                                                | PowerManager.ON_AFTER_RELEASE,
+                                                                  WAKE_LOG_TAG);
+            wakeLock.acquire(10000);
+
+            WakeLock cpuWakeLock = powerManager
+                    .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, WAKE_LOG_TAG);
+            cpuWakeLock.acquire(10000);
+
         }
     }
 
