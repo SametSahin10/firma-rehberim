@@ -59,25 +59,21 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                         switch (topic) {
                             case TOPIC_NUMBER_TRANSFER:
                                 handlePhoneNumber(phoneNumber);
-//                                sendNotification(phoneNumber);
                                 wakeUpScreen();
                                 break;
                             case TOPIC_WHATSAPP_MESSAGE:
                                 String whatsappMesageBody = dataPayload.get("whatsapp_message_body");
                                 sendWhatsappMessage(phoneNumber, whatsappMesageBody);
-//                                sendNotification("Sending Whatsapp message");
                                 wakeUpScreen();
                                 break;
                             case TOPIC_SMS:
                                 String smsBody = dataPayload.get("sms_body");
                                 sendSMS(phoneNumber, smsBody);
-//                                sendNotification("Sending SMS");
                                 wakeUpScreen();
                                 break;
                             case TOPIC_WEBPAGE:
                                 String webpageUrl = dataPayload.get("webpage_url");
                                 viewWebpage(webpageUrl);
-//                                sendNotification("View Webpage");
                                 wakeUpScreen();
                                 break;
                             default:
@@ -87,37 +83,6 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 }
             }
         }
-    }
-
-    private void sendNotification(String messageBody) {
-        Intent intent = new Intent(this, RadiosActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this,
-                                                                    0,
-                                                                    intent,
-                                                                    PendingIntent.FLAG_ONE_SHOT);
-
-        String channelId = getString(R.string.default_notification_channel_id);
-        Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-        NotificationCompat.Builder notificationBuilder =
-                new NotificationCompat.Builder(this, channelId)
-                    .setSmallIcon(R.mipmap.ic_launcher)
-                    .setContentTitle(getString(R.string.fcm_message))
-                    .setContentText(messageBody)
-                    .setAutoCancel(true)
-                    .setSound(defaultSoundUri)
-                    .setContentIntent(pendingIntent);
-
-        NotificationManager notificationManager =
-                (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel notificationChannel = new NotificationChannel(channelId,
-                                                "Best notification channel ever",
-                                                NotificationManager.IMPORTANCE_DEFAULT);
-            notificationManager.createNotificationChannel(notificationChannel);
-        }
-        notificationManager.notify(0, notificationBuilder.build());
     }
 
     private void wakeUpScreen() {
