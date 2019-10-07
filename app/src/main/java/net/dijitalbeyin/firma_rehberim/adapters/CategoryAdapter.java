@@ -7,11 +7,10 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
-import net.dijitalbeyin.firma_rehberim.Category;
+import net.dijitalbeyin.firma_rehberim.datamodel.Category;
 import net.dijitalbeyin.firma_rehberim.R;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class CategoryAdapter extends ArrayAdapter<Object> {
     Context context;

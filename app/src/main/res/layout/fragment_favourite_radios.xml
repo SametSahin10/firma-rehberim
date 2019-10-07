@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:weightSum="10"
-    tools:context=".RadiosActivity">
+    tools:context=".activities.RadiosActivity">
 
     <RelativeLayout
         android:layout_width="match_parent"

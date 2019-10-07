@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import androidx.core.content.ContextCompat;
 
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,7 +17,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import com.squareup.picasso.Picasso;
 import net.dijitalbeyin.firma_rehberim.R;
-import net.dijitalbeyin.firma_rehberim.Radio;
+import net.dijitalbeyin.firma_rehberim.datamodel.Radio;
 import net.dijitalbeyin.firma_rehberim.data.RadioDbHelper;
 import java.util.ArrayList;
 import java.util.List;

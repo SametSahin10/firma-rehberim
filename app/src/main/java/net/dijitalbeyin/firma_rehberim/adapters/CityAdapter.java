@@ -8,8 +8,7 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
-import net.dijitalbeyin.firma_rehberim.Category;
-import net.dijitalbeyin.firma_rehberim.City;
+import net.dijitalbeyin.firma_rehberim.datamodel.City;
 import net.dijitalbeyin.firma_rehberim.R;
 
 import java.util.ArrayList;

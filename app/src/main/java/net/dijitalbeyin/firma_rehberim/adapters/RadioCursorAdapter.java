@@ -19,7 +19,7 @@ import androidx.core.content.ContextCompat;
 import com.squareup.picasso.Picasso;
 
 import net.dijitalbeyin.firma_rehberim.R;
-import net.dijitalbeyin.firma_rehberim.Radio;
+import net.dijitalbeyin.firma_rehberim.datamodel.Radio;
 import net.dijitalbeyin.firma_rehberim.data.RadioDbHelper;
 
 import static net.dijitalbeyin.firma_rehberim.data.RadioContract.*;

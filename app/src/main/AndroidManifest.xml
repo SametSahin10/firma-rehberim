@@ -20,11 +20,11 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true">
-        <activity android:name=".AuthenticationActivity"
+        <activity android:name=".activities.AuthenticationActivity"
                   android:theme="@style/Theme.AppCompat.NoActionBar"/>
-        <activity android:name=".AboutActivity" />
+        <activity android:name=".activities.AboutActivity" />
         <activity
-            android:name=".CallLogsActivity"
+            android:name=".activities.CallLogsActivity"
             android:enabled="false"
             android:icon="@mipmap/ic_second_launcher"
             android:label="Arama Listesi"
@@ -35,22 +35,22 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".OverlayActivity" />
-        <activity android:name=".RadiosActivity">
+        <activity android:name=".activities.OverlayActivity" />
+        <activity android:name=".activities.RadiosActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".MainActivity">
+        <activity android:name=".activities.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
             </intent-filter>
         </activity>
 
         <receiver
-            android:name=".CallReceiver"
+            android:name=".receivers.CallReceiver"
             android:enabled="true">
             <intent-filter>
                 <action android:name="android.intent.action.PHONE_STATE" />
@@ -59,15 +59,16 @@
                 <action android:name="android.intent.action.NEW_OUTGOING_CALL" />
             </intent-filter>
         </receiver>
-        <receiver android:name=".StartupIntentReceiver">
+        <receiver android:name=".receivers.StartupIntentReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
 
-        <service android:name=".OverlayService" />
-        <service android:name=".PlayRadioService"/>
-        <service android:name=".MyFirebaseMessagingService"
+        <service android:name=".services.OverlayService" />
+        <service android:name=".services.PlayRadioService"
+                 android:enabled="true" />
+        <service android:name=".services.MyFirebaseMessagingService"
                  android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
