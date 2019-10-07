@@ -2,24 +2,35 @@ package net.dijitalbeyin.firma_rehberim;
 
 import android.Manifest;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Color;
 import android.net.Uri;
 
+import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
+import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 import net.dijitalbeyin.firma_rehberim.adapters.CallLogCursorAdapter;
 import net.dijitalbeyin.firma_rehberim.data.CompanyContract.CompanyEntry;
@@ -27,11 +38,16 @@ import net.dijitalbeyin.firma_rehberim.data.CompanyDbHelper;
 
 import java.util.ArrayList;
 
-import static net.dijitalbeyin.firma_rehberim.OverlayActivity.SERVICE_RUNNING;
-import static net.dijitalbeyin.firma_rehberim.OverlayActivity.SERVICE_STOPPED;
-import static net.dijitalbeyin.firma_rehberim.OverlayActivity.serviceState;
-
 public class CallLogsActivity extends AppCompatActivity {
+    static int SERVICE_STOPPED = 0;
+    static int SERVICE_RUNNING = 1;
+    private final static String rootURL = "https://firmarehberim.com/";
+
+    CompanyDbHelper dbHelper;
+    SQLiteDatabase database;
+
+    Toolbar toolbar;
+    TextView tv_toolbar_title;
     SwipeRefreshLayout swipeRefreshLayout;
     ListView lw_call_log;
     ProgressBar pb_loading_call_logs;
@@ -40,13 +56,46 @@ public class CallLogsActivity extends AppCompatActivity {
     ArrayList<CompanyCallLog> companyCallLogs;
     private String query;
 
+    FirebaseAuth firebaseAuth;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_call_logs);
 
-        CompanyDbHelper dbHelper = new CompanyDbHelper(this);
-        final SQLiteDatabase database = dbHelper.getWritableDatabase();
+        firebaseAuth = FirebaseAuth.getInstance();
+
+        SharedPreferences sharedPreferences =
+                PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        String userName = sharedPreferences.getString("username", "Kullanıcı adı bulunamadı");
+
+        toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
+        final String webpageLink = sharedPreferences.getString("webpageLink", "firmarehberim.com");
+
+        tv_toolbar_title = toolbar.findViewById(R.id.tv_toolbar_title);
+        tv_toolbar_title.setTextColor(Color.WHITE);
+        tv_toolbar_title.setText(userName);
+        tv_toolbar_title.setMovementMethod(LinkMovementMethod.getInstance());
+
+        tv_toolbar_title.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (webpageLink.equals("firmarehberim.com")) {
+                    Toast.makeText(CallLogsActivity.this, "Kullanıcı bulunamadı", Toast.LENGTH_SHORT).show();
+                } else {
+                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                    intent.setData(Uri.parse(rootURL + webpageLink));
+                    if (intent.resolveActivity(getPackageManager()) != null) {
+                        startActivity(intent);
+                    }
+                }
+            }
+        });
+
+        dbHelper = new CompanyDbHelper(this);
+        database = dbHelper.getWritableDatabase();
         final String[] projection = {CompanyEntry._ID,
                                 CompanyEntry.COLUMN_WEBPAGE_LINK,
                                 CompanyEntry.COLUMN_COMPANY_NAME,
@@ -96,6 +145,7 @@ public class CallLogsActivity extends AppCompatActivity {
                 swipeRefreshLayout.setRefreshing(false);
             }
         });
+
 
 
 //        boolean permissionGranted = ContextCompat.checkSelfPermission(
@@ -169,25 +219,48 @@ public class CallLogsActivity extends AppCompatActivity {
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        super.onCreateOptionsMenu(menu);
-        getMenuInflater().inflate(R.menu.call_logs_menu, menu);
-        MenuItem menuItem = menu.findItem(R.id.item_toggle_caller_detection);
-        if (serviceState == SERVICE_STOPPED) {
-            menuItem.setChecked(false);
-        } else if (serviceState == SERVICE_RUNNING) {
-            menuItem.setChecked(true);
-        } else {
-            Log.d("TAG", "Cannot determine service status");
-        }
-        return true;
+    protected void onResume() {
+        super.onResume();
+        refreshCallLogs();
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.item_toggle_caller_detection:
-                if (serviceState == SERVICE_STOPPED) {
+    protected void onStart() {
+        super.onStart();
+        refreshCallLogs();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        super.onCreateOptionsMenu(menu);
+        getMenuInflater().inflate(R.menu.call_logs_menu, menu);
+
+        final SharedPreferences sharedPreferences =
+                PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        final SharedPreferences.Editor editor = sharedPreferences.edit();
+        final int serviceState = sharedPreferences.getInt("serviceState", SERVICE_STOPPED);
+
+        CheckBox enableCallerDetection = (CheckBox) menu.findItem(R.id.item_call_logs_caller_detection).getActionView();
+        enableCallerDetection.setText("");
+        if (serviceState == SERVICE_STOPPED) {
+            Log.d("TAG", "checking it false");
+            enableCallerDetection.setChecked(false);
+        } else if (serviceState == SERVICE_RUNNING) {
+            Log.d("TAG", "checking it true");
+            enableCallerDetection.setChecked(true);
+        } else {
+            Log.d("TAG", "Cannot determine service status");
+        }
+
+        enableCallerDetection.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton checkbox, boolean isChecked) {
+                if (!isChecked) {
+                    Log.d("TAG", "Stopping Service");
+                    Intent intent = new Intent(CallLogsActivity.this, OverlayService.class);
+                    stopService(intent);
+                    editor.putInt("serviceState", SERVICE_STOPPED);
+                } else {
                     Log.d("TAG", "Starting Service");
                     boolean permissionGranted = ContextCompat.checkSelfPermission(
                             getApplicationContext(),
@@ -195,23 +268,75 @@ public class CallLogsActivity extends AppCompatActivity {
                     if (permissionGranted) {
                         Intent intent = new Intent(getApplicationContext(), OverlayService.class);
                         intent.putExtra("Sender", "Activity Button");
+                        Log.d("TAG", "Sending intent");
                         startService(intent);
-                        serviceState = SERVICE_RUNNING;
-                        item.setChecked(true);
+                        editor.putInt("serviceState", SERVICE_RUNNING);
                     } else {
                         ActivityCompat.requestPermissions(CallLogsActivity.this, new String[]{Manifest.permission.READ_PHONE_STATE}, 0);
                     }
-                } else if (serviceState == SERVICE_RUNNING) {
-                    Log.d("TAG", "Stopping Service");
-                    Intent intent = new Intent(CallLogsActivity.this, OverlayService.class);
-                    stopService(intent);
-                    serviceState = SERVICE_STOPPED;
-                    item.setChecked(false);
+                }
+                editor.apply();
+            }
+        });
+
+        String userName = sharedPreferences.getString("username", "Kullanıcı adı bulunamadı");
+        if (userName.equals("Kullanıcı adı bulunamadı")) {
+            //User is not logged in.
+            Log.d("TAG", "setting title as Giris yap");
+            menu.findItem(R.id.item_call_logs_login_logout).setTitle("Giriş yap");
+        } else {
+            // User is logged in.
+            Log.d("TAG", "setting title as Cikis yap");
+            menu.findItem(R.id.item_call_logs_login_logout).setTitle("Çıkış yap");
+        }
+
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        SharedPreferences sharedPreferences =
+                PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        switch (item.getItemId()) {
+            case R.id.item_call_logs_login_logout:
+                String userName = sharedPreferences.getString("username", "Kullanıcı adı bulunamadı");
+                if (userName.equals("Kullanıcı adı bulunamadı")) {
+                    // User is not logged in.
+                    Intent loginIntent = new Intent(CallLogsActivity.this, AuthenticationActivity.class);
+                    startActivity(loginIntent);
+                } else {
+                    // User is logged in.
+                    firebaseAuth.signOut();
+                    editor.putString("username", "Kullanıcı adı bulunamadı");
+                    editor.apply();
+                    Toast.makeText(getApplicationContext(), "Başarıyla çıkış yapıldı", Toast.LENGTH_SHORT).show();
+                    recreate();
                 }
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    private void refreshCallLogs() {
+        swipeRefreshLayout.setRefreshing(true);
+        String[] projection = {CompanyEntry._ID,
+                CompanyEntry.COLUMN_WEBPAGE_LINK,
+                CompanyEntry.COLUMN_COMPANY_NAME,
+                CompanyEntry.COLUMN_AUTHORITATIVE_NAME,
+                CompanyEntry.COLUMN_CALL_STATUS,
+                CompanyEntry.COLUMN_DATE_INFO};
+        Cursor cursor = database.query(CompanyEntry.TABLE_NAME,
+                projection,
+                null,
+                null,
+                null,
+                null,
+                CompanyEntry._ID + " DESC",
+                null);
+        callLogCursorAdapter.swapCursor(cursor);
+        swipeRefreshLayout.setRefreshing(false);
     }
 }
 

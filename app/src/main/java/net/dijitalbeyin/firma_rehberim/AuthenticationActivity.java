@@ -1,180 +1,144 @@
 package net.dijitalbeyin.firma_rehberim;
 
-import android.content.Intent;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
+
+import android.content.Intent;
 import android.os.Bundle;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ProgressBar;
-import android.widget.TextView;
 import android.widget.Toast;
 
-public class AuthenticationActivity extends AppCompatActivity {
-    private final static String REQUEST_URL_PHONE_NUMBER = "https://firmarehberim.com/inc/telephone.php?no=";
-    private final static String REQUEST_URL_EMAIL = "https://firmarehberim.com/inc/telephone.php?mail=";
+import com.google.android.gms.dynamic.IFragmentWrapper;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.SignInMethodQueryResult;
 
-    EditText et_username;
-    EditText et_password;
-    ProgressBar pb_verifying_user;
-    Button btn_login;
-    TextView tv_skip_logging_in;
+import java.util.List;
+
+public class AuthenticationActivity extends AppCompatActivity implements SignInFragment.OnLaunchSignUpClickListener,
+                                                                         SignInFragment.OnUserAuthorizedToSignInListener,
+                                                                         SignUpFragment.OnLaunchSignInClickListener,
+                                                                         SignUpFragment.OnUserAuthorizedToSignUpListener {
+
+    private final static String LOG_TAG = AuthenticationActivity.class.getSimpleName();
+
+    SignInFragment signInFragment;
+    SignUpFragment signUpFragment;
+
+    FirebaseAuth firebaseAuth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_authentication);
 
-        et_username = findViewById(R.id.et_username);
-        et_password = findViewById(R.id.et_password);
-        pb_verifying_user = findViewById(R.id.pb_verifying_user);
+        firebaseAuth = FirebaseAuth.getInstance();
 
-        btn_login = findViewById(R.id.btn_login);
-        btn_login.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //Implement authtentication logic.
-                final String userName = et_username.getText().toString();
-                if (TextUtils.isEmpty(userName)) {
-                    Toast.makeText(getApplicationContext(), "Telefon numarası veya e-posta giriniz", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                final String password = et_password.getText().toString();
-                if (TextUtils.isEmpty(password)) {
-                    Toast.makeText(getApplicationContext(), "Parola giriniz", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                if (isEmail(userName)) {
-                    verifyUsingEmail(userName, password);
-                } else {
-                    verifyUsingPhoneNumber(userName, password);
-                }
-            }
-        });
-
-        tv_skip_logging_in = findViewById(R.id.tv_skip_logging_in);
-        tv_skip_logging_in.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(AuthenticationActivity.this, RadiosActivity.class);
-                startActivity(intent);
-            }
-        });
+        signInFragment = new SignInFragment();
+        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
+        fragmentTransaction.replace(R.id.fragment_container, signInFragment).commit();
     }
 
-    private void verifyUsingEmail(final String userName, final String password) {
-        pb_verifying_user.setVisibility(View.VISIBLE);
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                User user = QueryUtils.fetchUserData(REQUEST_URL_EMAIL + userName + "&pass=" + password);
-                if (user != null) {
-                    if (user.isVerified() && (user.getMatch() == 0)) {
-                        //Authenticate user.
-                        Intent intent = new Intent(AuthenticationActivity.this, RadiosActivity.class);
-                        startActivity(intent);
-                    } else {
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                Toast.makeText(getApplicationContext(), "Lütfen doğru parolayı girdiğinizden emin olun", Toast.LENGTH_SHORT).show();
-                            }
-                        });
-                    }
-                } else {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(getApplicationContext(), "Kullanıcı adı veya parola yanlış. Lütfen tekrar deneyiniz", Toast.LENGTH_SHORT).show();
-                        }
-                    });
-                }
-                runOnUiThread(new Runnable() {
+    @Override
+    public void onAttachFragment(Fragment fragment) {
+        if (fragment instanceof SignInFragment) {
+            signInFragment.setOnLaunchSignUpClickListener(this);
+            signInFragment.setOnUserAuthorizedToSignInListener(this);
+        }
+        if (fragment instanceof  SignUpFragment) {
+            signUpFragment.setOnLaunchSignInClickListener(this);
+            signUpFragment.setOnUserAuthorizedToSignUpListener(this);
+        }
+    }
+
+    private void checkIfUserExists(final String email, final String password) {
+        FirebaseAuth firebaseAuth = FirebaseAuth.getInstance();
+        firebaseAuth.fetchSignInMethodsForEmail(email)
+                .addOnCompleteListener(new OnCompleteListener<SignInMethodQueryResult>() {
                     @Override
-                    public void run() {
-                        pb_verifying_user.setVisibility(View.INVISIBLE);
+                    public void onComplete(@NonNull Task<SignInMethodQueryResult> task) {
+                        if (task.isSuccessful()) {
+                            SignInMethodQueryResult result = task.getResult();
+                            List<String> signInMethods = result.getSignInMethods();
+                            if (signInMethods.isEmpty()) {
+                                Log.d(LOG_TAG, "User does not have an account. Launch account creation process.");
+                                signUpToFirebase(email, password);
+                            } else {
+                                Log.d(LOG_TAG, "User has an account. Simply login.");
+                                signInToFirebase(email, password);
+                            }
+                        }
                     }
                 });
-            }
-        }).start();
     }
 
-    private void verifyUsingPhoneNumber(final String userName, final String password) {
-        pb_verifying_user.setVisibility(View.VISIBLE);
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                //The case where user wanted to use phone number to login.
-                String formattedUserName = formatNumber(userName);
-                User user = QueryUtils.fetchUserData(REQUEST_URL_PHONE_NUMBER + formattedUserName + "&pass=" + password);
-                if (user != null) {
-                    if (user.isVerified() && (user.getMatch() == 0)) {
-                        //Authenticate user.
-                        Intent intent = new Intent(AuthenticationActivity.this, RadiosActivity.class);
-                        startActivity(intent);
-                    } else {
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                Toast.makeText(getApplicationContext(), "Lütfen doğru parolayı girdiğinizden emin olun", Toast.LENGTH_SHORT).show();
-                            }
-                        });
-                    }
-                } else {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(getApplicationContext(), "Kullanıcı adı veya parola yanlış. Lütfen tekrar deneyiniz", Toast.LENGTH_SHORT).show();
-                        }
-                    });
-                }
-                runOnUiThread(new Runnable() {
+    @Override
+    public void onUserAuthorizedToSignIn(String userName, String password) {
+        checkIfUserExists(userName, password);
+    }
+
+    @Override
+    public void onUserAuthorizedToSignUp(String userName, String password) {
+        // Create new account on Firebase.
+        Log.d(LOG_TAG, "User is authorized to sign up.");
+
+    }
+
+    private void signInToFirebase(String email, String password) {
+        Log.d(LOG_TAG, "User is authorized to sign in.");
+        firebaseAuth.signInWithEmailAndPassword(email, password)
+                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
-                    public void run() {
-                        pb_verifying_user.setVisibility(View.INVISIBLE);
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        if (task.isSuccessful()) {
+                            Log.d(LOG_TAG, "Signing into firebase successful");
+                            Intent intent = new Intent(AuthenticationActivity.this, RadiosActivity.class);
+                            startActivity(intent);
+                            finish();
+                        } else {
+                            Log.d(LOG_TAG, "Signing into firebase failed");
+                            Toast.makeText(getApplicationContext(), "Kullanıcı adı veya parola yanlış. Lütfen tekrar deneyiniz.", Toast.LENGTH_SHORT).show();
+                        }
+                        signInFragment.pb_verifying_user.setVisibility(View.GONE);
                     }
                 });
-            }
-        }).start();
     }
 
-    private boolean isEmail(String userName) {
-        if (userName.contains("@")) {
-            return true;
-        }
-        return false;
+    private void signUpToFirebase(final String email, final String password) {
+        firebaseAuth.createUserWithEmailAndPassword(email, password)
+                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        if (task.isSuccessful()) {
+                            Log.d(LOG_TAG, "Signing up successful");
+                            Toast.makeText(AuthenticationActivity.this,
+                                    "Başarıyla hesap oluşturuldu",
+                                    Toast.LENGTH_SHORT).show();
+                            signInToFirebase(email, password);
+                        } else {
+                            Log.d(LOG_TAG, "Signing up failed");
+                            Toast.makeText(getApplicationContext(), "Kullanıcı adı veya parola yanlış. Lütfen tekrar deneyiniz.\nHesap oluşturabilmeniz için firmarehberim.com'da bir hesabınız olmalıdır", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
     }
 
-    private String formatNumber(String number) {
-        number = number.replaceAll("\\s", "");
-        if (!number.startsWith("+90")) {
-            if (number.substring(0, 1).equals("0")) {
-                //First case: 05433723255
-                number = "+9" + number;
-            } else {
-                //Second case: 5433723255
-                number = "+90" + number;
-            }
-        }
-        if (number.length() < 13) {
-            Log.d("TAG", "Length of number is not long enough");
-            return null;
-        }
-        String zero = number.substring(2, 3);
-        String firstPart = "(" + number.substring(3, 6) + ")";
-        String secondPart = number.substring(6, 9);
-        String thirdPart = number.substring(9, 11);
-        String fourthPart = number.substring(11, 13);
-        String formattedNumber = zero
-                                + "+"
-                                + firstPart + "+"
-                                + secondPart + "+"
-                                + thirdPart + "+"
-                                + fourthPart;
-        Log.d("TAG", "Formatted number: " + formattedNumber);
-        return formattedNumber;
+    @Override
+    public void onLaunchSignUpClick() {
+        signUpFragment = new SignUpFragment();
+        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
+        fragmentTransaction.replace(R.id.fragment_container, signUpFragment).commit();
+    }
+
+    @Override
+    public void OnLaunchSignInClick() {
+        signInFragment = new SignInFragment();
+        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
+        fragmentTransaction.replace(R.id.fragment_container, signInFragment).commit();
     }
 }

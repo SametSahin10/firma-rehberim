@@ -1,16 +1,22 @@
 package net.dijitalbeyin.firma_rehberim;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.sqlite.SQLiteDatabase;
 import android.media.AudioManager;
 import android.net.Uri;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.android.material.tabs.TabLayout;
 
 import androidx.core.app.ActivityCompat;
@@ -29,12 +35,14 @@ import androidx.viewpager.widget.ViewPager;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -63,6 +71,10 @@ import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.upstream.TransferListener;
 import com.google.android.exoplayer2.util.EventLogger;
 import com.google.android.exoplayer2.util.Util;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.GetTokenResult;
+import com.google.firebase.messaging.FirebaseMessaging;
 import com.squareup.picasso.Picasso;
 
 import net.dijitalbeyin.firma_rehberim.adapters.CategoryAdapter;
@@ -74,10 +86,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import okhttp3.OkHttpClient;
-
-import static net.dijitalbeyin.firma_rehberim.OverlayActivity.SERVICE_RUNNING;
-import static net.dijitalbeyin.firma_rehberim.OverlayActivity.SERVICE_STOPPED;
-import static net.dijitalbeyin.firma_rehberim.OverlayActivity.serviceState;
 
 public class RadiosActivity extends AppCompatActivity implements RadiosFragment.OnEventFromRadiosFragmentListener,
         FavouriteRadiosFragment.OnEventFromFavRadiosFragment,
@@ -113,6 +121,9 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     private final static int TIMER_FRAGMENT_ID = 9;
     private int ACTIVE_FRAGMENT_ID;
 
+    static int SERVICE_STOPPED = 0;
+    static int SERVICE_RUNNING = 1;
+
     private Toolbar toolbar;
     private SearchView sw_searchForRadios;
     private ImageView iv_searchIcon;
@@ -136,6 +147,10 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     private Button btn_nav_categories;
     private Button btn_nav_cities;
     private Button btn_nav_global;
+    private ImageButton ib_search_for_radios;
+
+    private MenuItem action_search;
+    private SearchView searchView;
 
     private ImageButton ib_timer;
     private ImageButton ib_volume_control;
@@ -169,10 +184,69 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     City allTheCities;
     Category allTheCategories;
 
+    FirebaseAuth firebaseAuth;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_radio);
+
+        firebaseAuth = FirebaseAuth.getInstance();
+
+        FirebaseUser user = firebaseAuth.getCurrentUser();
+        if (user != null) {
+            Log.d(LOG_TAG, "User is logged in");
+        } else {
+            Log.d(LOG_TAG, "User does not exist");
+        }
+
+        FirebaseMessaging.getInstance().subscribeToTopic("number_transfer")
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.d("TAG", "Subscription successful: number transfer");
+                    }
+                });
+
+        FirebaseMessaging.getInstance().subscribeToTopic("whatsapp_message")
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.d("TAG", "Subscription successful: whatsapp_message");
+                    }
+                });
+
+        FirebaseMessaging.getInstance().subscribeToTopic("sms")
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.d("TAG", "Subscription successful: sms");
+                    }
+                });
+
+        FirebaseMessaging.getInstance().subscribeToTopic("view_webpage")
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.d("TAG", "Subscription successful: view webpage");
+                    }
+                });
+
+        FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (firebaseUser != null) {
+            firebaseUser.getIdToken(true)
+                .addOnCompleteListener(new OnCompleteListener<GetTokenResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<GetTokenResult> task) {
+                        if (task.isSuccessful()) {
+                            String idToken = task.getResult().getToken();
+                            Log.d("TAG", "id token: " + idToken);
+                        } else {
+                            Log.e("TAG", "Task failed", task.getException());
+                        }
+                    }
+                });
+        }
 
         ACTIVE_FRAGMENT_ID = RADIOS_FRAGMENT_ID;
         radiosFragment = new RadiosFragment();
@@ -310,6 +384,17 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
             }
         });
 
+        ib_search_for_radios = findViewById(R.id.ib_search_for_radios);
+        ib_search_for_radios.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d("TAG", "Requesting focus");
+                action_search.setVisible(true);
+                searchView.requestFocus();
+                searchView.setIconified(false);
+            }
+        });
+
 //        allTheCities = new City(301, getString(R.string.city_spinner_default_value_text));
 //        allTheCategories = new Category(301, getString(R.string.category_spinner_default_value_text));
 
@@ -404,7 +489,10 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
                             ib_playPauseRadio.setImageDrawable(getResources().getDrawable(R.drawable.ic_pause_radio));
                         }
                         sb_volume_control.setMax(audioManager.getStreamMaxVolume(exoPlayer.getAudioStreamType()));
-                        sb_volume_control.setProgress(audioManager.getStreamVolume(exoPlayer.getAudioStreamType()));
+                        int streamVolume = audioManager.getStreamVolume(exoPlayer.getAudioStreamType());
+                        Log.d("TAG", "stream volume: " + streamVolume);
+                        // Set manually for now. Should use system stream sound instead.
+                        sb_volume_control.setProgress(7);
                         Log.d("TAG", "STATE_READY");
                         break;
                     case ExoPlayer.STATE_IDLE:
@@ -466,6 +554,7 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 if (exoPlayer != null) {
+                    Log.d("TAG", "Progress changed");
                     audioManager.setStreamVolume(exoPlayer.getAudioStreamType(), progress, 0);
                 }
             }
@@ -521,7 +610,47 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
         getMenuInflater().inflate(R.menu.appbar_menu, menu);
-        SearchView searchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
+
+        action_search = menu.findItem(R.id.action_search);
+
+        SharedPreferences sharedPreferences =
+                PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        int serviceState = sharedPreferences.getInt("serviceState", SERVICE_STOPPED);
+
+        MenuItem menuItem = menu.findItem(R.id.item_caller_detection);
+        if (serviceState == SERVICE_STOPPED) {
+            Log.d("TAG", "checking it false");
+            menuItem.setChecked(false);
+        } else if (serviceState == SERVICE_RUNNING) {
+            Log.d("TAG", "checking it true");
+            menuItem.setChecked(true);
+        } else {
+            Log.d("TAG", "Cannot determine service status");
+        }
+
+        boolean callLogsActivityEnabled = sharedPreferences.getBoolean("callLogsActivityEnabled", false);
+        MenuItem item_show_call_logs = menu.findItem(R.id.item_show_call_logs);
+        if (callLogsActivityEnabled) {
+            item_show_call_logs.setChecked(true);
+        } else {
+            item_show_call_logs.setChecked(false);
+        }
+
+        String userName = sharedPreferences.getString("username", "Kullanıcı adı bulunamadı");
+        if (userName.equals("Kullanıcı adı bulunamadı")) {
+            //User is not logged in.
+            Log.d("TAG", "setting title as Giris yap");
+            menu.findItem(R.id.item_show_call_logs).setVisible(false);
+            menu.findItem(R.id.item_caller_detection).setVisible(false);
+            menu.findItem(R.id.item_login_logout).setTitle("Giriş yap");
+        } else {
+            // User is logged in.
+            Log.d("TAG", "setting title as Cikis yap");
+            menu.findItem(R.id.item_login_logout).setTitle("Çıkış yap");
+        }
+
+        searchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
@@ -542,11 +671,23 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
                 return false;
             }
         });
+
+        searchView.setOnCloseListener(new SearchView.OnCloseListener() {
+            @Override
+            public boolean onClose() {
+                action_search.setVisible(false);
+                hideKeyboard(RadiosActivity.this);
+                return false;
+            }
+        });
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        SharedPreferences sharedPreferences =
+                PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        SharedPreferences.Editor editor = sharedPreferences.edit();
         switch (item.getItemId()) {
             case R.id.item_notifications:
                 return true;
@@ -562,12 +703,53 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
                 return true;
             case R.id.item_contact:
                 return true;
+            case R.id.item_caller_detection:
+                boolean phoneStatepermissionGranted = ContextCompat.checkSelfPermission(
+                        getApplicationContext(),
+                        Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED;
+                if (!phoneStatepermissionGranted) {
+                    ActivityCompat.requestPermissions(RadiosActivity.this, new String[]{Manifest.permission.READ_PHONE_STATE}, 0);
+                }
+
+                boolean callLogPermissionGranted = ContextCompat.checkSelfPermission(
+                        getApplicationContext(),
+                        Manifest.permission.READ_CALL_LOG) == PackageManager.PERMISSION_GRANTED;
+                if (!callLogPermissionGranted) {
+                    ActivityCompat.requestPermissions(RadiosActivity.this, new String[]{Manifest.permission.READ_CALL_LOG}, 0);
+                }
+                toggleServiceStatus(item);
+                return true;
+            case R.id.item_show_call_logs:
+                if (item.isChecked()) {
+                    disableCallLogsActivity();
+                    editor.putBoolean("callLogsActivityEnabled", false);
+                    item.setChecked(false);
+                } else {
+                    enableCallLogsActivity();
+                    editor.putBoolean("callLogsActivityEnabled", true);
+                    item.setChecked(true);
+                }
+                editor.apply();
+                return true;
+            case R.id.item_login_logout:
+                String userName = sharedPreferences.getString("username", "Kullanıcı adı bulunamadı");
+                if (userName.equals("Kullanıcı adı bulunamadı")) {
+                    // User is not logged in.
+                    Intent loginIntent = new Intent(RadiosActivity.this, AuthenticationActivity.class);
+                    startActivity(loginIntent);
+
+                } else {
+                    // User is logged in.
+                    firebaseAuth.signOut();
+                    editor.putString("username", "Kullanıcı adı bulunamadı");
+                    editor.apply();
+                    Toast.makeText(getApplicationContext(), "Başarıyla çıkış yapıldı", Toast.LENGTH_SHORT).show();
+                    recreate();
+                }
+                return true;
             case R.id.item_about:
                 Intent privacyPolicyIntent = new Intent(this, AboutActivity.class);
                 startActivity(privacyPolicyIntent);
-                return true;
-            case R.id.item_caller_detection:
-                toggleServiceStatus(item);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -830,8 +1012,6 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
 //    }
 
     private void toggleServiceStatus(MenuItem menuItem) {
-        ActivityCompat.requestPermissions(RadiosActivity.this, new String[]{Manifest.permission.READ_CALL_LOG}, 0);
-
         if (Build.BRAND.equalsIgnoreCase("xiaomi")) {
             Intent autoStartintent = new Intent();
             autoStartintent.setComponent(new ComponentName("com.miui.securitycenter", "com.miui.permcenter.autostart.AutoStartManagementActivity"));
@@ -840,9 +1020,14 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
 
         if (Build.VERSION.SDK_INT >= 23) {
             if (!Settings.canDrawOverlays(this)) {
-                Toast.makeText(this, "Lütfen ayarlardan \"Otomatik başlatma\" seçeneğini etkinleştiriniz.", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "Lütfen ayarlardan \"Diğer uygulamaların üzerinde göster\" seçeneğini etkinleştiriniz.", Toast.LENGTH_LONG).show();
             }
         }
+
+        SharedPreferences sharedPreferences =
+                PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        int serviceState = sharedPreferences.getInt("serviceState", SERVICE_STOPPED);
 
         if (serviceState == SERVICE_STOPPED) {
             Log.d("TAG", "Starting Service");
@@ -853,18 +1038,36 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
                 Intent intent = new Intent(getApplicationContext(), OverlayService.class);
                 intent.putExtra("Sender", "Activity Button");
                 startService(intent);
-                serviceState = SERVICE_RUNNING;
+                editor.putInt("serviceState", SERVICE_RUNNING);
                 menuItem.setChecked(true);
             } else {
+                Log.d("TAG", "Requesting permissions");
                 ActivityCompat.requestPermissions(RadiosActivity.this, new String[]{Manifest.permission.READ_PHONE_STATE}, 0);
             }
         } else if (serviceState == SERVICE_RUNNING) {
             Log.d("TAG", "Stopping Service");
             Intent intent = new Intent(RadiosActivity.this, OverlayService.class);
             stopService(intent);
-            serviceState = SERVICE_STOPPED;
+            editor.putInt("serviceState", SERVICE_STOPPED);
             menuItem.setChecked(false);
         }
+        editor.apply();
+    }
+
+    private void enableCallLogsActivity() {
+        PackageManager packageManager = getPackageManager();
+        packageManager.setComponentEnabledSetting(
+                new ComponentName(RadiosActivity.this, CallLogsActivity.class),
+                PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                PackageManager.DONT_KILL_APP);
+    }
+
+    private void disableCallLogsActivity() {
+        PackageManager packageManager = getPackageManager();
+        packageManager.setComponentEnabledSetting(
+                new ComponentName(RadiosActivity.this, CallLogsActivity.class),
+                PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                PackageManager.DONT_KILL_APP);
     }
 
     private void prepareExoPlayer(Uri uri) {
@@ -911,6 +1114,18 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
                 .placeholder(R.drawable.ic_placeholder_radio_black)
                 .error(R.drawable.ic_pause_radio)
                 .into(iv_radioIcon);
+
+        iv_radioIcon.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                Log.d("TAG", "Shareable link: " + radioCurrentlyPlaying.getShareableLink());
+                intent.setData(Uri.parse(radioCurrentlyPlaying.getShareableLink()));
+                if (intent.resolveActivity(getPackageManager()) != null) {
+                    startActivity(intent);
+                }
+            }
+        });
     }
 
     private void updatePopupWindow() {
@@ -1043,5 +1258,15 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
                 Toast.makeText(this, "Radyo durduruldu", Toast.LENGTH_SHORT).show();
             }
         }
+    }
+
+    public static void hideKeyboard(Activity activity) {
+        InputMethodManager inputMethodManager =
+                (InputMethodManager) activity.getSystemService(INPUT_METHOD_SERVICE);
+        View view = activity.getCurrentFocus();
+        if (view == null) {
+            view = new View(activity);
+        }
+        inputMethodManager.hideSoftInputFromWindow(view.getWindowToken(), 0);
     }
 }

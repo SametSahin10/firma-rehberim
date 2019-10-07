@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import androidx.core.content.ContextCompat;
+
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -42,18 +43,21 @@ public class RadioAdapter extends ArrayAdapter<Radio> {
 
     OnAddToFavouritesListener onAddToFavouritesListener;
     OnDeleteFromFavouritesListener onDeleteFromFavouritesListener;
+    View.OnClickListener onRadioIconClickListener;
 
     public RadioAdapter(Context context,
                         int resource,
                         ArrayList<Radio> radios,
                         OnAddToFavouritesListener onAddToFavouritesListener,
-                        OnDeleteFromFavouritesListener onDeleteFromFavouritesListener) {
+                        OnDeleteFromFavouritesListener onDeleteFromFavouritesListener,
+                        View.OnClickListener onRadioIconClickListener) {
         super(context, resource, radios);
         this.context = context;
         this.layoutResourceId = resource;
         this.radios = radios;
         this.onAddToFavouritesListener = onAddToFavouritesListener;
         this.onDeleteFromFavouritesListener = onDeleteFromFavouritesListener;
+        this.onRadioIconClickListener = onRadioIconClickListener;
     }
 
     public void setPermanentRadiosList(List<Radio> permanentRadiosList) {
@@ -73,6 +77,7 @@ public class RadioAdapter extends ArrayAdapter<Radio> {
     public View getView(int position, View convertView, ViewGroup parent) {
         View row = convertView;
         RadioHolder holder;
+        final Radio currentRadio = radios.get(position);
         if (row == null) {
             LayoutInflater layoutInflater = LayoutInflater.from(context);
             row = layoutInflater.inflate(R.layout.item_radio, parent, false);
@@ -86,7 +91,8 @@ public class RadioAdapter extends ArrayAdapter<Radio> {
         } else {
             holder = (RadioHolder) row.getTag();
         }
-        final Radio currentRadio = radios.get(position);
+        holder.iv_item_radio_icon.setTag(position);
+        holder.iv_item_radio_icon.setOnClickListener(onRadioIconClickListener);
         String iconUrl = currentRadio.getRadioIconUrl();
         float scale = getContext().getResources().getDisplayMetrics().density;
         int width = (int) (50 * scale + 0.5f);
@@ -211,7 +217,6 @@ public class RadioAdapter extends ArrayAdapter<Radio> {
         contentValues.put(RadioEntry.COLUMN_RADIO_IS_BEING_BUFFERED, radio.isBeingBuffered());
         contentValues.put(RadioEntry.COLUMN_RADIO_IS_LIKED, radio.isLiked());
         long newRowId = sqLiteDatabase.insert(RadioEntry.TABLE_NAME, null, contentValues);
-        Log.d(LOG_TAG, "newRowId: " + newRowId);
     }
 
     private void deleteFromFavourites(Radio radio) {

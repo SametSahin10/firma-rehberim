@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-    <item android:id="@+id/item_toggle_caller_detection"
+    <item android:id="@+id/item_call_logs_caller_detection"
           android:title="@string/arayan_firma_tespiti_call_logs"
           android:checkable="true"
+          app:actionViewClass="android.widget.CheckBox"
+          app:showAsAction="always"/>
+    <item android:id="@+id/item_call_logs_login_logout"
+          android:title="@string/giri"
           app:showAsAction="never"/>
 </menu>
