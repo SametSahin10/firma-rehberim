@@ -6,6 +6,7 @@ import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.sqlite.SQLiteDatabase;
@@ -13,18 +14,15 @@ import android.media.AudioManager;
 import android.net.Uri;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.tabs.TabLayout;
-
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
-
 import android.os.Build;
 import android.os.Bundle;
 import androidx.loader.app.LoaderManager;
@@ -34,7 +32,7 @@ import androidx.viewpager.widget.PagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-
+import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.util.Log;
@@ -53,30 +51,17 @@ import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayer;
-import com.google.android.exoplayer2.ExoPlayerFactory;
-import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
-import com.google.android.exoplayer2.ext.okhttp.OkHttpDataSourceFactory;
-import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
-import com.google.android.exoplayer2.source.ExtractorMediaSource;
 import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
-import com.google.android.exoplayer2.trackselection.MappingTrackSelector;
 import com.google.android.exoplayer2.trackselection.TrackSelector;
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
-import com.google.android.exoplayer2.upstream.TransferListener;
-import com.google.android.exoplayer2.util.EventLogger;
-import com.google.android.exoplayer2.util.Util;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GetTokenResult;
 import com.google.firebase.messaging.FirebaseMessaging;
-import com.squareup.picasso.Picasso;
-
 import net.dijitalbeyin.firma_rehberim.fragments.CategoriesFragment;
 import net.dijitalbeyin.firma_rehberim.fragments.CitiesFragment;
 import net.dijitalbeyin.firma_rehberim.fragments.ContactsFragment;
@@ -95,11 +80,10 @@ import net.dijitalbeyin.firma_rehberim.data.RadioDbHelper;
 import net.dijitalbeyin.firma_rehberim.datamodel.Category;
 import net.dijitalbeyin.firma_rehberim.datamodel.City;
 import net.dijitalbeyin.firma_rehberim.datamodel.Radio;
-
+import net.dijitalbeyin.firma_rehberim.services.PlayRadioService;
 import java.util.ArrayList;
 import java.util.List;
-
-import okhttp3.OkHttpClient;
+import net.dijitalbeyin.firma_rehberim.services.PlayRadioService.PlayRadioBinder;
 
 public class RadiosActivity extends AppCompatActivity implements RadiosFragment.OnEventFromRadiosFragmentListener,
         FavouriteRadiosFragment.OnEventFromFavRadiosFragment,
@@ -110,7 +94,8 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
         CitiesFragment.OnFilterRespectToCityListener,
         CategoriesFragment.OnFilterRespectToCategoryListener,
         TimerFragment.OnCountdownFinishedListener,
-        LoaderManager.LoaderCallbacks<List<Object>> {
+        LoaderManager.LoaderCallbacks<List<Object>>,
+        PlayRadioService.ServiceCallbacks {
     private static final String LOG_TAG = RadiosActivity.class.getSimpleName();
     private static final String CITIES_REQUEST_URL = "https://firmarehberim.com/sayfalar/radyo/json/iller.php";
     private static final String CATEGORY_REQUEST_URL = "https://firmarehberim.com/sayfalar/radyo/json/kategoriler.php";
@@ -137,6 +122,9 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
 
     static int SERVICE_STOPPED = 0;
     static int SERVICE_RUNNING = 1;
+
+    PlayRadioService playRadioService;
+    boolean bound = false;
 
     private Toolbar toolbar;
     private SearchView sw_searchForRadios;
@@ -177,16 +165,7 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     private ImageButton ib_player_add_to_fav;
 //    private ImageButton ib_player_menu;
 
-    //Transferred to Service
     private AudioManager audioManager;
-    private SimpleExoPlayer exoPlayer;
-    private MediaSource mediaSource;
-    private DefaultDataSourceFactory dataSourceFactory;
-    private ExoPlayer.EventListener eventListener;
-    private DefaultBandwidthMeter BANDWIDTH_METER = new DefaultBandwidthMeter();
-
-    TrackSelector trackSelector = new DefaultTrackSelector();
-    //Transferred to Service
 
     PopupWindow popupWindow;
 
@@ -412,56 +391,6 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
         iv_radioIcon = findViewById(R.id.iv_radio_icon);
         tv_radioTitle = findViewById(R.id.tv_radio_title);
 
-        eventListener = new ExoPlayer.EventListener() {
-            @Override
-            public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
-                switch (playbackState) {
-                    case ExoPlayer.STATE_BUFFERING:
-                        Log.d("TAG", "STATE_BUFFERING");
-                        if (isFromFavouriteRadiosFragment) {
-                            favouriteRadiosFragment.setCurrentRadioStatus(STATE_BUFFERING, radioCurrentlyPlaying);
-                        } else {
-                            radiosFragment.setCurrentRadioStatus(STATE_BUFFERING, radioCurrentlyPlaying);
-                        }
-                        break;
-                    case ExoPlayer.STATE_READY:
-                        if (isFromFavouriteRadiosFragment) {
-                            favouriteRadiosFragment.setCurrentRadioStatus(STATE_READY, radioCurrentlyPlaying);
-                        } else {
-                            radiosFragment.setCurrentRadioStatus(STATE_READY, radioCurrentlyPlaying);
-                        }
-                        if (isPlaying()) {
-                            ib_playPauseRadio.setImageDrawable(getResources().getDrawable(R.drawable.ic_pause_radio));
-                        }
-                        sb_volume_control.setMax(audioManager.getStreamMaxVolume(exoPlayer.getAudioStreamType()));
-                        int streamVolume = audioManager.getStreamVolume(exoPlayer.getAudioStreamType());
-                        Log.d("TAG", "stream volume: " + streamVolume);
-                        // Set manually for now. Should use system stream sound instead.
-                        sb_volume_control.setProgress(7);
-                        Log.d("TAG", "STATE_READY");
-                        break;
-                    case ExoPlayer.STATE_IDLE:
-                        Log.d("TAG", "STATE_IDLE");
-                        exoPlayer.release();
-                        if (isFromFavouriteRadiosFragment) {
-                            favouriteRadiosFragment.setCurrentRadioStatus(STATE_IDLE, radioCurrentlyPlaying);
-                        } else {
-                            radiosFragment.setCurrentRadioStatus(STATE_IDLE, radioCurrentlyPlaying);
-                        }
-                        break;
-                    case ExoPlayer.STATE_ENDED:
-                        Log.d("TAG", "STATE_ENDED");
-                        break;
-                }
-            }
-
-            @Override
-            public void onPlayerError(ExoPlaybackException error) {
-                Toast.makeText(getApplicationContext(), R.string.cannot_stream_radio_text, Toast.LENGTH_SHORT).show();
-                Log.e(LOG_TAG, "onPlayerError: ", error);
-            }
-        };
-
         timerFragment = new TimerFragment();
         ib_timer = findViewById(R.id.ib_timer);
         ib_timer.setOnClickListener(new View.OnClickListener() {
@@ -498,9 +427,11 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
         sb_volume_control.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                SimpleExoPlayer exoPlayer = playRadioService.getExoPlayer();
                 if (exoPlayer != null) {
                     Log.d("TAG", "Progress changed");
-                    audioManager.setStreamVolume(exoPlayer.getAudioStreamType(), progress, 0);
+                    playRadioService.audioManager
+                            .setStreamVolume(exoPlayer.getAudioStreamType(), progress, 0);
                 }
             }
 
@@ -519,17 +450,23 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
         ib_playPauseRadio.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (isPlaying()) {
-                    exoPlayer.setPlayWhenReady(false);
+                if (playRadioService.isPlaying()) {
+                    playRadioService.getExoPlayer().setPlayWhenReady(false);
                     ib_playPauseRadio.setImageDrawable(getResources().getDrawable(R.drawable.ic_play_radio));
                 } else {
-                    if (exoPlayer != null) {
-                        exoPlayer.setPlayWhenReady(true);
-                        ib_playPauseRadio.setImageDrawable(getResources().getDrawable(R.drawable.ic_pause_radio));
-                    }
+                    playRadioService.getExoPlayer().setPlayWhenReady(true);
+                    ib_playPauseRadio.setImageDrawable(getResources().getDrawable(R.drawable.ic_pause_radio));
                 }
             }
         });
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        Intent intent = new Intent(this, PlayRadioService.class);
+        bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+        Toast.makeText(this, "Service is bound", Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -685,6 +622,7 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (event.getKeyCode() == KeyEvent.KEYCODE_VOLUME_DOWN) {
+            SimpleExoPlayer exoPlayer = playRadioService.getExoPlayer();
             if (exoPlayer != null) {
                 sb_volume_control.setProgress(audioManager.getStreamVolume(exoPlayer.getAudioStreamType()));
             }
@@ -695,6 +633,7 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     @Override
     public boolean onKeyUp(int keyCode, KeyEvent event) {
         if (event.getKeyCode() == KeyEvent.KEYCODE_VOLUME_UP) {
+            SimpleExoPlayer exoPlayer = playRadioService.getExoPlayer();
             if (exoPlayer != null) {
                 sb_volume_control.setProgress(audioManager.getStreamVolume(exoPlayer.getAudioStreamType()));
             }
@@ -872,64 +811,6 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
                 PackageManager.DONT_KILL_APP);
     }
 
-    private void prepareExoPlayer(Uri uri) {
-        dataSourceFactory = new DefaultDataSourceFactory(getApplicationContext(), Util.getUserAgent(getApplicationContext(), "exoPlayerSimple"), BANDWIDTH_METER);
-        String userAgent = Util.getUserAgent(getApplicationContext(), "exoPlayerSimple");
-        mediaSource = new ExtractorMediaSource(uri,
-                new OkHttpDataSourceFactory(new OkHttpClient(), userAgent, (TransferListener) null),
-                new DefaultExtractorsFactory(),
-                null,
-                null);
-        exoPlayer = ExoPlayerFactory.newSimpleInstance(getApplicationContext(), trackSelector);
-        exoPlayer.addAnalyticsListener(new EventLogger((MappingTrackSelector) trackSelector));
-        exoPlayer.addListener(eventListener);
-        exoPlayer.prepare(mediaSource);
-        exoPlayer.setPlayWhenReady(true);
-    }
-
-    private boolean isPlaying() {
-        if (exoPlayer != null) {
-            return exoPlayer.getPlaybackState() == Player.STATE_READY && exoPlayer.getPlayWhenReady();
-        } else {
-            return false;
-        }
-    }
-
-    private void playRadio(Radio radioClicked) {
-        Log.d("TAG", "Radio stream link: " + radioClicked.getStreamLink());
-        radioCurrentlyPlaying = radioClicked;
-//        updatePopupWindow();
-        if (exoPlayer != null) {
-            exoPlayer.release();
-            if (isPlaying()) {
-                exoPlayer.setPlayWhenReady(false);
-                exoPlayer.stop(true);
-            }
-        }
-        String streamLink = radioClicked.getStreamLink();
-        prepareExoPlayer(Uri.parse(streamLink));
-        tv_radioTitle.setText(radioClicked.getRadioName());
-        String iconUrl = radioClicked.getRadioIconUrl();
-        Picasso.with(getApplicationContext()).load(iconUrl)
-                .resize(200, 200)
-                .centerInside()
-                .placeholder(R.drawable.ic_placeholder_radio_black)
-                .error(R.drawable.ic_pause_radio)
-                .into(iv_radioIcon);
-
-        iv_radioIcon.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(Intent.ACTION_VIEW);
-                Log.d("TAG", "Shareable link: " + radioCurrentlyPlaying.getShareableLink());
-                intent.setData(Uri.parse(radioCurrentlyPlaying.getShareableLink()));
-                if (intent.resolveActivity(getPackageManager()) != null) {
-                    startActivity(intent);
-                }
-            }
-        });
-    }
-
     private void updatePopupWindow() {
         if (radioCurrentlyPlaying != null) {
             ImageButton ib_popup_window_fav = popupWindow.getContentView().findViewById(R.id.ib_popup_window_fav);
@@ -1005,13 +886,14 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
 
     @Override
     public void onRadioItemClick(Radio radioClicked) {
-        playRadio(radioClicked);
+        radioCurrentlyPlaying = radioClicked;
+        playRadioService.playRadio(radioClicked);
         isFromFavouriteRadiosFragment = false;
     }
 
     @Override
     public void onFavRadioItemClick(Radio currentFavRadio) {
-        playRadio(currentFavRadio);
+        playRadioService.playRadio(currentFavRadio);
         //Can make some adjustments. For example disabling the "Add to favourites" menu option.
         isFromFavouriteRadiosFragment = true;
     }
@@ -1053,12 +935,10 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
 
     @Override
     public void onCountDownFinished() {
-        if (isPlaying()) {
-            if (exoPlayer != null) {
-                exoPlayer.setPlayWhenReady(false);
-                ib_playPauseRadio.setImageDrawable(getResources().getDrawable(R.drawable.ic_play_radio));
-                Toast.makeText(this, "Radyo durduruldu", Toast.LENGTH_SHORT).show();
-            }
+        if (playRadioService.isPlaying()) {
+            playRadioService.pauseRadio();
+            ib_playPauseRadio.setImageDrawable(getResources().getDrawable(R.drawable.ic_play_radio));
+            Toast.makeText(this, "Radyo durduruldu", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -1070,5 +950,42 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
             view = new View(activity);
         }
         inputMethodManager.hideSoftInputFromWindow(view.getWindowToken(), 0);
+    }
+
+    private ServiceConnection serviceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            PlayRadioBinder binder = (PlayRadioBinder) service;
+            playRadioService = binder.getService();
+            bound = true;
+            playRadioService.setServiceCallbacks(RadiosActivity.this);
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            bound = false;
+        }
+    };
+
+    @Override
+    public void updateRadiosFragment(int statusCode) {
+        radiosFragment.setCurrentRadioStatus(statusCode, radioCurrentlyPlaying);
+    }
+
+    @Override
+    public void updateFavouriteRadiosFragment(int statusCode) {
+        favouriteRadiosFragment.setCurrentRadioStatus(statusCode, radioCurrentlyPlaying);
+    }
+
+    @Override
+    public void togglePlayPauseButton() {
+        ib_playPauseRadio.setImageDrawable(getResources().getDrawable(R.drawable.ic_pause_radio));
+    }
+
+    @Override
+    public void updateVolumeBar(int streamMaxVolume) {
+        sb_volume_control.setMax(streamMaxVolume);
+        // Set manually for now. Should use system stream sound instead.
+        sb_volume_control.setProgress(7);
     }
 }

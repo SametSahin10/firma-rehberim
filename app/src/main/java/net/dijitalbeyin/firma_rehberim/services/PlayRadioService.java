@@ -6,15 +6,12 @@ import android.app.Service;
 import android.content.Intent;
 import android.media.AudioManager;
 import android.net.Uri;
+import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
-import android.view.View;
 import android.widget.Toast;
-
 import androidx.core.app.NotificationCompat;
-import androidx.core.app.NotificationManagerCompat;
-
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.ExoPlayerFactory;
@@ -32,13 +29,8 @@ import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.upstream.TransferListener;
 import com.google.android.exoplayer2.util.EventLogger;
 import com.google.android.exoplayer2.util.Util;
-import com.google.android.gms.dynamic.IFragmentWrapper;
-import com.squareup.picasso.Picasso;
-
 import net.dijitalbeyin.firma_rehberim.datamodel.Radio;
-import net.dijitalbeyin.firma_rehberim.fragments.FavouriteRadiosFragment;
 import net.dijitalbeyin.firma_rehberim.R;
-import net.dijitalbeyin.firma_rehberim.fragments.RadiosFragment;
 
 import okhttp3.OkHttpClient;
 
@@ -53,11 +45,14 @@ public class PlayRadioService extends Service {
     private static final int STATE_IDLE = 12;
     private static final int NOTIFICATION_ID = 1;
 
+    private final IBinder binder = new PlayRadioBinder();
+    private ServiceCallbacks serviceCallbacks;
+
     Radio radioCurrentlyPlaying;
     Radio radioClicked;
 
-    private AudioManager audioManager;
-    private SimpleExoPlayer exoPlayer;
+    public AudioManager audioManager;
+    public SimpleExoPlayer exoPlayer;
     private MediaSource mediaSource;
     private DefaultDataSourceFactory dataSourceFactory;
     private ExoPlayer.EventListener eventListener;
@@ -69,7 +64,7 @@ public class PlayRadioService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
-        return null;
+        return binder;
     }
 
     @Override
@@ -82,31 +77,31 @@ public class PlayRadioService extends Service {
                     case ExoPlayer.STATE_BUFFERING:
                         Log.d("TAG", "STATE_BUFFERING");
                         if (isFromFavouriteRadiosFragment) {
-                            favouriteRadiosFragment.setCurrentRadioStatus(STATE_BUFFERING, radioCurrentlyPlaying);
+                            serviceCallbacks.updateFavouriteRadiosFragment(STATE_BUFFERING);
                         } else {
-                            radiosFragment.setCurrentRadioStatus(STATE_BUFFERING, radioCurrentlyPlaying);
+                            serviceCallbacks.updateRadiosFragment(STATE_BUFFERING);
                         }
                         break;
                     case ExoPlayer.STATE_READY:
                         if (isFromFavouriteRadiosFragment) {
-                            favouriteRadiosFragment.setCurrentRadioStatus(STATE_READY, radioCurrentlyPlaying);
+                            serviceCallbacks.updateFavouriteRadiosFragment(STATE_READY);
                         } else {
-                            radiosFragment.setCurrentRadioStatus(STATE_READY, radioCurrentlyPlaying);
+                            serviceCallbacks.updateRadiosFragment(STATE_READY);
                         }
                         if (isPlaying()) {
-                            ib_playPauseRadio.setImageDrawable(getResources().getDrawable(R.drawable.ic_pause_radio));
+                            serviceCallbacks.togglePlayPauseButton();
                         }
-                        sb_volume_control.setMax(audioManager.getStreamMaxVolume(exoPlayer.getAudioStreamType()));
-                        sb_volume_control.setProgress(audioManager.getStreamVolume(exoPlayer.getAudioStreamType()));
+                        int streamMaxVolume = audioManager
+                                .getStreamMaxVolume(exoPlayer.getAudioStreamType());
+                        serviceCallbacks.updateVolumeBar(streamMaxVolume);
                         Log.d("TAG", "STATE_READY");
                         break;
                     case ExoPlayer.STATE_IDLE:
                         Log.d("TAG", "STATE_IDLE");
-                        exoPlayer.release();
                         if (isFromFavouriteRadiosFragment) {
-                            favouriteRadiosFragment.setCurrentRadioStatus(STATE_IDLE, radioCurrentlyPlaying);
+                            serviceCallbacks.updateFavouriteRadiosFragment(STATE_IDLE);
                         } else {
-                            radiosFragment.setCurrentRadioStatus(STATE_IDLE, radioCurrentlyPlaying);
+                            serviceCallbacks.updateRadiosFragment(STATE_IDLE);
                         }
                         break;
                     case ExoPlayer.STATE_ENDED:
@@ -121,7 +116,7 @@ public class PlayRadioService extends Service {
                 Log.e(LOG_TAG, "onPlayerError: ", error);
             }
         };
-
+        audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
         exoPlayer = ExoPlayerFactory.newSimpleInstance(getApplicationContext(), trackSelector);
         exoPlayer.addListener(eventListener);
     }
@@ -129,14 +124,14 @@ public class PlayRadioService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         initNotification();
-        if (intent != null) {
-            if (intent.getExtras() != null) {
-                String streamLink = intent.getExtras().getString("streamLink");
-                radioClicked = new Radio()
-                playRadio(radioClicked);
-            }
-        }
+        Toast.makeText(this, "onStartCommand", Toast.LENGTH_SHORT).show();
         return START_STICKY;
+    }
+
+    @Override
+    public void onTaskRemoved(Intent rootIntent) {
+        super.onTaskRemoved(rootIntent);
+        stopSelf();
     }
 
     @Override
@@ -162,20 +157,10 @@ public class PlayRadioService extends Service {
         exoPlayer.setPlayWhenReady(true);
     }
 
-    private boolean isPlaying() {
-        if (exoPlayer != null) {
-            return exoPlayer.getPlaybackState() == Player.STATE_READY && exoPlayer.getPlayWhenReady();
-        } else {
-            return false;
-        }
-    }
-
-    private void playRadio(Radio radioClicked) {
+    public void playRadio(Radio radioClicked) {
         Log.d("TAG", "Radio stream link: " + radioClicked.getStreamLink());
         radioCurrentlyPlaying = radioClicked;
-//        updatePopupWindow();
         if (exoPlayer != null) {
-            exoPlayer.release();
             if (isPlaying()) {
                 exoPlayer.setPlayWhenReady(false);
                 exoPlayer.stop(true);
@@ -183,14 +168,14 @@ public class PlayRadioService extends Service {
         }
         String streamLink = radioClicked.getStreamLink();
         prepareExoPlayer(Uri.parse(streamLink));
-        String iconUrl = radioClicked.getRadioIconUrl();
+//        String iconUrl = radioClicked.getRadioIconUrl();
 //        Picasso.with(getApplicationContext()).load(iconUrl)
 //                .resize(200, 200)
 //                .centerInside()
 //                .placeholder(R.drawable.ic_placeholder_radio_black)
 //                .error(R.drawable.ic_pause_radio)
 //                .into(iv_radioIcon);
-
+//
 //        iv_radioIcon.setOnClickListener(new View.OnClickListener() {
 //            @Override
 //            public void onClick(View v) {
@@ -201,7 +186,7 @@ public class PlayRadioService extends Service {
 //                    startActivity(intent);
 //                }
 //            }
-        });
+//        });
     }
 
     private void initNotification() {
@@ -224,13 +209,47 @@ public class PlayRadioService extends Service {
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setAutoCancel(false);
 
-        NotificationManagerCompat notificationManagerCompat = NotificationManagerCompat.from(this);
-        notificationManagerCompat.notify(NOTIFICATION_ID, builder.build());
+        startForeground(112, builder.build());
     }
 
     private void cancelNotification() {
         NotificationManager notificationManager
                 = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         notificationManager.cancel(NOTIFICATION_ID);
+    }
+
+    public boolean isPlaying() {
+        if (exoPlayer != null) {
+            return exoPlayer.getPlaybackState() == Player.STATE_READY && exoPlayer.getPlayWhenReady();
+        } else {
+            return false;
+        }
+    }
+
+    public void pauseRadio() {
+        if (exoPlayer != null) {
+            exoPlayer.setPlayWhenReady(false);
+        }
+    }
+
+    public SimpleExoPlayer getExoPlayer() {
+        return exoPlayer;
+    }
+
+    public void setServiceCallbacks(ServiceCallbacks serviceCallbacks) {
+        this.serviceCallbacks = serviceCallbacks;
+    }
+
+    public class PlayRadioBinder extends Binder {
+        public PlayRadioService getService() {
+            return PlayRadioService.this;
+        }
+    }
+
+    public interface ServiceCallbacks {
+        void updateRadiosFragment(int statusCode);
+        void updateFavouriteRadiosFragment(int statusCode);
+        void togglePlayPauseButton();
+        void updateVolumeBar(int streamMaxVolume);
     }
 }
