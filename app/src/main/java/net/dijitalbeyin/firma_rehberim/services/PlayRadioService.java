@@ -49,7 +49,6 @@ public class PlayRadioService extends Service {
     private ServiceCallbacks serviceCallbacks;
 
     Radio radioCurrentlyPlaying;
-    Radio radioClicked;
 
     public AudioManager audioManager;
     public SimpleExoPlayer exoPlayer;
@@ -123,8 +122,15 @@ public class PlayRadioService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        initNotification();
-        Toast.makeText(this, "onStartCommand", Toast.LENGTH_SHORT).show();
+        if (intent != null) {
+            if (intent.getExtras() != null) {
+                boolean showNotification = intent.getExtras().getBoolean("showNotification");
+                if (showNotification) {
+                    initNotification();
+                }
+            }
+        }
+        Log.d(LOG_TAG, "onStartCommand()");
         return START_STICKY;
     }
 
@@ -158,7 +164,7 @@ public class PlayRadioService extends Service {
     }
 
     public void playRadio(Radio radioClicked) {
-        Log.d("TAG", "Radio stream link: " + radioClicked.getStreamLink());
+        initNotification();
         radioCurrentlyPlaying = radioClicked;
         if (exoPlayer != null) {
             if (isPlaying()) {

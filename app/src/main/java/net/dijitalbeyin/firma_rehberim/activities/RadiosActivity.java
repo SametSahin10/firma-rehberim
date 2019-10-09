@@ -11,7 +11,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.sqlite.SQLiteDatabase;
 import android.media.AudioManager;
-import android.net.Uri;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -23,6 +23,9 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
+
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Bundle;
 import androidx.loader.app.LoaderManager;
@@ -51,13 +54,8 @@ import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
-import com.google.android.exoplayer2.ExoPlayer;
+
 import com.google.android.exoplayer2.SimpleExoPlayer;
-import com.google.android.exoplayer2.source.MediaSource;
-import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
-import com.google.android.exoplayer2.trackselection.TrackSelector;
-import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
-import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GetTokenResult;
@@ -120,8 +118,8 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     private final static int TIMER_FRAGMENT_ID = 9;
     private int ACTIVE_FRAGMENT_ID;
 
-    static int SERVICE_STOPPED = 0;
-    static int SERVICE_RUNNING = 1;
+    static int CALL_DETECTION_SERVICE_STOPPED = 0;
+    static int CALL_DETECTION_SERVICE_SERVICE_RUNNING = 1;
 
     PlayRadioService playRadioService;
     boolean bound = false;
@@ -163,7 +161,6 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     private TextView  tv_radioTitle;
     private ImageButton ib_share_radio;
     private ImageButton ib_player_add_to_fav;
-//    private ImageButton ib_player_menu;
 
     private AudioManager audioManager;
 
@@ -240,6 +237,10 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
                     }
                 });
         }
+
+        Intent intent = new Intent(this, PlayRadioService.class);
+        intent.putExtra("showNotification", false);
+        startService(intent);
 
         ACTIVE_FRAGMENT_ID = RADIOS_FRAGMENT_ID;
         radiosFragment = new RadiosFragment();
@@ -450,12 +451,21 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
         ib_playPauseRadio.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (playRadioService.isPlaying()) {
-                    playRadioService.getExoPlayer().setPlayWhenReady(false);
-                    ib_playPauseRadio.setImageDrawable(getResources().getDrawable(R.drawable.ic_play_radio));
+                boolean isConnected = checkConnectivity();
+                if (isConnected) {
+                    if (playRadioService.isPlaying()) {
+                        playRadioService.getExoPlayer().setPlayWhenReady(false);
+                        ib_playPauseRadio.setImageDrawable(getResources().getDrawable(R.drawable.ic_play_radio));
+                    } else {
+                        playRadioService.getExoPlayer().setPlayWhenReady(true);
+                        ib_playPauseRadio.setImageDrawable(getResources().getDrawable(R.drawable.ic_pause_radio));
+                    }
                 } else {
-                    playRadioService.getExoPlayer().setPlayWhenReady(true);
-                    ib_playPauseRadio.setImageDrawable(getResources().getDrawable(R.drawable.ic_pause_radio));
+                    Toast.makeText(RadiosActivity.this,
+                            "Lütfen internete bağlı olduğunuzdan emin olun",
+                                 Toast.LENGTH_SHORT)
+                                 .show();
+                    ib_playPauseRadio.setImageDrawable(getResources().getDrawable(R.drawable.ic_play_radio));
                 }
             }
         });
@@ -466,7 +476,6 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
         super.onStart();
         Intent intent = new Intent(this, PlayRadioService.class);
         bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
-        Toast.makeText(this, "Service is bound", Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -479,13 +488,13 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
         SharedPreferences sharedPreferences =
                 PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        int serviceState = sharedPreferences.getInt("serviceState", SERVICE_STOPPED);
+        int serviceState = sharedPreferences.getInt("serviceState", CALL_DETECTION_SERVICE_STOPPED);
 
         MenuItem menuItem = menu.findItem(R.id.item_caller_detection);
-        if (serviceState == SERVICE_STOPPED) {
+        if (serviceState == CALL_DETECTION_SERVICE_STOPPED) {
             Log.d("TAG", "checking it false");
             menuItem.setChecked(false);
-        } else if (serviceState == SERVICE_RUNNING) {
+        } else if (serviceState == CALL_DETECTION_SERVICE_SERVICE_RUNNING) {
             Log.d("TAG", "checking it true");
             menuItem.setChecked(true);
         } else {
@@ -768,9 +777,9 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
         SharedPreferences sharedPreferences =
                 PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        int serviceState = sharedPreferences.getInt("serviceState", SERVICE_STOPPED);
+        int serviceState = sharedPreferences.getInt("serviceState", CALL_DETECTION_SERVICE_STOPPED);
 
-        if (serviceState == SERVICE_STOPPED) {
+        if (serviceState == CALL_DETECTION_SERVICE_STOPPED) {
             Log.d("TAG", "Starting Service");
             boolean permissionGranted = ContextCompat.checkSelfPermission(
                     getApplicationContext(),
@@ -779,17 +788,17 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
                 Intent intent = new Intent(getApplicationContext(), OverlayService.class);
                 intent.putExtra("Sender", "Activity Button");
                 startService(intent);
-                editor.putInt("serviceState", SERVICE_RUNNING);
+                editor.putInt("serviceState", CALL_DETECTION_SERVICE_SERVICE_RUNNING);
                 menuItem.setChecked(true);
             } else {
                 Log.d("TAG", "Requesting permissions");
                 ActivityCompat.requestPermissions(RadiosActivity.this, new String[]{Manifest.permission.READ_PHONE_STATE}, 0);
             }
-        } else if (serviceState == SERVICE_RUNNING) {
+        } else if (serviceState == CALL_DETECTION_SERVICE_SERVICE_RUNNING) {
             Log.d("TAG", "Stopping Service");
             Intent intent = new Intent(RadiosActivity.this, OverlayService.class);
             stopService(intent);
-            editor.putInt("serviceState", SERVICE_STOPPED);
+            editor.putInt("serviceState", CALL_DETECTION_SERVICE_STOPPED);
             menuItem.setChecked(false);
         }
         editor.apply();
@@ -886,9 +895,18 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
 
     @Override
     public void onRadioItemClick(Radio radioClicked) {
-        radioCurrentlyPlaying = radioClicked;
-        playRadioService.playRadio(radioClicked);
-        isFromFavouriteRadiosFragment = false;
+        boolean isConnected = checkConnectivity();
+        if (isConnected) {
+            radioCurrentlyPlaying = radioClicked;
+            playRadioService.playRadio(radioClicked);
+            isFromFavouriteRadiosFragment = false;
+        } else {
+            Toast.makeText(RadiosActivity.this,
+                    "Lütfen internete bağlı olduğunuzdan emin olun",
+                    Toast.LENGTH_SHORT)
+                    .show();
+            ib_playPauseRadio.setImageDrawable(getResources().getDrawable(R.drawable.ic_play_radio));
+        }
     }
 
     @Override
@@ -950,6 +968,14 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
             view = new View(activity);
         }
         inputMethodManager.hideSoftInputFromWindow(view.getWindowToken(), 0);
+    }
+
+    private boolean checkConnectivity() {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        boolean isConnected = activeNetwork != null
+                && activeNetwork.isConnectedOrConnecting();
+        return isConnected;
     }
 
     private ServiceConnection serviceConnection = new ServiceConnection() {

@@ -116,10 +116,7 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
 
     @Override
     public void onViewCreated(@NonNull final View view, @Nullable Bundle savedInstanceState) {
-        ConnectivityManager cm = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-        boolean isConnected = activeNetwork != null
-                && activeNetwork.isConnectedOrConnecting();
+        boolean isConnected = checkConnectivity();
 
         onClickListener = new View.OnClickListener() {
             @Override
@@ -287,6 +284,14 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
                 }
             }
         }
+    }
+
+    private boolean checkConnectivity() {
+        ConnectivityManager cm = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        boolean isConnected = activeNetwork != null
+                && activeNetwork.isConnectedOrConnecting();
+        return isConnected;
     }
 
     @Override
