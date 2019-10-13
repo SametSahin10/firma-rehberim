@@ -425,6 +425,7 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
 
         audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         sb_volume_control = findViewById(R.id.sb_volume_control_bar);
+        sb_volume_control.setProgress(7);
         sb_volume_control.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -1012,6 +1013,6 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     public void updateVolumeBar(int streamMaxVolume) {
         sb_volume_control.setMax(streamMaxVolume);
         // Set manually for now. Should use system stream sound instead.
-        sb_volume_control.setProgress(7);
+//        sb_volume_control.setProgress(7);
     }
 }
