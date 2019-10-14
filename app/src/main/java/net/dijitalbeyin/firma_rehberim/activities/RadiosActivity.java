@@ -122,7 +122,7 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     static int CALL_DETECTION_SERVICE_SERVICE_RUNNING = 1;
 
     PlayRadioService playRadioService;
-    boolean bound = false;
+    boolean serviceBound = false;
 
     private Toolbar toolbar;
     private SearchView sw_searchForRadios;
@@ -477,6 +477,15 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
         super.onStart();
         Intent intent = new Intent(this, PlayRadioService.class);
         bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (serviceBound) {
+            unbindService(serviceConnection);
+            playRadioService.stopSelf();
+        }
     }
 
     @Override
@@ -898,9 +907,15 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     public void onRadioItemClick(Radio radioClicked) {
         boolean isConnected = checkConnectivity();
         if (isConnected) {
-            radioCurrentlyPlaying = radioClicked;
-            playRadioService.playRadio(radioClicked);
-            isFromFavouriteRadiosFragment = false;
+            if (!serviceBound) {
+                Intent intent = new Intent(this, PlayRadioService.class);
+                startService(intent);
+                bindService(intent, serviceConnection, BIND_AUTO_CREATE);
+            } else {
+                radioCurrentlyPlaying = radioClicked;
+                playRadioService.playRadio(radioClicked);
+                isFromFavouriteRadiosFragment = false;
+            }
         } else {
             Toast.makeText(RadiosActivity.this,
                     "Lütfen internete bağlı olduğunuzdan emin olun",
@@ -984,13 +999,13 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
         public void onServiceConnected(ComponentName name, IBinder service) {
             PlayRadioBinder binder = (PlayRadioBinder) service;
             playRadioService = binder.getService();
-            bound = true;
+            serviceBound = true;
             playRadioService.setServiceCallbacks(RadiosActivity.this);
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-            bound = false;
+            serviceBound = false;
         }
     };
 
@@ -1005,8 +1020,12 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     }
 
     @Override
-    public void togglePlayPauseButton() {
-        ib_playPauseRadio.setImageDrawable(getResources().getDrawable(R.drawable.ic_pause_radio));
+    public void togglePlayPauseButton(boolean isPaused) {
+        if (isPaused) {
+            ib_playPauseRadio.setImageDrawable(getResources().getDrawable(R.drawable.ic_pause_radio));
+        } else {
+            ib_playPauseRadio.setImageDrawable(getResources().getDrawable(R.drawable.ic_play_radio));
+        }
     }
 
     @Override
