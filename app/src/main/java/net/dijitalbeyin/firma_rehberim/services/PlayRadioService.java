@@ -7,6 +7,7 @@ import android.app.Service;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
 import android.media.session.MediaSessionManager;
 import android.net.Uri;
@@ -35,6 +36,8 @@ import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.upstream.TransferListener;
 import com.google.android.exoplayer2.util.EventLogger;
 import com.google.android.exoplayer2.util.Util;
+import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Target;
 
 import net.dijitalbeyin.firma_rehberim.datamodel.PlaybackStatus;
 import net.dijitalbeyin.firma_rehberim.datamodel.Radio;
@@ -183,8 +186,8 @@ public class PlayRadioService extends Service {
     }
 
     public void playRadio(Radio radioClicked) {
-        initNotification(PlaybackStatus.PLAYING);
         radioCurrentlyPlaying = radioClicked;
+        initNotification(PlaybackStatus.PLAYING);
         if (exoPlayer != null) {
             if (isPlaying()) {
                 exoPlayer.setPlayWhenReady(false);
@@ -238,9 +241,10 @@ public class PlayRadioService extends Service {
             notificationManager.createNotificationChannel(notificationChannel);
         }
 
+
         Bitmap largeIcon = BitmapFactory.decodeResource(getResources(), R.drawable.ic_placeholder_radio);
 
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, channelId)
+        final NotificationCompat.Builder builder = new NotificationCompat.Builder(this, channelId)
                 .setShowWhen(false)
                 .setStyle(new androidx.media.app.NotificationCompat.MediaStyle()
                             .setMediaSession(mediaSession.getSessionToken())
@@ -248,14 +252,36 @@ public class PlayRadioService extends Service {
                 .setColor(getResources().getColor(R.color.colorPrimary))
                 .setLargeIcon(largeIcon)
                 .setSmallIcon(R.mipmap.ic_launcher)
-                .setContentTitle("Firma Rehberim Radio Player")
-                .setContentText("Playing radio")
-                .setContentInfo("Show Radyo")
+                .setContentTitle(radioCurrentlyPlaying.getRadioName())
+                .setContentText("Radyo çalınıyor")
+                .setContentInfo("Firma Rehberim Radyo")
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setAutoCancel(false)
                 .addAction(android.R.drawable.ic_media_previous, "previous", generatePlaybackAction(3))
                 .addAction(notificationAction, "pause", playPauseAction)
                 .addAction(android.R.drawable.ic_media_next, "next", generatePlaybackAction(2));
+
+        Target target = new Target() {
+            @Override
+            public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+                builder.setLargeIcon(bitmap);
+                startForeground(112, builder.build());
+            }
+
+            @Override
+            public void onBitmapFailed(Drawable errorDrawable) {
+                Log.e(LOG_TAG, "Loading Bitmap failed");
+            }
+
+            @Override
+            public void onPrepareLoad(Drawable placeHolderDrawable) {
+
+            }
+        };
+
+        if (radioCurrentlyPlaying != null) {
+            Picasso.with(this).load(radioCurrentlyPlaying.getRadioIconUrl()).into(target);
+        }
 
         startForeground(112, builder.build());
     }
