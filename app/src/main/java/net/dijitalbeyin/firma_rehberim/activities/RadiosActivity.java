@@ -65,7 +65,6 @@ import net.dijitalbeyin.firma_rehberim.fragments.CitiesFragment;
 import net.dijitalbeyin.firma_rehberim.fragments.ContactsFragment;
 import net.dijitalbeyin.firma_rehberim.fragments.FavouriteRadiosFragment;
 import net.dijitalbeyin.firma_rehberim.fragments.NewspaperFragment;
-import net.dijitalbeyin.firma_rehberim.services.OverlayService;
 import net.dijitalbeyin.firma_rehberim.helper.QueryUtils;
 import net.dijitalbeyin.firma_rehberim.R;
 import net.dijitalbeyin.firma_rehberim.fragments.RadiosFragment;
@@ -118,8 +117,6 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     private final static int TIMER_FRAGMENT_ID = 9;
     private int ACTIVE_FRAGMENT_ID;
 
-    static int CALL_DETECTION_SERVICE_STOPPED = 0;
-    static int CALL_DETECTION_SERVICE_SERVICE_RUNNING = 1;
 
     PlayRadioService playRadioService;
     boolean serviceBound = false;
@@ -174,73 +171,11 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     City allTheCities;
     Category allTheCategories;
 
-    FirebaseAuth firebaseAuth;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_radio);
 
-        firebaseAuth = FirebaseAuth.getInstance();
-
-        FirebaseUser user = firebaseAuth.getCurrentUser();
-        if (user != null) {
-            Log.d(LOG_TAG, "User is logged in");
-        } else {
-            Log.d(LOG_TAG, "User does not exist");
-        }
-
-        FirebaseMessaging.getInstance().subscribeToTopic("number_transfer")
-                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        Log.d("TAG", "Subscription successful: number transfer");
-                    }
-                });
-
-        FirebaseMessaging.getInstance().subscribeToTopic("whatsapp_message")
-                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        Log.d("TAG", "Subscription successful: whatsapp_message");
-                    }
-                });
-
-        FirebaseMessaging.getInstance().subscribeToTopic("sms")
-                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        Log.d("TAG", "Subscription successful: sms");
-                    }
-                });
-
-        FirebaseMessaging.getInstance().subscribeToTopic("view_webpage")
-                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        Log.d("TAG", "Subscription successful: view webpage");
-                    }
-                });
-
-        FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-        if (firebaseUser != null) {
-            firebaseUser.getIdToken(true)
-                .addOnCompleteListener(new OnCompleteListener<GetTokenResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<GetTokenResult> task) {
-                        if (task.isSuccessful()) {
-                            String idToken = task.getResult().getToken();
-                            Log.d("TAG", "id token: " + idToken);
-                        } else {
-                            Log.e("TAG", "Task failed", task.getException());
-                        }
-                    }
-                });
-        }
-
-        Intent intent = new Intent(this, PlayRadioService.class);
-        intent.putExtra("showNotification", false);
-        startService(intent);
 
         ACTIVE_FRAGMENT_ID = RADIOS_FRAGMENT_ID;
         radiosFragment = new RadiosFragment();
@@ -495,43 +430,6 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
 
         action_search = menu.findItem(R.id.action_search);
 
-        SharedPreferences sharedPreferences =
-                PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        int serviceState = sharedPreferences.getInt("serviceState", CALL_DETECTION_SERVICE_STOPPED);
-
-        MenuItem menuItem = menu.findItem(R.id.item_caller_detection);
-        if (serviceState == CALL_DETECTION_SERVICE_STOPPED) {
-            Log.d("TAG", "checking it false");
-            menuItem.setChecked(false);
-        } else if (serviceState == CALL_DETECTION_SERVICE_SERVICE_RUNNING) {
-            Log.d("TAG", "checking it true");
-            menuItem.setChecked(true);
-        } else {
-            Log.d("TAG", "Cannot determine service status");
-        }
-
-        boolean callLogsActivityEnabled = sharedPreferences.getBoolean("callLogsActivityEnabled", false);
-        MenuItem item_show_call_logs = menu.findItem(R.id.item_show_call_logs);
-        if (callLogsActivityEnabled) {
-            item_show_call_logs.setChecked(true);
-        } else {
-            item_show_call_logs.setChecked(false);
-        }
-
-        String userName = sharedPreferences.getString("username", "Kullanıcı adı bulunamadı");
-        if (userName.equals("Kullanıcı adı bulunamadı")) {
-            //User is not logged in.
-            Log.d("TAG", "setting title as Giris yap");
-            menu.findItem(R.id.item_show_call_logs).setVisible(false);
-            menu.findItem(R.id.item_caller_detection).setVisible(false);
-            menu.findItem(R.id.item_login_logout).setTitle("Giriş yap");
-        } else {
-            // User is logged in.
-            Log.d("TAG", "setting title as Cikis yap");
-            menu.findItem(R.id.item_login_logout).setTitle("Çıkış yap");
-        }
-
         searchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
@@ -584,50 +482,6 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
             case R.id.item_add_your_radio:
                 return true;
             case R.id.item_contact:
-                return true;
-            case R.id.item_caller_detection:
-                boolean phoneStatepermissionGranted = ContextCompat.checkSelfPermission(
-                        getApplicationContext(),
-                        Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED;
-                if (!phoneStatepermissionGranted) {
-                    ActivityCompat.requestPermissions(RadiosActivity.this, new String[]{Manifest.permission.READ_PHONE_STATE}, 0);
-                }
-
-                boolean callLogPermissionGranted = ContextCompat.checkSelfPermission(
-                        getApplicationContext(),
-                        Manifest.permission.READ_CALL_LOG) == PackageManager.PERMISSION_GRANTED;
-                if (!callLogPermissionGranted) {
-                    ActivityCompat.requestPermissions(RadiosActivity.this, new String[]{Manifest.permission.READ_CALL_LOG}, 0);
-                }
-                toggleServiceStatus(item);
-                return true;
-            case R.id.item_show_call_logs:
-                if (item.isChecked()) {
-                    disableCallLogsActivity();
-                    editor.putBoolean("callLogsActivityEnabled", false);
-                    item.setChecked(false);
-                } else {
-                    enableCallLogsActivity();
-                    editor.putBoolean("callLogsActivityEnabled", true);
-                    item.setChecked(true);
-                }
-                editor.apply();
-                return true;
-            case R.id.item_login_logout:
-                String userName = sharedPreferences.getString("username", "Kullanıcı adı bulunamadı");
-                if (userName.equals("Kullanıcı adı bulunamadı")) {
-                    // User is not logged in.
-                    Intent loginIntent = new Intent(RadiosActivity.this, AuthenticationActivity.class);
-                    startActivity(loginIntent);
-
-                } else {
-                    // User is logged in.
-                    firebaseAuth.signOut();
-                    editor.putString("username", "Kullanıcı adı bulunamadı");
-                    editor.apply();
-                    Toast.makeText(getApplicationContext(), "Başarıyla çıkış yapıldı", Toast.LENGTH_SHORT).show();
-                    recreate();
-                }
                 return true;
             case R.id.item_about:
                 Intent privacyPolicyIntent = new Intent(this, AboutActivity.class);
@@ -770,65 +624,6 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     }
 
 //
-
-    private void toggleServiceStatus(MenuItem menuItem) {
-        if (Build.BRAND.equalsIgnoreCase("xiaomi")) {
-            Intent autoStartintent = new Intent();
-            autoStartintent.setComponent(new ComponentName("com.miui.securitycenter", "com.miui.permcenter.autostart.AutoStartManagementActivity"));
-            startActivity(autoStartintent);
-        }
-
-        if (Build.VERSION.SDK_INT >= 23) {
-            if (!Settings.canDrawOverlays(this)) {
-                Toast.makeText(this, "Lütfen ayarlardan \"Diğer uygulamaların üzerinde göster\" seçeneğini etkinleştiriniz.", Toast.LENGTH_LONG).show();
-            }
-        }
-
-        SharedPreferences sharedPreferences =
-                PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        int serviceState = sharedPreferences.getInt("serviceState", CALL_DETECTION_SERVICE_STOPPED);
-
-        if (serviceState == CALL_DETECTION_SERVICE_STOPPED) {
-            Log.d("TAG", "Starting Service");
-            boolean permissionGranted = ContextCompat.checkSelfPermission(
-                    getApplicationContext(),
-                    Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED;
-            if (permissionGranted) {
-                Intent intent = new Intent(getApplicationContext(), OverlayService.class);
-                intent.putExtra("Sender", "Activity Button");
-                startService(intent);
-                editor.putInt("serviceState", CALL_DETECTION_SERVICE_SERVICE_RUNNING);
-                menuItem.setChecked(true);
-            } else {
-                Log.d("TAG", "Requesting permissions");
-                ActivityCompat.requestPermissions(RadiosActivity.this, new String[]{Manifest.permission.READ_PHONE_STATE}, 0);
-            }
-        } else if (serviceState == CALL_DETECTION_SERVICE_SERVICE_RUNNING) {
-            Log.d("TAG", "Stopping Service");
-            Intent intent = new Intent(RadiosActivity.this, OverlayService.class);
-            stopService(intent);
-            editor.putInt("serviceState", CALL_DETECTION_SERVICE_STOPPED);
-            menuItem.setChecked(false);
-        }
-        editor.apply();
-    }
-
-    private void enableCallLogsActivity() {
-        PackageManager packageManager = getPackageManager();
-        packageManager.setComponentEnabledSetting(
-                new ComponentName(RadiosActivity.this, CallLogsActivity.class),
-                PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
-                PackageManager.DONT_KILL_APP);
-    }
-
-    private void disableCallLogsActivity() {
-        PackageManager packageManager = getPackageManager();
-        packageManager.setComponentEnabledSetting(
-                new ComponentName(RadiosActivity.this, CallLogsActivity.class),
-                PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-                PackageManager.DONT_KILL_APP);
-    }
 
     private void updatePopupWindow() {
         if (radioCurrentlyPlaying != null) {

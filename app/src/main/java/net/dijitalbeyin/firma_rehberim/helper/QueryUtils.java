@@ -15,7 +15,6 @@ import net.dijitalbeyin.firma_rehberim.data.RadioContract.RadioEntry;
 import net.dijitalbeyin.firma_rehberim.datamodel.Category;
 import net.dijitalbeyin.firma_rehberim.datamodel.City;
 import net.dijitalbeyin.firma_rehberim.datamodel.Radio;
-import net.dijitalbeyin.firma_rehberim.datamodel.User;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -91,30 +90,6 @@ public class QueryUtils {
             str2 = "";
         }
         return extractFavouriteRadiosFromJson(str2);
-    }
-
-    public static User fetchCallerData(String requestUrl) {
-        URL url = createURL(requestUrl);
-        String jsonResponse =  "";
-        try {
-            jsonResponse = makeHttpRequest(url);
-        } catch (IOException e) {
-            Log.e(LOG_TAG, "Error retrieving caller JSON response");
-        }
-        User user = extractCallerFromJson(jsonResponse);
-        return user;
-    }
-
-    public static User fetchUserData(String requestUrl) {
-        URL url = createURL(requestUrl);
-        String jsonResponse = "";
-        try {
-            jsonResponse = makeHttpRequest(url);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        User user = extractUserFromJson(jsonResponse);
-        return user;
     }
 
     private static URL createURL(String stringUrl) {
@@ -366,48 +341,5 @@ public class QueryUtils {
             Log.e(LOG_TAG, "Problem occured while parsing radios through cities JSON response ");
         }
         return arrayList;
-    }
-
-    private static User extractCallerFromJson(String callerJsonResponse) {
-        if (TextUtils.isEmpty(callerJsonResponse)) {
-            return null;
-        }
-        User user = null;
-        try {
-            JSONObject callerObject = new JSONObject(callerJsonResponse);
-            String userWebpageLink = callerObject.getString("seo");
-            String userName = callerObject.getString("isim");
-            String userPhotoLink = callerObject.getString("resim");
-            String authoritativeWebpageLink = callerObject.getString("yetkiliseo");
-            String userId = callerObject.getString("id");
-            String authoritativeName = callerObject.getString("authoritative");
-            //isVerified and match values set as default: false and 211 since there is no information related in the JSON response received.
-            user = new User(userWebpageLink, userName, userPhotoLink, false, 211, authoritativeWebpageLink, userId, authoritativeName);
-        } catch (JSONException e) {
-            Log.e(LOG_TAG, "Problem occured while parsing caller JSON response");
-        }
-        return user;
-    }
-
-    private static User extractUserFromJson(String userJsonResponse) {
-        if (TextUtils.isEmpty(userJsonResponse)) {
-            return null;
-        }
-        User user = null;
-        try {
-            JSONObject userObject = new JSONObject(userJsonResponse);
-            String userWebpageLink = userObject.getString("seo");
-            String userName = userObject.getString("isim");
-            String userPhotoLink = userObject.getString("resim");
-            boolean isVerified = userObject.getBoolean("verify");
-            int match = userObject.getInt("match");
-            String authoritativeWebpageLink = userObject.getString("yetkiliseo");
-            String userId = userObject.getString("id");
-            String authoritativeName = userObject.getString("authoritative");
-            user = new User(userWebpageLink, userName, userPhotoLink, isVerified, match, authoritativeWebpageLink, userId, authoritativeName);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        return user;
     }
 }

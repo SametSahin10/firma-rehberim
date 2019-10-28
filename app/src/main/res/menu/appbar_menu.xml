@@ -37,21 +37,8 @@
           android:title="@string/contact"
           app:showAsAction="never"/>
 
-    <item android:id="@+id/item_caller_detection"
-          android:title="@string/arayan_firma_tespiti"
-          android:checkable="true"
-          app:showAsAction="never"/>
-
-    <item android:id="@+id/item_show_call_logs"
-        android:title="@string/arayan_firma_listesini_g_ster"
-        android:checkable="true"
-        app:showAsAction="never"/>
 
     <item android:id="@+id/item_about"
-        android:title="@string/hakkinda"
-        app:showAsAction="never"/>
-
-    <item android:id="@+id/item_login_logout"
-          android:title="@string/giri"
+          android:title="@string/hakkinda"
           app:showAsAction="never"/>
 </menu>
