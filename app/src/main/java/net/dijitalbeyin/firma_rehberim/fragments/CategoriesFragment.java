@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CategoriesFragment extends Fragment implements LoaderManager.LoaderCallbacks<List<Object>> {
-    private static final String CATEGORY_REQUEST_URL = "https://firmarehberim.com/sayfalar/radyo/json/kategoriler.php";
+    private static final String CATEGORY_REQUEST_URL = "https://firmarehberim.com/bolumler/radyolar/app-json/kategoriler.php";
     private static final int CATEGORY_LOADER_ID = 1;
 
     //    ListView lw_categories;
