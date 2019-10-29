@@ -27,7 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CitiesFragment extends Fragment implements LoaderManager.LoaderCallbacks<List<Object>> {
-    private static final String CITIES_REQUEST_URL = "https://firmarehberim.com/sayfalar/radyo/json/iller.php";
+    private static final String CITIES_REQUEST_URL = "https://firmarehberim.com/bolumler/radyolar/app-json/iller.php";
     private static final int CITY_LOADER_ID = 1;
 
     GridView gv_cities;
