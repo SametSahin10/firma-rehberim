@@ -366,9 +366,11 @@ public class PlayRadioService extends Service {
         if (actionString.equalsIgnoreCase(ACTION_PLAY)) {
             Log.d(LOG_TAG, "handleIncomingActions() ACTION_PLAY");
             transportControls.play();
+            serviceCallbacks.togglePlayPauseButton(false);
         } else if (actionString.equalsIgnoreCase(ACTION_PAUSE)) {
             Log.d(LOG_TAG, "handleIncomingActions() ACTION_PAUSE");
             transportControls.pause();
+            serviceCallbacks.togglePlayPauseButton(true);
         } else if (actionString.equalsIgnoreCase(ACTION_NEXT)) {
             Log.d(LOG_TAG, "handleIncomingActions() ACTION_NEXT");
             transportControls.skipToNext();
