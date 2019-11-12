@@ -8,6 +8,8 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
+import android.media.AudioAttributes;
+import android.media.AudioFocusRequest;
 import android.media.AudioManager;
 import android.media.session.MediaSessionManager;
 import android.net.Uri;
@@ -45,7 +47,7 @@ import net.dijitalbeyin.firma_rehberim.R;
 
 import okhttp3.OkHttpClient;
 
-public class PlayRadioService extends Service {
+public class PlayRadioService extends Service implements AudioManager.OnAudioFocusChangeListener {
     private static final String LOG_TAG = PlayRadioService.class.getSimpleName();
     private static final int STATE_BUFFERING = 10;
     private static final int STATE_READY = 11;
@@ -159,6 +161,7 @@ public class PlayRadioService extends Service {
     @Override
     public void onTaskRemoved(Intent rootIntent) {
         super.onTaskRemoved(rootIntent);
+        relieveAudioFocus();
         stopSelf();
     }
 
@@ -168,6 +171,7 @@ public class PlayRadioService extends Service {
             exoPlayer.setPlayWhenReady(false);
             exoPlayer.release();
         }
+        relieveAudioFocus();
         cancelNotification();
         super.onDestroy();
     }
@@ -285,15 +289,19 @@ public class PlayRadioService extends Service {
             @Override
             public void onPlay() {
                 super.onPlay();
-                initNotification(PlaybackStatus.PLAYING);
-                if (exoPlayer != null) {
-                    exoPlayer.setPlayWhenReady(true);
-                    serviceCallbacks.togglePlayPauseButton(false);
+                boolean audioFocusGained = gainAudioFocus();
+                if (audioFocusGained) {
+                    initNotification(PlaybackStatus.PLAYING);
+                    if (exoPlayer != null) {
+                        exoPlayer.setPlayWhenReady(true);
+                        serviceCallbacks.togglePlayPauseButton(false);
+                    }
                 }
             }
 
             @Override
             public void onPause() {
+
                 super.onPause();
                 initNotification(PlaybackStatus.PAUSED);
                 pauseRadio();
@@ -388,6 +396,81 @@ public class PlayRadioService extends Service {
 
     public void setServiceCallbacks(ServiceCallbacks serviceCallbacks) {
         this.serviceCallbacks = serviceCallbacks;
+    }
+
+    @Override
+    public void onAudioFocusChange(int focusChange) {
+        // Will implement this later.
+        if (focusChange == AudioManager.AUDIOFOCUS_GAIN) {
+            Log.d(LOG_TAG, "Gained audio focus");
+            transportControls.play();
+        } else if (focusChange == AudioManager.AUDIOFOCUS_REQUEST_FAILED) {
+            Log.d(LOG_TAG, "Audio focus request failed");
+            transportControls.pause();
+        } else if (focusChange == AudioManager.AUDIOFOCUS_LOSS) {
+            Log.d(LOG_TAG, "Audio focus lost");
+            transportControls.pause();
+        } else {
+            Log.d(LOG_TAG, "Unknown focus change");
+        }
+    }
+
+    public boolean gainAudioFocus() {
+        boolean playBackNowAuthorized;
+        int response;
+        AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_MEDIA)
+                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                .build();
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            AudioFocusRequest focusRequest =
+                    new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+                            .setAudioAttributes(audioAttributes)
+                            .setAcceptsDelayedFocusGain(false)
+                            .setOnAudioFocusChangeListener(this)
+                            .build();
+            response = audioManager.requestAudioFocus(focusRequest);
+            switch (response) {
+                case AudioManager.AUDIOFOCUS_REQUEST_FAILED:
+                    playBackNowAuthorized = false;
+                    return playBackNowAuthorized;
+                case AudioManager.AUDIOFOCUS_REQUEST_GRANTED:
+                    playBackNowAuthorized = true;
+                    return playBackNowAuthorized;
+                default:
+                    return false;
+            }
+        }
+        // If Build version is lower than 26
+        response = audioManager.requestAudioFocus(this,
+                                AudioManager.STREAM_MUSIC,
+                                AudioManager.AUDIOFOCUS_GAIN);
+        switch (response) {
+            case AudioManager.AUDIOFOCUS_REQUEST_FAILED:
+                playBackNowAuthorized = false;
+                return playBackNowAuthorized;
+            case AudioManager.AUDIOFOCUS_REQUEST_GRANTED:
+                playBackNowAuthorized = true;
+                return playBackNowAuthorized;
+            default:
+                return false;
+        }
+    }
+
+    private void relieveAudioFocus() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_MEDIA)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                    .build();
+            AudioFocusRequest focusRequest =
+                    new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+                            .setAudioAttributes(audioAttributes)
+                            .setAcceptsDelayedFocusGain(false)
+                            .setOnAudioFocusChangeListener(this)
+                            .build();
+            audioManager.abandonAudioFocusRequest(focusRequest);
+        }
     }
 
     public class PlayRadioBinder extends Binder {
