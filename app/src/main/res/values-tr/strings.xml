@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Firma Rehberim Radyo</string>
+    <string name="app_name">Radyo Dinle Firma Rehberim</string>
     <string name="cannot_stream_radio_text">Radyo akışı çözülemedi</string>
     <string name="empty_categories_text">Kategori bulunamadı</string>
     <string name="empty_cities_text">Şehir bulunamadı</string>

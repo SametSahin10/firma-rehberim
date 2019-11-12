@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Firma Rehberim Radio</string>
+    <string name="app_name">Radyo Dinle Firma Rehberim</string>
     <string name="empty_cities_text">No cities found</string>
     <string name="no_internet_connection_text">No Internet Connection</string>
     <string name="empty_categories_text">No categories found</string>
