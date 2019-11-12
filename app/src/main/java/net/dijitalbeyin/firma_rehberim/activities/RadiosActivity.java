@@ -393,11 +393,9 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
                 boolean isConnected = checkConnectivity();
                 if (isConnected) {
                     if (playRadioService.isPlaying()) {
-                        playRadioService.getExoPlayer().setPlayWhenReady(false);
-                        ib_playPauseRadio.setImageDrawable(getResources().getDrawable(R.drawable.ic_play_radio));
+                        playRadioService.getTransportControls().pause();
                     } else {
-                        playRadioService.getExoPlayer().setPlayWhenReady(true);
-                        ib_playPauseRadio.setImageDrawable(getResources().getDrawable(R.drawable.ic_pause_radio));
+                        playRadioService.getTransportControls().play();
                     }
                 } else {
                     Toast.makeText(RadiosActivity.this,
@@ -752,7 +750,7 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     @Override
     public void onFilterRespectToCity(String cityToFilter) {
         //Filter respect to city.
-        getSupportActionBar().setTitle("Firma Rehberim Radyo");
+        getSupportActionBar().setTitle(getResources().getString(R.string.app_name));
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         fragmentTransaction.replace(R.id.fragment_container, radiosFragment).commit();

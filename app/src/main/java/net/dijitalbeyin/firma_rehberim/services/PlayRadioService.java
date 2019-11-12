@@ -382,6 +382,10 @@ public class PlayRadioService extends Service {
         return exoPlayer;
     }
 
+    public MediaControllerCompat.TransportControls getTransportControls() {
+        return transportControls;
+    }
+
     public void setServiceCallbacks(ServiceCallbacks serviceCallbacks) {
         this.serviceCallbacks = serviceCallbacks;
     }
