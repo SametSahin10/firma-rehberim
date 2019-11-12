@@ -196,25 +196,6 @@ public class PlayRadioService extends Service {
         }
         String streamLink = radioClicked.getStreamLink();
         prepareExoPlayer(Uri.parse(streamLink));
-//        String iconUrl = radioClicked.getRadioIconUrl();
-//        Picasso.with(getApplicationContext()).load(iconUrl)
-//                .resize(200, 200)
-//                .centerInside()
-//                .placeholder(R.drawable.ic_placeholder_radio_black)
-//                .error(R.drawable.ic_pause_radio)
-//                .into(iv_radioIcon);
-//
-//        iv_radioIcon.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                Intent intent = new Intent(Intent.ACTION_VIEW);
-//                Log.d("TAG", "Shareable link: " + radioCurrentlyPlaying.getShareableLink());
-//                intent.setData(Uri.parse(radioCurrentlyPlaying.getShareableLink()));
-//                if (intent.resolveActivity(getPackageManager()) != null) {
-//                    startActivity(intent);
-//                }
-//            }
-//        });
     }
 
     private void initNotification(PlaybackStatus playbackStatus) {

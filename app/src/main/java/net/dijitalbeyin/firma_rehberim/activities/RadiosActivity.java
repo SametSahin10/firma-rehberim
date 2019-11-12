@@ -26,6 +26,7 @@ import androidx.fragment.app.FragmentTransaction;
 
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import androidx.loader.app.LoaderManager;
@@ -60,6 +61,8 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GetTokenResult;
 import com.google.firebase.messaging.FirebaseMessaging;
+import com.squareup.picasso.Picasso;
+
 import net.dijitalbeyin.firma_rehberim.fragments.CategoriesFragment;
 import net.dijitalbeyin.firma_rehberim.fragments.CitiesFragment;
 import net.dijitalbeyin.firma_rehberim.fragments.ContactsFragment;
@@ -709,6 +712,20 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
             } else {
                 radioCurrentlyPlaying = radioClicked;
                 playRadioService.playRadio(radioClicked);
+                tv_radioTitle.setText(radioCurrentlyPlaying.getRadioName());
+                String iconUrl = radioCurrentlyPlaying.getRadioIconUrl();
+                updateRadioIcon(iconUrl);
+                iv_radioIcon.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Intent intent = new Intent(Intent.ACTION_VIEW);
+                        Log.d("TAG", "Shareable link: " + radioCurrentlyPlaying.getShareableLink());
+                        intent.setData(Uri.parse(radioCurrentlyPlaying.getShareableLink()));
+                        if (intent.resolveActivity(getPackageManager()) != null) {
+                            startActivity(intent);
+                        }
+                    }
+                });
                 isFromFavouriteRadiosFragment = false;
             }
         } else {
@@ -828,5 +845,14 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
         sb_volume_control.setMax(streamMaxVolume);
         // Set manually for now. Should use system stream sound instead.
 //        sb_volume_control.setProgress(7);
+    }
+
+    void updateRadioIcon(String iconUrl) {
+        Picasso.with(getApplicationContext()).load(iconUrl)
+                .resize(200, 200)
+                .centerInside()
+                .placeholder(R.drawable.ic_placeholder_radio_black)
+                .error(R.drawable.ic_pause_radio)
+                .into(iv_radioIcon);
     }
 }
