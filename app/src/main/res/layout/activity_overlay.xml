@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".OverlayActivity">
+
+    <Button
+        android:id="@+id/btn_start_service"
+        android:layout_width="300dp"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:padding="15dp"
+        android:background="@drawable/category_item_background"
+        android:textAllCaps="false"
+        android:fontFamily="@font/righteous_regular"
+        android:textColor="#FFFFFF"
+        android:textSize="32sp"
+        android:text="@string/arayan_firma_numaras_tespitini_aktifle_tir"/>
+
+    <Button
+        android:id="@+id/btn_stop_service"
+        android:layout_width="300dp"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:padding="15dp"
+        android:visibility="invisible"
+        android:background="@drawable/category_item_background"
+        android:textAllCaps="false"
+        android:fontFamily="@font/righteous_regular"
+        android:textColor="#FFFFFF"
+        android:textSize="32sp"
+        android:text="@string/arayan_firma_numaras_tespitini_devre_d_b_rak"/>
+</RelativeLayout>

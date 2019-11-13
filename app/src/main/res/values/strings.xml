@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Radyo Dinle Firma Rehberim</string>
+    <string name="app_name">Firma Rehberim Radio</string>
     <string name="empty_cities_text">No cities found</string>
     <string name="no_internet_connection_text">No Internet Connection</string>
     <string name="empty_categories_text">No categories found</string>
@@ -34,6 +34,7 @@
     <string name="ptal_et">İptal et</string>
     <string name="arayan_firma_numaras_tespitini_aktifle_tir">Arayan firma numarası tespitini aktifleştir</string>
     <string name="arayan_firma_numaras_tespitini_devre_d_b_rak">Arayan firma numarası tespitini devre dışı bırak</string>
+    <string name="arayan_firma_tespiti">Arayan firma tespiti</string>
     <string name="gizlilik_s_zle_mesi">Gizlilik Sözleşmesi</string>
     <string name="hakkinda">Hakkinda</string>
     <string name="arama_kayd_bulunamad">Arama kaydı bulunamadı.</string>
@@ -42,16 +43,4 @@
     <string name="g_r_yap">Giriş Yap</string>
     <string name="firma_rehberim_radyo">Firma\nRehberim\nRadyo</string>
     <string name="giris_yapmadan_devam_et">Giriş yapmadan devam et</string>
-    <string name="arayan_firma_tespiti">Arama tespiti</string>
-    <string name="arayan_firma_tespiti_call_logs">Arama Tespiti</string>
-    <string name="giri">Giriş yap</string>
-    <string name="arayan_firma_listesini_g_ster">Arama Listesi</string>
-    <string name="hesab_n_yok_mu_hesap_olu_tur">Hesabın yok mu? Hesap oluştur</string>
-    <string name="hesab_n_var_m_giri_yap">Hesabın var mı? Giriş yap</string>
-    <string name="hesap_olu_tur">Hesap Oluştur</string>
-    <string name="default_notification_channel_id">fcm_default_channel</string>
-    <string name="fcm_message">FCM Message</string>
-
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

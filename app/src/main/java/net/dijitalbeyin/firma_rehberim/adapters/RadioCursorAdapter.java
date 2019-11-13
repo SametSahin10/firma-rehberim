@@ -4,173 +4,146 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.support.p000v4.content.ContextCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.CursorAdapter;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-
-import androidx.core.content.ContextCompat;
-
 import com.squareup.picasso.Picasso;
-
-import net.dijitalbeyin.firma_rehberim.R;
-import net.dijitalbeyin.firma_rehberim.datamodel.Radio;
+import net.dijitalbeyin.firma_rehberim.C0662R;
+import net.dijitalbeyin.firma_rehberim.Radio;
+import net.dijitalbeyin.firma_rehberim.data.RadioContract.RadioEntry;
 import net.dijitalbeyin.firma_rehberim.data.RadioDbHelper;
 
-import static net.dijitalbeyin.firma_rehberim.data.RadioContract.*;
-
 public class RadioCursorAdapter extends CursorAdapter {
+    /* access modifiers changed from: private */
+    public static final String LOG_TAG = "RadioCursorAdapter";
     Context context;
     OnRadioDeleteListener onRadioDeleteListener;
 
-    public void setOnRadioDeleteListener(OnRadioDeleteListener onRadioDeleteListener) {
-        this.onRadioDeleteListener = onRadioDeleteListener;
+    public interface OnRadioDeleteListener {
+        void onRadioDelete(int i);
     }
 
-    private static final String LOG_TAG = RadioCursorAdapter.class.getSimpleName();
-
-    public RadioCursorAdapter(Context context, Cursor c, OnRadioDeleteListener onRadioDeleteListener) {
-        super(context, c);
-        this.context = context;
-        this.onRadioDeleteListener = onRadioDeleteListener;
+    public void setOnRadioDeleteListener(OnRadioDeleteListener onRadioDeleteListener2) {
+        this.onRadioDeleteListener = onRadioDeleteListener2;
     }
 
-    @Override
-    public View newView(Context context, Cursor cursor, ViewGroup parent) {
-        return LayoutInflater.from(context).inflate(R.layout.item_radio, parent, false);
+    public RadioCursorAdapter(Context context2, Cursor cursor, OnRadioDeleteListener onRadioDeleteListener2) {
+        super(context2, cursor);
+        this.context = context2;
+        this.onRadioDeleteListener = onRadioDeleteListener2;
     }
 
-    @Override
-    public void bindView(View view, Context context, Cursor cursor) {
-        ImageView iv_item_radio_icon = view.findViewById(R.id.iv_item_radio_icon);
-        TextView tv_radio_name = view.findViewById(R.id.tv_radio_name);
-        ProgressBar pb_buffering_radio = view.findViewById(R.id.pb_buffering_radio);
-        ImageButton ib_add_to_favourites = view.findViewById(R.id.ib_add_to_favourites);
+    public View newView(Context context2, Cursor cursor, ViewGroup viewGroup) {
+        return LayoutInflater.from(context2).inflate(C0662R.layout.item_radio, viewGroup, false);
+    }
 
-        int idColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_ID);
-        int cityIdColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_CITY_ID);
-        int townIdColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_TOWN_ID);
-        int neighbourhoodIdColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_NEIGHBOURHOOD_ID);
-        int categoryIdColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_CATEGORY_ID);
-        int userIdColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_USER_ID);
-        int nameColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_NAME);
-        int categoryColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_CATEGORY);
-        int iconUrlColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_ICON_URL);
-        int streamLinkColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_STREAM_LINK);
-        int shareableLinkColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_SHAREABLE_LINK);
-        int numOfOnlineListenersColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_NUM_OF_ONLINE_LISTENERS);
-        int hitColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_HIT);
-        int isBeingBufferedColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_IS_BEING_BUFFERED);
-        int isLikedColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_IS_LIKED);
-
-        int radioId = cursor.getInt(idColumnIndex);
-        int cityId = cursor.getInt(cityIdColumnIndex);
-        int townId = cursor.getInt(townIdColumnIndex);
-        int neighbourhoodId = cursor.getInt(neighbourhoodIdColumnIndex);
-        String categoryId = cursor.getString(categoryIdColumnIndex);
-        int userId = cursor.getInt(userIdColumnIndex);
-        String radioName = cursor.getString(nameColumnIndex);
-        String category = cursor.getString(categoryColumnIndex);
-        String radioIconUrl = cursor.getString(iconUrlColumnIndex);
-        String streamLink = cursor.getString(streamLinkColumnIndex);
-        String shareableLink = cursor.getString(shareableLinkColumnIndex);
-        int hit = cursor.getInt(hitColumnIndex);
-        int numOfOnlineListeners = cursor.getInt(numOfOnlineListenersColumnIndex);
-        boolean isBeingBuffered = false;
-        if (cursor.getInt(isBeingBufferedColumnIndex) == 1) {
-            isBeingBuffered = true;
-        }
-        boolean isLiked = false;
-
-        if (cursor.getInt(isLikedColumnIndex) == 1) {
-            isLiked = true;
-        }
-
-        final Radio currentRadio = new Radio(radioId,
-                radioName,
-                cityId,
-                townId,
-                neighbourhoodId,
-                categoryId,
-                userId,
-                category,
-                radioIconUrl,
-                streamLink,
-                shareableLink,
-                hit,
-                numOfOnlineListeners,
-                false,
-                false);
-        String iconUrl = currentRadio.getRadioIconUrl();
-        float scale = view.getContext().getResources().getDisplayMetrics().density;
-        int width = (int) (60 * scale + 0.5f);
-        int height = (int) (60 * scale + 0.5f);
-        Picasso.with(view.getContext()).load(iconUrl)
-                .resize(width, height)
-                .centerInside()
-                .placeholder(R.mipmap.ic_launcher)
-                .error(R.drawable.ic_pause_radio)
-                .into(iv_item_radio_icon);
-        tv_radio_name.setText(currentRadio.getRadioName());
-        if (currentRadio.isBeingBuffered()) {
-            pb_buffering_radio.setVisibility(View.VISIBLE);
+    public void bindView(View view, Context context2, Cursor cursor) {
+        ImageButton imageButton;
+        View view2 = view;
+        Cursor cursor2 = cursor;
+        ImageView imageView = (ImageView) view2.findViewById(C0662R.C0664id.iv_item_radio_icon);
+        TextView textView = (TextView) view2.findViewById(C0662R.C0664id.tv_radio_name);
+        ProgressBar progressBar = (ProgressBar) view2.findViewById(C0662R.C0664id.pb_buffering_radio);
+        ImageButton imageButton2 = (ImageButton) view2.findViewById(C0662R.C0664id.ib_add_to_favourites);
+        int columnIndex = cursor2.getColumnIndex("id");
+        int columnIndex2 = cursor2.getColumnIndex(RadioEntry.COLUMN_CITY_ID);
+        int columnIndex3 = cursor2.getColumnIndex(RadioEntry.COLUMN_TOWN_ID);
+        int columnIndex4 = cursor2.getColumnIndex(RadioEntry.COLUMN_NEIGHBOURHOOD_ID);
+        int columnIndex5 = cursor2.getColumnIndex(RadioEntry.COLUMN_CATEGORY_ID);
+        int columnIndex6 = cursor2.getColumnIndex(RadioEntry.COLUMN_USER_ID);
+        int columnIndex7 = cursor2.getColumnIndex(RadioEntry.COLUMN_RADIO_NAME);
+        int columnIndex8 = cursor2.getColumnIndex(RadioEntry.COLUMN_RADIO_CATEGORY);
+        int columnIndex9 = cursor2.getColumnIndex(RadioEntry.COLUMN_RADIO_ICON_URL);
+        int columnIndex10 = cursor2.getColumnIndex(RadioEntry.COLUMN_RADIO_STREAM_LINK);
+        int columnIndex11 = cursor2.getColumnIndex(RadioEntry.COLUMN_RADIO_SHAREABLE_LINK);
+        ImageButton imageButton3 = imageButton2;
+        int columnIndex12 = cursor2.getColumnIndex(RadioEntry.COLUMN_NUM_OF_ONLINE_LISTENERS);
+        ProgressBar progressBar2 = progressBar;
+        int columnIndex13 = cursor2.getColumnIndex(RadioEntry.COLUMN_RADIO_HIT);
+        TextView textView2 = textView;
+        int columnIndex14 = cursor2.getColumnIndex(RadioEntry.COLUMN_RADIO_IS_BEING_BUFFERED);
+        ImageView imageView2 = imageView;
+        int columnIndex15 = cursor2.getColumnIndex(RadioEntry.COLUMN_RADIO_IS_LIKED);
+        int i = cursor2.getInt(columnIndex);
+        int i2 = cursor2.getInt(columnIndex2);
+        int i3 = cursor2.getInt(columnIndex3);
+        int i4 = cursor2.getInt(columnIndex4);
+        String string = cursor2.getString(columnIndex5);
+        int i5 = cursor2.getInt(columnIndex6);
+        String string2 = cursor2.getString(columnIndex7);
+        String string3 = cursor2.getString(columnIndex8);
+        String string4 = cursor2.getString(columnIndex9);
+        String string5 = cursor2.getString(columnIndex10);
+        String string6 = cursor2.getString(columnIndex11);
+        int i6 = cursor2.getInt(columnIndex13);
+        int i7 = cursor2.getInt(columnIndex12);
+        int i8 = cursor2.getInt(columnIndex14);
+        int i9 = cursor2.getInt(columnIndex15);
+        final Radio radio = new Radio(i, string2, i2, i3, i4, string, i5, string3, string4, string5, string6, i6, i7, false, false);
+        int i10 = (int) ((view.getContext().getResources().getDisplayMetrics().density * 60.0f) + 0.5f);
+        Picasso.with(view.getContext()).load(radio.getRadioIconUrl()).resize(i10, i10).centerInside().placeholder((int) C0662R.mipmap.ic_launcher).error((int) C0662R.C0663drawable.ic_pause_radio).into(imageView2);
+        textView2.setText(radio.getRadioName());
+        if (radio.isBeingBuffered()) {
+            progressBar2.setVisibility(0);
         } else {
-            pb_buffering_radio.setVisibility(View.INVISIBLE);
+            progressBar2.setVisibility(4);
         }
-        if (currentRadio.isLiked()) {
-            ib_add_to_favourites.setImageDrawable(ContextCompat.getDrawable(view.getContext(), R.drawable.ic_favourite_full));
+        if (radio.isLiked()) {
+            imageButton = imageButton3;
+            imageButton.setImageDrawable(ContextCompat.getDrawable(view.getContext(), C0662R.C0663drawable.ic_favourite_full));
         } else {
-            ib_add_to_favourites.setImageDrawable(ContextCompat.getDrawable(view.getContext(), R.drawable.ic_favourite_empty));
+            imageButton = imageButton3;
+            imageButton.setImageDrawable(ContextCompat.getDrawable(view.getContext(), C0662R.C0663drawable.ic_favourite_empty));
         }
-        ib_add_to_favourites.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (!currentRadio.isLiked()) {
-                    currentRadio.setLiked(true);
-                    addToFavourites(currentRadio);
+        imageButton.setOnClickListener(new OnClickListener() {
+            public void onClick(View view) {
+                if (!radio.isLiked()) {
+                    radio.setLiked(true);
+                    RadioCursorAdapter.this.addToFavourites(radio);
                 } else {
-                    currentRadio.setLiked(false);
-                    deleteFromFavourites(currentRadio);
-                    onRadioDeleteListener.onRadioDelete(currentRadio.getRadioId());
+                    radio.setLiked(false);
+                    RadioCursorAdapter.this.deleteFromFavourites(radio);
+                    RadioCursorAdapter.this.onRadioDeleteListener.onRadioDelete(radio.getRadioId());
                 }
-                notifyDataSetChanged();
-                Log.d(LOG_TAG, "onClick ON RadioCursorAdapter: ");
+                RadioCursorAdapter.this.notifyDataSetChanged();
+                Log.d(RadioCursorAdapter.LOG_TAG, "onClick ON RadioCursorAdapter: ");
             }
         });
     }
 
-    private void addToFavourites(Radio radio) {
-        RadioDbHelper dbHelper = new RadioDbHelper((context));
-        SQLiteDatabase sqLiteDatabase = dbHelper.getWritableDatabase();
+    /* access modifiers changed from: private */
+    public void addToFavourites(Radio radio) {
+        SQLiteDatabase writableDatabase = new RadioDbHelper(this.context).getWritableDatabase();
         ContentValues contentValues = new ContentValues();
-        contentValues.put(RadioEntry.COLUMN_RADIO_ID, radio.getRadioId());
+        contentValues.put("id", Integer.valueOf(radio.getRadioId()));
         contentValues.put(RadioEntry.COLUMN_RADIO_NAME, radio.getRadioName());
         contentValues.put(RadioEntry.COLUMN_RADIO_CATEGORY, radio.getCategory());
         contentValues.put(RadioEntry.COLUMN_RADIO_ICON_URL, radio.getRadioIconUrl());
         contentValues.put(RadioEntry.COLUMN_RADIO_STREAM_LINK, radio.getStreamLink());
         contentValues.put(RadioEntry.COLUMN_RADIO_SHAREABLE_LINK, radio.getShareableLink());
-        contentValues.put(RadioEntry.COLUMN_RADIO_HIT, radio.getHit());
-        contentValues.put(RadioEntry.COLUMN_NUM_OF_ONLINE_LISTENERS, radio.getNumOfOnlineListeners());
-        contentValues.put(RadioEntry.COLUMN_RADIO_IS_BEING_BUFFERED, radio.isBeingBuffered());
-        contentValues.put(RadioEntry.COLUMN_RADIO_IS_LIKED, radio.isLiked());
-        long newRowId = sqLiteDatabase.insert(RadioEntry.TABLE_NAME, null, contentValues);
-        Log.d(LOG_TAG, "newRowId: " + newRowId);
+        contentValues.put(RadioEntry.COLUMN_RADIO_HIT, Integer.valueOf(radio.getHit()));
+        contentValues.put(RadioEntry.COLUMN_NUM_OF_ONLINE_LISTENERS, Integer.valueOf(radio.getNumOfOnlineListeners()));
+        contentValues.put(RadioEntry.COLUMN_RADIO_IS_BEING_BUFFERED, Boolean.valueOf(radio.isBeingBuffered()));
+        contentValues.put(RadioEntry.COLUMN_RADIO_IS_LIKED, Boolean.valueOf(radio.isLiked()));
+        long insert = writableDatabase.insert(RadioEntry.TABLE_NAME, null, contentValues);
+        String str = LOG_TAG;
+        StringBuilder sb = new StringBuilder();
+        sb.append("newRowId: ");
+        sb.append(insert);
+        Log.d(str, sb.toString());
     }
 
-    private void deleteFromFavourites(Radio radio) {
-        RadioDbHelper dbHelper = new RadioDbHelper(context);
-        SQLiteDatabase sqLiteDatabase = dbHelper.getWritableDatabase();
-        String selection = RadioEntry.COLUMN_RADIO_NAME + "=?";
-        String[] selectionArgs = {radio.getRadioName()};
-        int numOfDeletedRows = sqLiteDatabase.delete(RadioEntry.TABLE_NAME, selection, selectionArgs);
-    }
-
-    public interface OnRadioDeleteListener {
-        void onRadioDelete(int radioId);
+    /* access modifiers changed from: private */
+    public void deleteFromFavourites(Radio radio) {
+        String[] strArr = {radio.getRadioName()};
+        new RadioDbHelper(this.context).getWritableDatabase().delete(RadioEntry.TABLE_NAME, "name=?", strArr);
     }
 }
