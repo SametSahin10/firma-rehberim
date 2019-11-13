@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "819923756842",
+    "firebase_url": "https://firmarehberim-7e242.firebaseio.com",
+    "project_id": "firmarehberim-7e242",
+    "storage_bucket": "firmarehberim-7e242.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:819923756842:android:9334fc2a1be14152ea6053",
+        "android_client_info": {
+          "package_name": "net.dijitalbeyin.firma_rehberim"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "819923756842-m0a9loc0lqq6mmbnh54kupifqusr4hi3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCzwpdP1tJV9UExMy2mWi6JIYuj3xim4XI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "819923756842-m0a9loc0lqq6mmbnh54kupifqusr4hi3.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
