@@ -3,7 +3,7 @@ apply plugin: 'com.android.application'
 android {
     compileSdkVersion 29
     defaultConfig {
-        applicationId "com.firmarehberim.radyo"
+        applicationId "com.firmarehberim.canliradyo"
         minSdkVersion 21
         targetSdkVersion 29
         versionCode 8
@@ -40,5 +40,3 @@ dependencies {
     implementation 'com.google.firebase:firebase-storage:19.0.1'
     implementation 'com.google.firebase:firebase-database:19.1.0'
 }
-
-apply plugin: 'com.google.gms.google-services'
