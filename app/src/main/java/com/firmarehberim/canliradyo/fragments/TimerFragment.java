@@ -6,6 +6,8 @@ import android.os.CountDownTimer;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,8 +22,14 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
+import java.util.TimeZone;
 
 public class TimerFragment extends Fragment {
+    private final static String LOG_TAG = TimerFragment.class.getSimpleName();
+
+    ViewGroup rootView;
+
     TimePicker timePicker;
     Button btn_set_timer;
     Button btn_cancel_timer;
@@ -32,6 +40,8 @@ public class TimerFragment extends Fragment {
 
     OnCountdownFinishedListener onCountdownFinishedListener;
 
+    private boolean isInflated;
+
     public void setOnCountdownFinishedListener(OnCountdownFinishedListener onCountdownFinishedListener) {
         this.onCountdownFinishedListener = onCountdownFinishedListener;
     }
@@ -39,9 +49,12 @@ public class TimerFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        ViewGroup rootView = (ViewGroup) inflater.inflate(R.layout.fragment_timer,
-                                                                         container,
-                                                                false);
+        if (!isInflated) {
+            rootView = (ViewGroup) inflater.inflate(R.layout.fragment_timer,
+                    container,
+                    false);
+            isInflated = true;
+        }
         return rootView;
     }
 
@@ -70,13 +83,21 @@ public class TimerFragment extends Fragment {
                 String[] timeAsArray = currentTime.split(":");
                 int currentHour = Integer.valueOf(timeAsArray[0]);
                 int currentMinute = Integer.valueOf(timeAsArray[1]);
+                Log.d(LOG_TAG, "current Hour: " + currentHour);
+                Log.d(LOG_TAG, "current Minute: " + currentMinute);
+//                Log.d(LOG_TAG, "current Second: " + currentMilliSecond / 1000);
+                Log.d(LOG_TAG, "selected Hour: " + selectedHour);
+                Log.d(LOG_TAG, "selected Minute: " + selectedMinute);
                 long countDownInterval = ((selectedHour - currentHour)*3600000) + ((selectedMinute - currentMinute)*60000);
+                Log.d(LOG_TAG, "countDownInterval: " + countDownInterval);
                 if (countDownTimer == null) {
                     countDownTimer = new CountDownTimer(countDownInterval, 1000) {
                         @Override
                         public void onTick(long millisUntilFinished) {
-                            DateFormat simpleDateFormat = new SimpleDateFormat("HH:mm:ss");
+                            DateFormat simpleDateFormat = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());
+                            simpleDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
                             Date remainingTimeAsDate = new Date(millisUntilFinished);
+                            Log.d(LOG_TAG, "Remaining time as date: " + remainingTimeAsDate.toString());
                             tv_remaining_time.setText(simpleDateFormat.format(remainingTimeAsDate));
                         }
 
