@@ -28,7 +28,7 @@ import java.util.List;
 
 public class FavouriteRadiosFragment extends Fragment implements LoaderManager.LoaderCallbacks<List<Radio>> {
     private static final String LOG_TAG = FavouriteRadiosFragment.class.getSimpleName();
-    private static final String FAVOURITE_RADIO_REQUEST_URL = "https://firmarehberim.com/sayfalar/radyo/json/radyolar_favori.php";
+    private static final String FAVOURITE_RADIO_REQUEST_URL = "https://firmarehberim.com/bolumler/radyolar/app-json/radyolar_favori.php";
     private static final int FAVOURITE_RADIO_LOADER_ID = 1;
 
     OnEventFromFavRadiosFragment onEventFromFavRadiosFragment;
