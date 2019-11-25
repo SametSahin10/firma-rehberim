@@ -461,6 +461,13 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
             case R.id.item_notifications:
                 return true;
             case R.id.item_timer:
+                if (ACTIVE_FRAGMENT_ID != TIMER_FRAGMENT_ID) {
+                    FragmentManager fragmentManager = getSupportFragmentManager();
+                    FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+                    fragmentTransaction.replace(R.id.fragment_container, timerFragment).commit();
+                    getSupportActionBar().setTitle("Zamanlayıcı");
+                    ACTIVE_FRAGMENT_ID = TIMER_FRAGMENT_ID;
+                }
                 return true;
             case R.id.item_add_your_company:
                 return true;
