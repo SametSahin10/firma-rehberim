@@ -291,10 +291,12 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
                 super.onPlay();
                 boolean audioFocusGained = gainAudioFocus();
                 if (audioFocusGained) {
-                    initNotification(PlaybackStatus.PLAYING);
-                    if (exoPlayer != null) {
-                        exoPlayer.setPlayWhenReady(true);
-                        serviceCallbacks.togglePlayPauseButton(false);
+                    if (radioCurrentlyPlaying != null) {
+                        initNotification(PlaybackStatus.PLAYING);
+                        if (exoPlayer != null) {
+                            exoPlayer.setPlayWhenReady(true);
+                            serviceCallbacks.togglePlayPauseButton(false);
+                        }
                     }
                 }
             }
