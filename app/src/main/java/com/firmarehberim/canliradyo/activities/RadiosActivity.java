@@ -167,7 +167,6 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_radio);
 
-
         ACTIVE_FRAGMENT_ID = RADIOS_FRAGMENT_ID;
         radiosFragment = new RadiosFragment();
         FragmentManager fragmentManager = getSupportFragmentManager();
@@ -371,6 +370,21 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
 
+            }
+        });
+
+        ib_share_radio = findViewById(R.id.ib_player_share_radio);
+        ib_share_radio.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (radioCurrentlyPlaying != null) {
+                    shareRadio(radioCurrentlyPlaying);
+                } else {
+                    Toast.makeText(RadiosActivity.this,
+                            "Paylaşmak için bir radyoyu çalmaya başlayın",
+                            Toast.LENGTH_SHORT)
+                            .show();
+                }
             }
         });
 
@@ -635,7 +649,7 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     private void shareRadio(Radio radio) {
         Intent intent = new Intent();
         intent.setAction(Intent.ACTION_SEND);
-        String extraText = "I'm listening to " + radio.getRadioName() + " on " + "Firma Rehberim Radyo";
+        String extraText = radio.getShareableLink();
         intent.putExtra(Intent.EXTRA_TEXT, extraText);
         intent.setType("text/plain");
         if (intent.resolveActivity(getPackageManager()) != null) {
