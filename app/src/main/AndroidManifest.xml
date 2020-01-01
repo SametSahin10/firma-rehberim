@@ -34,6 +34,8 @@
 
         <service android:name="com.firmarehberim.canliradyo.services.PlayRadioService"
                  android:enabled="true" />
+
+        <receiver android:name=".receivers.OnCancelBroadcastReceiver"/>
     </application>
 
 </manifest>

@@ -21,6 +21,8 @@ import android.support.v4.media.session.MediaSessionCompat;
 import android.util.Log;
 import android.widget.Toast;
 import androidx.core.app.NotificationCompat;
+
+import com.firmarehberim.canliradyo.receivers.OnCancelBroadcastReceiver;
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.ExoPlayerFactory;
@@ -142,6 +144,7 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.d(LOG_TAG, "onStartCommand");
         if (intent != null) {
             if (intent.getExtras() != null) {
                 boolean showNotification = intent.getExtras().getBoolean("showNotification");
@@ -150,6 +153,15 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
                         initMediaSession();
                     }
                     initNotification(PlaybackStatus.PLAYING);
+                } else {
+                    Log.d(LOG_TAG, "Not showing notification");
+                    if (exoPlayer != null) {
+                        exoPlayer.setPlayWhenReady(false);
+                        exoPlayer.release();
+                    }
+                    serviceCallbacks.togglePlayPauseButton(true);
+                    relieveAudioFocus();
+                    stopSelf();
                 }
             }
             handleIncomingActions(intent);
@@ -213,6 +225,10 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
             playPauseAction = generatePlaybackAction(0);
         }
 
+        Intent onCancelIntent = new Intent(this, OnCancelBroadcastReceiver.class);
+        PendingIntent onCancelPendingIntent =
+                    PendingIntent.getBroadcast(this, 0, onCancelIntent, 0);
+
         String channelId = "newChannelId";
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             channelId = getString(R.string.app_name);
@@ -240,6 +256,7 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
                 .setContentTitle(radioCurrentlyPlaying.getRadioName())
                 .setContentText("Radyo çalınıyor")
                 .setContentInfo("Firma Rehberim Radyo")
+                .setDeleteIntent(onCancelPendingIntent)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setAutoCancel(false)
                 .addAction(android.R.drawable.ic_media_previous, "previous", generatePlaybackAction(3))
@@ -301,7 +318,6 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
 
             @Override
             public void onPause() {
-
                 super.onPause();
                 initNotification(PlaybackStatus.PAUSED);
                 pauseRadio();

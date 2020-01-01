@@ -422,8 +422,13 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
         super.onDestroy();
         if (serviceBound) {
             unbindService(serviceConnection);
-            playRadioService.stopSelf();
         }
+    }
+
+    @Override
+    public void onBackPressed() {
+        playRadioService.stopForeground(false);
+        moveTaskToBack(true);
     }
 
     @Override
