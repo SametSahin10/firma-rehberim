@@ -638,19 +638,6 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
         }
     }
 
-//
-
-    private void updatePopupWindow() {
-        if (radioCurrentlyPlaying != null) {
-            ImageButton ib_popup_window_fav = popupWindow.getContentView().findViewById(R.id.ib_popup_window_fav);
-            if (radioCurrentlyPlaying.isLiked()) {
-                ib_popup_window_fav.setImageDrawable(getDrawable(R.drawable.ic_favourite_checked));
-            } else {
-                ib_popup_window_fav.setImageDrawable(getDrawable(R.drawable.ic_favourite_empty));
-            }
-        }
-    }
-
     private void shareRadio(Radio radio) {
         Intent intent = new Intent();
         intent.setAction(Intent.ACTION_SEND);
@@ -692,10 +679,10 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
             if (radioId == radioCurrentlyPlaying.getRadioId()) {
                 if (isLiked) {
                     radioCurrentlyPlaying.setLiked(true);
-//                    updatePopupWindow();
+                    // Add radio to database
                 } else {
                     radioCurrentlyPlaying.setLiked(false);
-//                    updatePopupWindow();
+                    // Remove radio from database
                 }
             }
         }
