@@ -92,20 +92,21 @@ public class RadioCursorAdapter extends CursorAdapter {
         }
 
         final Radio currentRadio = new Radio(radioId,
-                radioName,
-                cityId,
-                townId,
-                neighbourhoodId,
-                categoryId,
-                userId,
-                category,
-                radioIconUrl,
-                streamLink,
-                shareableLink,
-                hit,
-                numOfOnlineListeners,
-                false,
-                false);
+                                             cityId,
+                                             townId,
+                                             neighbourhoodId,
+                                             radioIconUrl,
+                                             shareableLink,
+                                             radioName,
+                                             streamLink,
+                                             hit,
+                                             categoryId,
+                                             userId,
+                                             category,
+                                             numOfOnlineListeners,
+                                            false,
+                                            false,
+                                            false);
         String iconUrl = currentRadio.getRadioIconUrl();
         float scale = view.getContext().getResources().getDisplayMetrics().density;
         int width = (int) (60 * scale + 0.5f);

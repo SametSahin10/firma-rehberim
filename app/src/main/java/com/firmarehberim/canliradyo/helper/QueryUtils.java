@@ -106,32 +106,6 @@ public class QueryUtils {
         }
     }
 
-    /* JADX WARNING: type inference failed for: r1v0 */
-    /* JADX WARNING: type inference failed for: r7v1, types: [java.net.HttpURLConnection] */
-    /* JADX WARNING: type inference failed for: r1v1, types: [java.io.InputStream] */
-    /* JADX WARNING: type inference failed for: r7v2, types: [java.io.InputStream] */
-    /* JADX WARNING: type inference failed for: r1v2, types: [java.net.HttpURLConnection] */
-    /* JADX WARNING: type inference failed for: r6v0 */
-    /* JADX WARNING: type inference failed for: r1v3 */
-    /* JADX WARNING: type inference failed for: r7v3 */
-    /* JADX WARNING: type inference failed for: r7v4 */
-    /* JADX WARNING: type inference failed for: r7v5 */
-    /* JADX WARNING: type inference failed for: r1v4 */
-    /* JADX WARNING: type inference failed for: r7v8 */
-    /* JADX WARNING: type inference failed for: r1v5, types: [java.io.InputStream] */
-    /* JADX WARNING: type inference failed for: r1v7 */
-    /* JADX WARNING: type inference failed for: r1v8 */
-    /* JADX WARNING: type inference failed for: r1v9 */
-    /* JADX WARNING: type inference failed for: r1v10 */
-    /* JADX WARNING: type inference failed for: r7v9 */
-    /* JADX WARNING: type inference failed for: r1v11 */
-    /* JADX WARNING: Multi-variable type inference failed */
-    /* JADX WARNING: Removed duplicated region for block: B:26:0x0065  */
-    /* JADX WARNING: Removed duplicated region for block: B:28:0x006a  */
-    /* JADX WARNING: Removed duplicated region for block: B:33:0x0074  */
-    /* JADX WARNING: Removed duplicated region for block: B:35:0x0079  */
-    /* JADX WARNING: Unknown variable types count: 7 */
-    /* Code decompiled incorrectly, please refer to instructions dump. */
     private static String makeHttpRequest(URL url) throws IOException {
         String jsonResponse = "";
         if (url == null) {
@@ -205,7 +179,7 @@ public class QueryUtils {
             if (jSONArray.length() > 0) {
                 for (int i = 0; i < jSONArray.length(); i++) {
                     JSONObject jSONObject = jSONArray.getJSONObject(i);
-                    arrayList.add(new Category(Integer.parseInt(jSONObject.getString("katId")), jSONObject.getString("kategori")));
+            arrayList.add(new Category(Integer.parseInt(jSONObject.getString("katId")), jSONObject.getString("kategori")));
                 }
             }
         } catch (JSONException unused) {
@@ -243,18 +217,19 @@ public class QueryUtils {
                 String category = radioObject.getString("kategori");
                 int numOfOnlineListeners = Integer.parseInt(radioObject.getString("online"));
                 Radio radio = new Radio(radioId,
-                                        radioName,
                                         cityId,
                                         townId,
                                         neighbourhoodId,
+                                        radioIconLink,
+                                        shareableLink,
+                                        radioName,
+                                        streamLink,
+                                        hit,
                                         categoryId,
                                         userId,
                                         category,
-                                        radioIconLink,
-                                        streamLink,
-                                        shareableLink,
-                                        hit,
                                         numOfOnlineListeners,
+                                        false,
                                         false,
                                         false);
                 radios.add(radio);
@@ -265,81 +240,131 @@ public class QueryUtils {
         return radios;
     }
 
-    private static ArrayList<Radio> extractFavouriteRadiosFromJson(String str) {
-        if (TextUtils.isEmpty(str)) {
+    private static ArrayList<Radio> extractFavouriteRadiosFromJson(String radiosJSONResponse) {
+        if (TextUtils.isEmpty(radiosJSONResponse)) {
             return null;
         }
-        ArrayList<Radio> arrayList = new ArrayList<>();
+        ArrayList<Radio> radios = new ArrayList<>();
         try {
-            JSONArray jSONArray = new JSONArray(str);
-            for (int i = 0; i < jSONArray.length(); i++) {
-                JSONObject jSONObject = jSONArray.getJSONObject(i);
-                int parseInt = Integer.parseInt(jSONObject.getString("id"));
-                String string = jSONObject.getString("resim");
-                StringBuilder sb = new StringBuilder();
-                sb.append("https:");
-                sb.append(string);
-                String sb2 = sb.toString();
-                String string2 = jSONObject.getString("paylasmaLink");
-                String str2 = "30001";
-                Radio radio = new Radio(parseInt, jSONObject.getString("baslik"), 30001, 30001, 30001, str2, 30001, jSONObject.getString("kategori"), sb2, jSONObject.getString("link"), string2, Integer.parseInt(jSONObject.getString(RadioEntry.COLUMN_RADIO_HIT)), Integer.parseInt(jSONObject.getString("online")), false, false);
-                arrayList.add(radio);
+            JSONArray rootJSONArray = new JSONArray(radiosJSONResponse);
+            for (int i = 0; i < rootJSONArray.length(); i++) {
+                JSONObject radioObject = rootJSONArray.getJSONObject(i);
+                int radioId = Integer.parseInt(radioObject.getString("id"));
+                String rawRadioIconLink = radioObject.getString("resim");
+                String radioIconLink = "https:" + rawRadioIconLink;
+                String shareableLink = radioObject.getString("paylasmaLink");
+                String radioName = radioObject.getString("baslik");
+                String streamLink = radioObject.getString("link");
+                int hit = Integer.parseInt(radioObject.getString("hit"));
+                int userId = Integer.parseInt(radioObject.getString("uyeId"));
+                String category = radioObject.getString("kategori");
+                int numOfOnlineListeners = Integer.parseInt(radioObject.getString("online"));
+                Radio radio = new Radio(radioId,
+                                        3001,
+                                        3001,
+                                        3001,
+                                        radioIconLink,
+                                        shareableLink,
+                                        radioName,
+                                        streamLink,
+                                        hit,
+                                        null,
+                                        userId,
+                                        category,
+                                        numOfOnlineListeners,
+                                        false,
+                                        false,
+                                        false);
+                radios.add(radio);
             }
         } catch (JSONException unused) {
             Log.e(LOG_TAG, "Problem occured while parsing favourite radio JSON response ");
         }
-        return arrayList;
+        return radios;
     }
 
-    private static ArrayList<Radio> extractRadiosThroughCitiesFromJson(String str) {
-        if (TextUtils.isEmpty(str)) {
+    private static ArrayList<Radio> extractRadiosThroughCitiesFromJson(String radiosJSONResponse) {
+        if (TextUtils.isEmpty(radiosJSONResponse)) {
             return null;
         }
-        ArrayList<Radio> arrayList = new ArrayList<>();
+        ArrayList<Radio> radios = new ArrayList<>();
         try {
-            JSONArray jSONArray = new JSONArray(str);
-            for (int i = 0; i < jSONArray.length(); i++) {
-                JSONObject jSONObject = jSONArray.getJSONObject(i);
-                int parseInt = Integer.parseInt(jSONObject.getString("id"));
-                String string = jSONObject.getString("resim");
-                StringBuilder sb = new StringBuilder();
-                sb.append("https:");
-                sb.append(string);
-                String sb2 = sb.toString();
-                String string2 = jSONObject.getString("paylasmaLink");
-                String str2 = "30001";
-                Radio radio = new Radio(parseInt, jSONObject.getString("baslik"), 30001, 30001, 30001, str2, 30001, jSONObject.getString("kategori"), sb2, jSONObject.getString("link"), string2, Integer.parseInt(jSONObject.getString(RadioEntry.COLUMN_RADIO_HIT)), Integer.parseInt(jSONObject.getString("online")), false, false);
-                arrayList.add(radio);
+            JSONArray JSONArray = new JSONArray(radiosJSONResponse);
+            for (int i = 0; i < JSONArray.length(); i++) {
+                JSONObject radioObject = JSONArray.getJSONObject(i);
+                int radioId = Integer.parseInt(radioObject.getString("id"));
+                int cityId = Integer.parseInt(radioObject.getString("ilId"));
+                String rawRadioIconLink = radioObject.getString("resim");
+                String radioIconLink = "https:" + rawRadioIconLink;
+                String shareableLink = radioObject.getString("paylasmaLink");
+                String radioName = radioObject.getString("baslik");
+                String streamLink = radioObject.getString("link");
+                int hit = Integer.parseInt(radioObject.getString("hit"));
+                String category = radioObject.getString("kategori");
+                int numOfOnlineListeners = Integer.parseInt(radioObject.getString("online"));
+                Radio radio = new Radio(radioId,
+                                        cityId,
+                                        3001,
+                                        3001,
+                                        radioIconLink,
+                                        shareableLink,
+                                        radioName,
+                                        streamLink,
+                                        hit,
+                                        null,
+                                        3001,
+                                        category,
+                                        numOfOnlineListeners,
+                                        false,
+                                        false,
+                                        false);
+                radios.add(radio);
             }
         } catch (JSONException unused) {
             Log.e(LOG_TAG, "Problem occured while parsing radios through cities JSON response ");
         }
-        return arrayList;
+        return radios;
     }
 
-    private static ArrayList<Radio> extractRadiosThroughCategoriesFromJson(String str) {
-        if (TextUtils.isEmpty(str)) {
+    private static ArrayList<Radio> extractRadiosThroughCategoriesFromJson(String radiosJSONResponse) {
+        if (TextUtils.isEmpty(radiosJSONResponse)) {
             return null;
         }
-        ArrayList<Radio> arrayList = new ArrayList<>();
+        ArrayList<Radio> radios = new ArrayList<>();
         try {
-            JSONArray jSONArray = new JSONArray(str);
-            for (int i = 0; i < jSONArray.length(); i++) {
-                JSONObject jSONObject = jSONArray.getJSONObject(i);
-                int parseInt = Integer.parseInt(jSONObject.getString("id"));
-                String string = jSONObject.getString("resim");
-                StringBuilder sb = new StringBuilder();
-                sb.append("https:");
-                sb.append(string);
-                String sb2 = sb.toString();
-                String string2 = jSONObject.getString("paylasmaLink");
-                String str2 = "30001";
-                Radio radio = new Radio(parseInt, jSONObject.getString("baslik"), 30001, 30001, 30001, str2, 30001, jSONObject.getString("kategori"), sb2, jSONObject.getString("link"), string2, Integer.parseInt(jSONObject.getString(RadioEntry.COLUMN_RADIO_HIT)), Integer.parseInt(jSONObject.getString("online")), false, false);
-                arrayList.add(radio);
+            JSONArray JSONArray = new JSONArray(radiosJSONResponse);
+            for (int i = 0; i < JSONArray.length(); i++) {
+                JSONObject radioObject = JSONArray.getJSONObject(i);
+                int radioId = Integer.parseInt(radioObject.getString("id"));
+                String rawRadioIconLink = radioObject.getString("resim");
+                String radioIconLink = "https:" + rawRadioIconLink;
+                String shareableLink = radioObject.getString("paylasmaLink");
+                String radioName = radioObject.getString("baslik");
+                String streamLink = radioObject.getString("link");
+                int hit = Integer.parseInt(radioObject.getString("hit"));
+                String category = radioObject.getString("kategori");
+                int numOfOnlineListeners = Integer.parseInt(radioObject.getString("online"));
+                Radio radio = new Radio(radioId,
+                                        3001,
+                                        3001,
+                                        3001,
+                                        radioIconLink,
+                                        shareableLink,
+                                        radioName,
+                                        streamLink,
+                                        hit,
+                                        null,
+                                        3001,
+                                        category,
+                                        numOfOnlineListeners,
+                                        false,
+                                        false,
+                                        false);
+                radios.add(radio);
             }
         } catch (JSONException unused) {
             Log.e(LOG_TAG, "Problem occured while parsing radios through cities JSON response ");
         }
-        return arrayList;
+        return radios;
     }
 }

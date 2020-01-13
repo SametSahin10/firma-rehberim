@@ -161,6 +161,7 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
                 if (radioClicked != null) {
                     radioClicked.setBeingBuffered(false);
+                    radioClicked.setPlaying(false);
                     radioAdapter.notifyDataSetChanged();
                 }
                 radioClicked = (Radio) adapterView.getItemAtPosition(position);
@@ -270,16 +271,22 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
                 switch (statusCode) {
                     case 10: //STATE_BUFFERING
                         radio.setBeingBuffered(true);
+                        radio.setPlaying(false);
                         radioAdapter.notifyDataSetChanged();
                         break;
                     case 11: //STATE_READY
                         radio.setBeingBuffered(false);
+                        radio.setPlaying(true);
                         radioAdapter.notifyDataSetChanged();
                         break;
                     case 12: //STATE_IDLE
                         radio.setBeingBuffered(false);
+                        radio.setPlaying(false);
                         radioAdapter.notifyDataSetChanged();
                         break;
+                    case 13: //STATE_PAUSED - This state is not an exoplayer state.
+                        radio.setPlaying(false);
+                        radioAdapter.notifyDataSetChanged();
                     default:
                         Log.e(LOG_TAG, "Unknown status code: " + statusCode);
                 }

@@ -313,16 +313,19 @@ public class FavouriteRadiosFragment extends Fragment implements LoaderManager.L
                 switch (statusCode) {
                     case 10: //STATE_BUFFERING
                         radio.setBeingBuffered(true);
+                        radio.setPlaying(false);
                         radioAdapter.notifyDataSetChanged();
                         Log.d("TAG", "STATE_BUFFERING");
                         break;
                     case 11: //STATE_READY
                         radio.setBeingBuffered(false);
+                        radio.setPlaying(true);
                         radioAdapter.notifyDataSetChanged();
                         Log.d("TAG", "STATE_READY");
                         break;
                     case 12: //STATE_IDLE
                         radio.setBeingBuffered(false);
+                        radio.setPlaying(false);
                         radioAdapter.notifyDataSetChanged();
                         Log.d("TAG", "STATE_IDLE");
                         break;

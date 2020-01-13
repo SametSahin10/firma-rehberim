@@ -2,7 +2,6 @@ package com.firmarehberim.canliradyo.adapters;
 
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import androidx.core.content.ContextCompat;
 
@@ -26,10 +25,10 @@ import static com.firmarehberim.canliradyo.data.RadioContract.*;
 
 public class RadioAdapter extends ArrayAdapter<Radio> {
     private static final String LOG_TAG = RadioAdapter.class.getSimpleName();
-    Context context;
-    int layoutResourceId;
-    ArrayList<Radio> radios;
-    List<Radio> permanentRadiosList;
+    private Context context;
+    private int layoutResourceId;
+    private ArrayList<Radio> radios;
+    private List<Radio> permanentRadiosList;
 
     private final static int FILTER_TYPE_RADIO = 1;
     private final static int FILTER_TYPE_CITY = 2;
@@ -83,6 +82,7 @@ public class RadioAdapter extends ArrayAdapter<Radio> {
             holder = new RadioHolder();
             holder.iv_item_radio_icon = row.findViewById(R.id.iv_item_radio_icon);
             holder.tv_radio_name = row.findViewById(R.id.tv_radio_name);
+            holder.iv_playing_gif = row.findViewById(R.id.iv_playing_gif);
             holder.pb_buffering_radio = row.findViewById(R.id.pb_buffering_radio);
 //            holder.ib_share_radio = row.findViewById(R.id.ib_share_radio);
             holder.ib_add_to_favourites = row.findViewById(R.id.ib_add_to_favourites);
@@ -103,27 +103,22 @@ public class RadioAdapter extends ArrayAdapter<Radio> {
                 .error(R.drawable.ic_pause_radio)
                 .into(holder.iv_item_radio_icon);
         holder.tv_radio_name.setText(currentRadio.getRadioName());
+        if (currentRadio.isPlaying()) {
+            holder.iv_playing_gif.setVisibility(View.VISIBLE);
+        } else {
+            holder.iv_playing_gif.setVisibility(View.INVISIBLE);
+        }
         if (currentRadio.isBeingBuffered()) {
-//            holder.ib_share_radio.setVisibility(View.INVISIBLE);
+            holder.iv_playing_gif.setVisibility(View.INVISIBLE);
             holder.pb_buffering_radio.setVisibility(View.VISIBLE);
         } else {
             holder.pb_buffering_radio.setVisibility(View.INVISIBLE);
-//            holder.ib_share_radio.setVisibility(View.VISIBLE);
         }
         if (currentRadio.isLiked()) {
             holder.ib_add_to_favourites.setImageDrawable(ContextCompat.getDrawable(getContext(), R.drawable.ic_favourite_full));
         } else {
             holder.ib_add_to_favourites.setImageDrawable(ContextCompat.getDrawable(getContext(), R.drawable.ic_favourite_empty));
         }
-        //
-        //Add click listener to share radio ImageButton here.
-        //
-//        holder.ib_share_radio.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                shareRadio(currentRadio);
-//            }
-//        });
         holder.ib_add_to_favourites.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -136,7 +131,6 @@ public class RadioAdapter extends ArrayAdapter<Radio> {
                     deleteFromFavourites(currentRadio);
                     onDeleteFromFavouritesListener.onDeleteFromFavouritesClick(currentRadio.getRadioId());
                 }
-
                 notifyDataSetChanged();
             }
         });
@@ -196,8 +190,8 @@ public class RadioAdapter extends ArrayAdapter<Radio> {
     private class RadioHolder {
         private ImageView iv_item_radio_icon;
         private TextView tv_radio_name;
+        private ImageView iv_playing_gif;
         private ProgressBar pb_buffering_radio;
-        //        private ImageButton ib_share_radio;
         private ImageButton ib_add_to_favourites;
     }
 
@@ -224,17 +218,6 @@ public class RadioAdapter extends ArrayAdapter<Radio> {
         String selection = RadioEntry.COLUMN_RADIO_NAME + "=?";
         String selectionArgs[] = {radio.getRadioName()};
         int numOfDeletedRows = sqLiteDatabase.delete(RadioEntry.TABLE_NAME, selection, selectionArgs);
-    }
-
-    private void shareRadio(Radio radio) {
-        Intent intent = new Intent();
-        intent.setAction(Intent.ACTION_SEND);
-        String extraText = "I'm listening to " + radio.getRadioName() + " on " + "Firma Rehberim Radyo";
-        intent.putExtra(Intent.EXTRA_TEXT, extraText);
-        intent.setType("text/plain");
-        if (intent.resolveActivity(context.getPackageManager()) != null) {
-            context.startActivity(intent);
-        }
     }
 
     public interface OnAddToFavouritesListener {

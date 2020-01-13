@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:orientation="horizontal"
     android:layout_width="match_parent"
@@ -34,6 +35,18 @@
             android:textSize="20sp"
             tools:text="Show Radyo"/>
 
+        <com.airbnb.lottie.LottieAnimationView
+            android:id="@+id/iv_playing_gif"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_centerVertical="true"
+            android:layout_toStartOf="@id/ib_add_to_favourites"
+            android:layout_marginEnd="10dp"
+            android:visibility="invisible"
+            app:lottie_rawRes="@raw/playing_radio"
+            app:lottie_loop="true"
+            app:lottie_autoPlay="true"/>
+
         <ProgressBar
             android:id="@+id/pb_buffering_radio"
             android:layout_width="30dp"
@@ -42,7 +55,8 @@
             android:layout_marginEnd="10dp"
             android:layout_centerVertical="true"
             android:visibility="invisible"
-            tools:visibility="visible"/>
+            tools:visibility="visible"
+            android:theme="@style/AppTheme.WhiteAccent"/>
 
         <ImageButton
             android:id="@+id/ib_add_to_favourites"

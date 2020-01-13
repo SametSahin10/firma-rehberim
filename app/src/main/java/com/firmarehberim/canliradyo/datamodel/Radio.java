@@ -1,157 +1,182 @@
 package com.firmarehberim.canliradyo.datamodel;
 
 public class Radio {
-    private String category;
-    private String categoryId;
-    private int cityId;
-    private int hit;
-    private boolean isBeingBuffered;
-    private boolean isLiked;
-    private int neighbourhoodId;
-    private int numOfOnlineListeners;
-    private String radioIconUrl;
     private int radioId;
-    private String radioName;
-    private String shareableLink;
-    private String streamLink;
+    private int cityId;
     private int townId;
+    private int neighbourhoodId;
+    private String radioIconUrl;
+    private String shareableLink;
+    private String radioName;
+    private String streamLink;
+    private int hit;
+    private String categoryId;
     private int userId;
+    private String category;
+    private int numOfOnlineListeners;
+    private boolean isLiked;
+    private boolean isBeingBuffered;
+    private boolean isPlaying;
 
-    public Radio(int i, String str, int i2, int i3, int i4, String str2, int i5, String str3, String str4, String str5, String str6, int i6, int i7, boolean z, boolean z2) {
-        this.radioId = i;
-        this.cityId = i2;
-        this.townId = i3;
-        this.neighbourhoodId = i4;
-        this.categoryId = str2;
-        this.userId = i5;
-        this.radioName = str;
-        this.category = str3;
-        this.radioIconUrl = str4;
-        this.streamLink = str5;
-        this.shareableLink = str6;
-        this.hit = i6;
-        this.numOfOnlineListeners = i7;
-        this.isBeingBuffered = z;
-        this.isLiked = z2;
+    public Radio(int radioId,
+                 int cityId,
+                 int townId,
+                 int neighbourhoodId,
+                 String radioIconUrl,
+                 String shareableLink,
+                 String radioName,
+                 String streamLink,
+                 int hit,
+                 String categoryId,
+                 int userId,
+                 String category,
+                 int numOfOnlineListeners,
+                 boolean isLiked,
+                 boolean isBeingBuffered,
+                 boolean isPlaying) {
+        this.radioId = radioId;
+        this.cityId = cityId;
+        this.townId = townId;
+        this.neighbourhoodId = neighbourhoodId;
+        this.radioIconUrl = radioIconUrl;
+        this.shareableLink = shareableLink;
+        this.radioName = radioName;
+        this.streamLink = streamLink;
+        this.hit = hit;
+        this.categoryId = categoryId;
+        this.userId = userId;
+        this.category = category;
+        this.numOfOnlineListeners = numOfOnlineListeners;
+        this.isLiked = isLiked;
+        this.isBeingBuffered = isBeingBuffered;
+        this.isPlaying = isPlaying;
     }
 
     public int getRadioId() {
-        return this.radioId;
+        return radioId;
     }
 
-    public void setRadioId(int i) {
-        this.radioId = i;
+    public void setRadioId(int radioId) {
+        this.radioId = radioId;
     }
 
     public int getCityId() {
-        return this.cityId;
+        return cityId;
     }
 
-    public void setCityId(int i) {
-        this.cityId = i;
+    public void setCityId(int cityId) {
+        this.cityId = cityId;
     }
 
     public int getTownId() {
-        return this.townId;
+        return townId;
     }
 
-    public void setTownId(int i) {
-        this.townId = i;
+    public void setTownId(int townId) {
+        this.townId = townId;
     }
 
     public int getNeighbourhoodId() {
-        return this.neighbourhoodId;
+        return neighbourhoodId;
     }
 
-    public void setNeighbourhoodId(int i) {
-        this.neighbourhoodId = i;
-    }
-
-    public String getCategoryId() {
-        return this.categoryId;
-    }
-
-    public void setCategoryId(String str) {
-        this.categoryId = str;
-    }
-
-    public int getUserId() {
-        return this.userId;
-    }
-
-    public void setUserId(int i) {
-        this.userId = i;
-    }
-
-    public String getRadioName() {
-        return this.radioName;
-    }
-
-    public void setRadioName(String str) {
-        this.radioName = str;
-    }
-
-    public String getCategory() {
-        return this.category;
-    }
-
-    public void setCategory(String str) {
-        this.category = str;
+    public void setNeighbourhoodId(int neighbourhoodId) {
+        this.neighbourhoodId = neighbourhoodId;
     }
 
     public String getRadioIconUrl() {
-        return this.radioIconUrl;
+        return radioIconUrl;
     }
 
-    public void setRadioIconUrl(String str) {
-        this.radioIconUrl = str;
-    }
-
-    public String getStreamLink() {
-        return this.streamLink;
-    }
-
-    public void setStreamLink(String str) {
-        this.streamLink = str;
+    public void setRadioIconUrl(String radioIconUrl) {
+        this.radioIconUrl = radioIconUrl;
     }
 
     public String getShareableLink() {
-        return this.shareableLink;
+        return shareableLink;
     }
 
-    public void setShareableLink(String str) {
-        this.shareableLink = str;
+    public void setShareableLink(String shareableLink) {
+        this.shareableLink = shareableLink;
+    }
+
+    public String getRadioName() {
+        return radioName;
+    }
+
+    public void setRadioName(String radioName) {
+        this.radioName = radioName;
+    }
+
+    public String getStreamLink() {
+        return streamLink;
+    }
+
+    public void setStreamLink(String streamLink) {
+        this.streamLink = streamLink;
     }
 
     public int getHit() {
-        return this.hit;
+        return hit;
     }
 
-    public void setHit(int i) {
-        this.hit = i;
+    public void setHit(int hit) {
+        this.hit = hit;
+    }
+
+    public String getCategoryId() {
+        return categoryId;
+    }
+
+    public void setCategoryId(String categoryId) {
+        this.categoryId = categoryId;
+    }
+
+    public int getUserId() {
+        return userId;
+    }
+
+    public void setUserId(int userId) {
+        this.userId = userId;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
     }
 
     public int getNumOfOnlineListeners() {
-        return this.numOfOnlineListeners;
+        return numOfOnlineListeners;
     }
 
-    public void setNumOfOnlineListeners(int i) {
-        this.numOfOnlineListeners = i;
-    }
-
-    public boolean isBeingBuffered() {
-        return this.isBeingBuffered;
-    }
-
-    public void setBeingBuffered(boolean z) {
-        this.isBeingBuffered = z;
+    public void setNumOfOnlineListeners(int numOfOnlineListeners) {
+        this.numOfOnlineListeners = numOfOnlineListeners;
     }
 
     public boolean isLiked() {
-        return this.isLiked;
+        return isLiked;
     }
 
-    public void setLiked(boolean z) {
-        this.isLiked = z;
+    public void setLiked(boolean liked) {
+        isLiked = liked;
+    }
+
+    public boolean isBeingBuffered() {
+        return isBeingBuffered;
+    }
+
+    public void setBeingBuffered(boolean beingBuffered) {
+        isBeingBuffered = beingBuffered;
+    }
+
+    public boolean isPlaying() {
+        return isPlaying;
+    }
+
+    public void setPlaying(boolean playing) {
+        isPlaying = playing;
     }
 }

@@ -847,8 +847,10 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     public void togglePlayPauseButton(boolean isPaused) {
         if (isPaused) {
             ib_playPauseRadio.setImageDrawable(getResources().getDrawable(R.drawable.ic_play_radio));
+            radiosFragment.setCurrentRadioStatus(13, radioCurrentlyPlaying);
         } else {
             ib_playPauseRadio.setImageDrawable(getResources().getDrawable(R.drawable.ic_pause_radio));
+            radiosFragment.setCurrentRadioStatus(11, radioCurrentlyPlaying);
         }
     }
 
