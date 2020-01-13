@@ -256,7 +256,7 @@ public class QueryUtils {
                 String radioName = radioObject.getString("baslik");
                 String streamLink = radioObject.getString("link");
                 int hit = Integer.parseInt(radioObject.getString("hit"));
-                int userId = Integer.parseInt(radioObject.getString("uyeId"));
+                int userId = Integer.parseInt(radioObject.getString("uyeid"));
                 String category = radioObject.getString("kategori");
                 int numOfOnlineListeners = Integer.parseInt(radioObject.getString("online"));
                 Radio radio = new Radio(radioId,
