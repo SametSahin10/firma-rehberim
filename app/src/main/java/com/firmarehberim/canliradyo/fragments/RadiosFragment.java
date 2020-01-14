@@ -2,6 +2,8 @@ package com.firmarehberim.canliradyo.fragments;
 
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -23,6 +25,8 @@ import android.widget.TextView;
 
 import com.firmarehberim.canliradyo.R;
 
+import com.firmarehberim.canliradyo.data.RadioContract;
+import com.firmarehberim.canliradyo.data.RadioDbHelper;
 import com.firmarehberim.canliradyo.helper.QueryUtils;
 import com.firmarehberim.canliradyo.adapters.RadioAdapter;
 import com.firmarehberim.canliradyo.datamodel.Radio;
@@ -57,16 +61,6 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
     public void setOnRadioLoadingCompleteListener(OnRadioLoadingCompleteListener onRadioLoadingCompleteListener) {
         this.onRadioLoadingCompleteListener = onRadioLoadingCompleteListener;
     }
-
-    public void setOnRadioLoadingStartListener(OnRadioLoadingStartListener onRadioLoadingStartListener) {
-//        this.onRadioLoadingStartListener = onRadioLoadingStartListener;
-    }
-
-//    public void setOnRadioIconClickListener(RadioAdapter.OnRadioIconClickListener onRadioIconClickListener) {
-//        this.onRadioIconClickListener = onRadioIconClickListener;
-//    }
-
-
 
     String cityToFilter;
     int categoryIdToFilter;
@@ -140,12 +134,16 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
         lw_radios = view.findViewById(R.id.lw_radios);
         tv_emptyView = view.findViewById(R.id.tv_emptyRadioView);
         lw_radios.setEmptyView(tv_emptyView);
+
+        Cursor cursor = queryAllTheRadios(getContext());
+        List<Radio> radios = retrieveRadiosFromCursor(cursor);
         radioAdapter = new RadioAdapter(getContext(),
-                R.layout.item_radio,
-                new ArrayList<Radio>(),
-                this,
-                this,
-                        onClickListener);
+                                        R.layout.item_radio,
+                                        new ArrayList<Radio>(),
+                                        radios,
+                                        this,
+                                        this,
+                                        onClickListener);
         lw_radios.setAdapter(radioAdapter);
         if (isConnected) {
             getLoaderManager().initLoader(RADIO_LOADER_ID, null, this).forceLoad();
@@ -186,11 +184,8 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
         return new RadioLoader(getContext(), RADIO_REQUEST_URL, onRadioLoadingCompleteListener, onRadioLoadingStartListener, false, false);
     }
 
-
-
     @Override
     public void onLoadFinished(@NonNull Loader<List<Radio>> loader, List<Radio> radios) {
-        radioAdapter.setPermanentRadiosList(radios);
         onRadioLoadingCompleteListener.onRadioLoadingComplete(true);
         radioAdapter.clear();
         if (radios != null) {
@@ -243,7 +238,6 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
         @Override
         protected void onStartLoading() {
             onRadioLoadingCompleteListener.onRadioLoadingComplete(false);
-//            onRadioLoadingStartListener.onRadioLoadingStart();
             forceLoad();
         }
     }
@@ -261,6 +255,99 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
             }
         }
         radioAdapter.notifyDataSetChanged();
+    }
+
+    private Cursor queryAllTheRadios(Context context) {
+        RadioDbHelper dbHelper = new RadioDbHelper(context);
+        SQLiteDatabase sqLiteDatabase = dbHelper.getReadableDatabase();
+        String[] projection = {
+                RadioContract.RadioEntry._ID,
+                RadioContract.RadioEntry.COLUMN_RADIO_ID,
+                RadioContract.RadioEntry.COLUMN_CITY_ID,
+                RadioContract.RadioEntry.COLUMN_TOWN_ID,
+                RadioContract.RadioEntry.COLUMN_NEIGHBOURHOOD_ID,
+                RadioContract.RadioEntry.COLUMN_RADIO_ICON_URL,
+                RadioContract.RadioEntry.COLUMN_RADIO_SHAREABLE_LINK,
+                RadioContract.RadioEntry.COLUMN_RADIO_NAME,
+                RadioContract.RadioEntry.COLUMN_RADIO_STREAM_LINK,
+                RadioContract.RadioEntry.COLUMN_RADIO_HIT,
+                RadioContract.RadioEntry.COLUMN_CATEGORY_ID,
+                RadioContract.RadioEntry.COLUMN_USER_ID,
+                RadioContract.RadioEntry.COLUMN_RADIO_CATEGORY,
+                RadioContract.RadioEntry.COLUMN_NUM_OF_ONLINE_LISTENERS,
+                RadioContract.RadioEntry.COLUMN_RADIO_IS_BEING_BUFFERED,
+                RadioContract.RadioEntry.COLUMN_RADIO_IS_LIKED};
+        Cursor cursor = sqLiteDatabase.query(RadioContract.RadioEntry.TABLE_NAME,
+                projection,
+                null,
+                null,
+                null,
+                null,
+                null);
+        return cursor;
+    }
+
+    private List<Radio> retrieveRadiosFromCursor(Cursor cursor) {
+        int idColumnIndex = cursor.getColumnIndex(RadioContract.RadioEntry.COLUMN_RADIO_ID);
+        int cityIdColumnIndex = cursor.getColumnIndex(RadioContract.RadioEntry.COLUMN_CITY_ID);
+        int townIdColumnIndex = cursor.getColumnIndex(RadioContract.RadioEntry.COLUMN_TOWN_ID);
+        int neighbourhoodIdColumnIndex = cursor.getColumnIndex(RadioContract.RadioEntry.COLUMN_NEIGHBOURHOOD_ID);
+        int categoryIdColumnIndex = cursor.getColumnIndex(RadioContract.RadioEntry.COLUMN_CATEGORY_ID);
+        int userIdColumnIndex = cursor.getColumnIndex(RadioContract.RadioEntry.COLUMN_USER_ID);
+        int nameColumnIndex = cursor.getColumnIndex(RadioContract.RadioEntry.COLUMN_RADIO_NAME);
+        int categoryColumnIndex = cursor.getColumnIndex(RadioContract.RadioEntry.COLUMN_RADIO_CATEGORY);
+        int iconUrlColumnIndex = cursor.getColumnIndex(RadioContract.RadioEntry.COLUMN_RADIO_ICON_URL);
+        int streamLinkColumnIndex = cursor.getColumnIndex(RadioContract.RadioEntry.COLUMN_RADIO_STREAM_LINK);
+        int shareableLinkColumnIndex = cursor.getColumnIndex(RadioContract.RadioEntry.COLUMN_RADIO_SHAREABLE_LINK);
+        int numOfOnlineListenersColumnIndex = cursor.getColumnIndex(RadioContract.RadioEntry.COLUMN_NUM_OF_ONLINE_LISTENERS);
+        int hitColumnIndex = cursor.getColumnIndex(RadioContract.RadioEntry.COLUMN_RADIO_HIT);
+        int isBeingBufferedColumnIndex = cursor.getColumnIndex(RadioContract.RadioEntry.COLUMN_RADIO_IS_BEING_BUFFERED);
+        int isLikedColumnIndex = cursor.getColumnIndex(RadioContract.RadioEntry.COLUMN_RADIO_IS_LIKED);
+
+        List<Radio> radios = new ArrayList<>();
+
+        while (cursor.moveToNext()) {
+            int radioId = cursor.getInt(idColumnIndex);
+            int cityId = cursor.getInt(cityIdColumnIndex);
+            int townId = cursor.getInt(townIdColumnIndex);
+            int neighbourhoodId = cursor.getInt(neighbourhoodIdColumnIndex);
+            String categoryId = cursor.getString(categoryIdColumnIndex);
+            int userId = cursor.getInt(userIdColumnIndex);
+            String radioName = cursor.getString(nameColumnIndex);
+            String category = cursor.getString(categoryColumnIndex);
+            String radioIconUrl = cursor.getString(iconUrlColumnIndex);
+            String streamLink = cursor.getString(streamLinkColumnIndex);
+            String shareableLink = cursor.getString(shareableLinkColumnIndex);
+            int hit = cursor.getInt(hitColumnIndex);
+            int numOfOnlineListeners = cursor.getInt(numOfOnlineListenersColumnIndex);
+            boolean isBeingBuffered = false;
+            if (cursor.getInt(isBeingBufferedColumnIndex) == 1) {
+                isBeingBuffered = true;
+            }
+            boolean isLiked = false;
+            if (cursor.getInt(isLikedColumnIndex) == 1) {
+                isLiked = true;
+            }
+
+            Radio radio = new Radio(radioId,
+                    cityId,
+                    townId,
+                    neighbourhoodId,
+                    radioIconUrl,
+                    shareableLink,
+                    radioName,
+                    streamLink,
+                    hit,
+                    categoryId,
+                    userId,
+                    category,
+                    numOfOnlineListeners,
+                    false,
+                    false,
+                    false);
+            radios.add(radio);
+        }
+        return radios;
     }
 
     public void setCurrentRadioStatus(int statusCode, Radio radioCurrentlyPlaying) {

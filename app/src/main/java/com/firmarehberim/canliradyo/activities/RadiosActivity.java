@@ -679,10 +679,8 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
             if (radioId == radioCurrentlyPlaying.getRadioId()) {
                 if (isLiked) {
                     radioCurrentlyPlaying.setLiked(true);
-                    // Add radio to database
                 } else {
                     radioCurrentlyPlaying.setLiked(false);
-                    // Remove radio from database
                 }
             }
         }

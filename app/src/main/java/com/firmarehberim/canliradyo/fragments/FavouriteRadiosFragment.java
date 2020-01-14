@@ -32,7 +32,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class FavouriteRadiosFragment extends Fragment implements LoaderManager.LoaderCallbacks<List<Radio>>,
-                                                                 RadioCursorAdapter.OnRadioDeleteListener {
+                                                                 RadioAdapter.OnDeleteFromFavouritesListener {
     private static final String LOG_TAG = FavouriteRadiosFragment.class.getSimpleName();
     private static final String FAVOURITE_RADIO_REQUEST_URL = "https://firmarehberim.com/bolumler/radyolar/app-json/radyolar_favori.php";
     private static final int FAVOURITE_RADIO_LOADER_ID = 1;
@@ -77,25 +77,22 @@ public class FavouriteRadiosFragment extends Fragment implements LoaderManager.L
         lw_radios = view.findViewById(R.id.lw_radios);
         tv_emptyView = view.findViewById(R.id.tv_emptyRadioView);
         lw_radios.setEmptyView(tv_emptyView);
+
+        cursor = queryAllTheRadios(getContext());
+        List<Radio> favoriteRadios = retrieveRadiosFromCursor(cursor);
+        Log.d(LOG_TAG, "Number of favorite radios: " + favoriteRadios.size());
         radioAdapter = new RadioAdapter(getContext(),
-                R.layout.item_radio,
-                new ArrayList<Radio>(),
-                null,
-                null,
-                        null);
+                                        R.layout.item_radio,
+                                        new ArrayList<Radio>(),
+                                        favoriteRadios,
+                                        null,
+                                        null,
+                                        null);
         lw_radios.setAdapter(radioAdapter);
         if (isConnected) {
-            cursor = queryAllTheRadios(getContext());
             getLoaderManager().initLoader(FAVOURITE_RADIO_LOADER_ID, null, this).forceLoad();
         } else {
             Log.d("TAG", "No Network Connection");
-            tv_emptyView.setText(getString(R.string.no_internet_connection_text));
-            pb_loadingRadios.setVisibility(View.GONE);
-        }
-        lw_radios.setAdapter(radioAdapter);
-        if (isConnected) {
-            getLoaderManager().initLoader(FAVOURITE_RADIO_LOADER_ID, null, this).forceLoad();
-        } else {
             tv_emptyView.setText(getString(R.string.no_internet_connection_text));
             pb_loadingRadios.setVisibility(View.GONE);
         }
@@ -127,14 +124,19 @@ public class FavouriteRadiosFragment extends Fragment implements LoaderManager.L
 
     @Override
     public void onLoadFinished(Loader<List<Radio>> loader, List<Radio> radios) {
-        radioAdapter.setPermanentRadiosList(radios);
+        Log.d(LOG_TAG, "onLoadFinished");
         radioAdapter.clear();
         if (radios != null) {
             radioAdapter.addAll(radios);
         }
+        Cursor cursor = queryAllTheRadios(getContext());
         if (cursor != null) {
             List<Radio> radiosFromCursor = retrieveRadiosFromCursor(cursor);
             Log.d(LOG_TAG, "Adding radios from cursor");
+            Log.d(LOG_TAG, "Number of favorite radios: " + radiosFromCursor.size());
+            for (Radio radio: radiosFromCursor) {
+                Log.d(LOG_TAG, radio.getRadioName() + "\n");
+            }
             radioAdapter.addAll(radiosFromCursor);
         }
         tv_emptyView.setText(getString(R.string.empty_radios_text));
@@ -417,9 +419,8 @@ public class FavouriteRadiosFragment extends Fragment implements LoaderManager.L
     }
 
     @Override
-    public void onRadioDelete(int radioId) {
-        updateFavouriteRadiosList();
-        onEventFromFavRadiosFragment.onEventFromFavRadiosFragment(radioId);
+    public void onDeleteFromFavouritesClick(int radioId) {
+        // Delete radio from list and notify radioAdapter.
     }
 
     public interface OnEventFromFavRadiosFragment {
