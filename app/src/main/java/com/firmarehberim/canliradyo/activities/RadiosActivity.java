@@ -152,8 +152,6 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
 
     private AudioManager audioManager;
 
-    PopupWindow popupWindow;
-
     Radio radioCurrentlyPlaying;
     boolean isFromFavouriteRadiosFragment = false;
     boolean isRadioLoadingCompleted = false;
@@ -354,11 +352,13 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
         sb_volume_control.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                SimpleExoPlayer exoPlayer = playRadioService.getExoPlayer();
-                if (exoPlayer != null) {
-                    Log.d("TAG", "Progress changed");
-                    playRadioService.audioManager
-                            .setStreamVolume(exoPlayer.getAudioStreamType(), progress, 0);
+                if (playRadioService != null) {
+                    SimpleExoPlayer exoPlayer = playRadioService.getExoPlayer();
+                    if (exoPlayer != null) {
+                        Log.d("TAG", "Progress changed");
+                        playRadioService.audioManager
+                                .setStreamVolume(exoPlayer.getAudioStreamType(), progress, 0);
+                    }
                 }
             }
 
@@ -510,9 +510,11 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (event.getKeyCode() == KeyEvent.KEYCODE_VOLUME_DOWN) {
-            SimpleExoPlayer exoPlayer = playRadioService.getExoPlayer();
-            if (exoPlayer != null) {
-                sb_volume_control.setProgress(audioManager.getStreamVolume(exoPlayer.getAudioStreamType()));
+            if (playRadioService != null) {
+                SimpleExoPlayer exoPlayer = playRadioService.getExoPlayer();
+                if (exoPlayer != null) {
+                    sb_volume_control.setProgress(audioManager.getStreamVolume(exoPlayer.getAudioStreamType()));
+                }
             }
         }
         return super.onKeyDown(keyCode, event);
@@ -521,9 +523,11 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     @Override
     public boolean onKeyUp(int keyCode, KeyEvent event) {
         if (event.getKeyCode() == KeyEvent.KEYCODE_VOLUME_UP) {
-            SimpleExoPlayer exoPlayer = playRadioService.getExoPlayer();
-            if (exoPlayer != null) {
-                sb_volume_control.setProgress(audioManager.getStreamVolume(exoPlayer.getAudioStreamType()));
+            if (playRadioService != null) {
+                SimpleExoPlayer exoPlayer = playRadioService.getExoPlayer();
+                if (exoPlayer != null) {
+                    sb_volume_control.setProgress(audioManager.getStreamVolume(exoPlayer.getAudioStreamType()));
+                }
             }
         }
         return super.onKeyUp(keyCode, event);

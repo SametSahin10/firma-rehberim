@@ -20,7 +20,7 @@ import androidx.loader.app.LoaderManager;
 import androidx.loader.content.AsyncTaskLoader;
 import androidx.loader.content.Loader;
 
-import com.firmarehberim.canliradyo.adapters.RadioCursorAdapter;
+import com.firmarehberim.canliradyo.adapters.FavouriteRadioAdapter;
 import com.firmarehberim.canliradyo.data.RadioDbHelper;
 import com.firmarehberim.canliradyo.helper.QueryUtils;
 import com.firmarehberim.canliradyo.R;
@@ -52,10 +52,12 @@ public class FavouriteRadiosFragment extends Fragment implements LoaderManager.L
 
     private ListView lw_radios;
     private Cursor cursor;
-    private RadioAdapter radioAdapter;
+    private FavouriteRadioAdapter favouriteRadioAdapter;
     private TextView tv_emptyView;
     private ProgressBar pb_loadingRadios;
     private ProgressBar pb_bufferingRadio;
+
+    private List<Radio> favoriteRadios;
 
     Radio radioClicked;
 
@@ -79,16 +81,15 @@ public class FavouriteRadiosFragment extends Fragment implements LoaderManager.L
         lw_radios.setEmptyView(tv_emptyView);
 
         cursor = queryAllTheRadios(getContext());
-        List<Radio> favoriteRadios = retrieveRadiosFromCursor(cursor);
-        Log.d(LOG_TAG, "Number of favorite radios: " + favoriteRadios.size());
-        radioAdapter = new RadioAdapter(getContext(),
+        favoriteRadios = new ArrayList<>();
+        favoriteRadios = retrieveRadiosFromCursor(cursor);
+        favouriteRadioAdapter = new FavouriteRadioAdapter(getContext(),
                                         R.layout.item_radio,
                                         new ArrayList<Radio>(),
-                                        favoriteRadios,
                                         null,
                                         null,
                                         null);
-        lw_radios.setAdapter(radioAdapter);
+        lw_radios.setAdapter(favouriteRadioAdapter);
         if (isConnected) {
             getLoaderManager().initLoader(FAVOURITE_RADIO_LOADER_ID, null, this).forceLoad();
         } else {
@@ -105,14 +106,14 @@ public class FavouriteRadiosFragment extends Fragment implements LoaderManager.L
                     onFavRadioItemClickListener.onFavRadioItemClick(radioClicked);
                     radioClicked.setBeingBuffered(false);
 //                    radioCursorAdapter.notifyDataSetChanged();
-                    radioAdapter.notifyDataSetChanged();
+                    favouriteRadioAdapter.notifyDataSetChanged();
                 }
 //                Cursor radioCursor = (Cursor) adapterView.getItemAtPosition(position);
 //                Radio radioFromCursor = retireveRadioFromCursor(radioCursor, position);
 //                radioClicked = radioFromCursor;
                 radioClicked = (Radio) adapterView.getItemAtPosition(position);
                 radioClicked.setBeingBuffered(true);
-                radioAdapter.notifyDataSetChanged();
+                favouriteRadioAdapter.notifyDataSetChanged();
             }
         });
     }
@@ -125,9 +126,10 @@ public class FavouriteRadiosFragment extends Fragment implements LoaderManager.L
     @Override
     public void onLoadFinished(Loader<List<Radio>> loader, List<Radio> radios) {
         Log.d(LOG_TAG, "onLoadFinished");
-        radioAdapter.clear();
+        favouriteRadioAdapter.clear();
         if (radios != null) {
-            radioAdapter.addAll(radios);
+            favouriteRadioAdapter.addAll(radios);
+            favoriteRadios.addAll(radios);
         }
         Cursor cursor = queryAllTheRadios(getContext());
         if (cursor != null) {
@@ -137,7 +139,7 @@ public class FavouriteRadiosFragment extends Fragment implements LoaderManager.L
             for (Radio radio: radiosFromCursor) {
                 Log.d(LOG_TAG, radio.getRadioName() + "\n");
             }
-            radioAdapter.addAll(radiosFromCursor);
+            favouriteRadioAdapter.addAll(radiosFromCursor);
         }
         tv_emptyView.setText(getString(R.string.empty_radios_text));
         pb_loadingRadios.setVisibility(View.GONE);
@@ -145,7 +147,7 @@ public class FavouriteRadiosFragment extends Fragment implements LoaderManager.L
 
     @Override
     public void onLoaderReset(Loader<List<Radio>> loader) {
-        radioAdapter.clear();
+        favouriteRadioAdapter.clear();
     }
 
     private static class RadioLoader extends AsyncTaskLoader<List<Radio>> {
@@ -388,25 +390,25 @@ public class FavouriteRadiosFragment extends Fragment implements LoaderManager.L
 //        }
 //        radioCursorAdapter.notifyDataSetChanged();
 
-        for (Radio radio: radioAdapter.getItems()) {
+        for (Radio radio: favouriteRadioAdapter.getItems()) {
             if (radio.getRadioId() == radioCurrentlyPlaying.getRadioId()) {
                 switch (statusCode) {
                     case 10: //STATE_BUFFERING
                         radio.setBeingBuffered(true);
                         radio.setPlaying(false);
-                        radioAdapter.notifyDataSetChanged();
+                        favouriteRadioAdapter.notifyDataSetChanged();
                         Log.d("TAG", "STATE_BUFFERING");
                         break;
                     case 11: //STATE_READY
                         radio.setBeingBuffered(false);
                         radio.setPlaying(true);
-                        radioAdapter.notifyDataSetChanged();
+                        favouriteRadioAdapter.notifyDataSetChanged();
                         Log.d("TAG", "STATE_READY");
                         break;
                     case 12: //STATE_IDLE
                         radio.setBeingBuffered(false);
                         radio.setPlaying(false);
-                        radioAdapter.notifyDataSetChanged();
+                        favouriteRadioAdapter.notifyDataSetChanged();
                         Log.d("TAG", "STATE_IDLE");
                         break;
                     default:

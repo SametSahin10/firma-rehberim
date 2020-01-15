@@ -26,21 +26,19 @@ import java.util.List;
 
 import static com.firmarehberim.canliradyo.data.RadioContract.*;
 
-public class RadioAdapter extends ArrayAdapter<Radio> {
-    private static final String LOG_TAG = RadioAdapter.class.getSimpleName();
+public class FavouriteRadioAdapter extends ArrayAdapter<Radio> {
+    private static final String LOG_TAG = FavouriteRadioAdapter.class.getSimpleName();
     private Context context;
     private int layoutResourceId;
     private ArrayList<Radio> radios;
-    private List<Radio> favoriteRadios;
 
     OnAddToFavouritesListener onAddToFavouritesListener;
     OnDeleteFromFavouritesListener onDeleteFromFavouritesListener;
     View.OnClickListener onRadioIconClickListener;
 
-    public RadioAdapter(Context context,
+    public FavouriteRadioAdapter(Context context,
                         int resource,
                         ArrayList<Radio> radios,
-                        List<Radio> favoriteRadios,
                         OnAddToFavouritesListener onAddToFavouritesListener,
                         OnDeleteFromFavouritesListener onDeleteFromFavouritesListener,
                         View.OnClickListener onRadioIconClickListener) {
@@ -48,7 +46,6 @@ public class RadioAdapter extends ArrayAdapter<Radio> {
         this.context = context;
         this.layoutResourceId = resource;
         this.radios = radios;
-        this.favoriteRadios = favoriteRadios;
         this.onAddToFavouritesListener = onAddToFavouritesListener;
         this.onDeleteFromFavouritesListener = onDeleteFromFavouritesListener;
         this.onRadioIconClickListener = onRadioIconClickListener;
@@ -105,26 +102,13 @@ public class RadioAdapter extends ArrayAdapter<Radio> {
         } else {
             holder.pb_buffering_radio.setVisibility(View.INVISIBLE);
         }
-        if (isRadioInFavourites(currentRadio, favoriteRadios)) {
-            holder.ib_add_to_favourites.setImageDrawable(ContextCompat.getDrawable(getContext(), R.drawable.ic_favourite_full));
-        } else {
-            holder.ib_add_to_favourites.setImageDrawable(ContextCompat.getDrawable(getContext(), R.drawable.ic_favourite_empty));
-        }
+        holder.ib_add_to_favourites.setImageDrawable(ContextCompat.getDrawable(getContext(), R.drawable.ic_favourite_full));
         holder.ib_add_to_favourites.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (isRadioInFavourites(currentRadio, favoriteRadios)) {
-                    deleteFromFavourites(currentRadio);
-                    Log.d(LOG_TAG, "Removing " + currentRadio.getRadioName());
-                    radios.remove(currentRadio);
-//                    onDeleteFromFavouritesListener.onDeleteFromFavouritesClick(currentRadio.getRadioId());
-                } else {
-                    addToFavourites(currentRadio);
-//                    onAddToFavouritesListener.onAddToFavouritesClick(currentRadio.getRadioId());
-                }
+                Log.d(LOG_TAG, "Removing " + currentRadio.getRadioName());
+                radios.remove(currentRadio);
                 notifyDataSetChanged();
-                Cursor cursor = queryAllTheRadios(getContext());
-                favoriteRadios = retrieveRadiosFromCursor(cursor);
             }
         });
         return row;
