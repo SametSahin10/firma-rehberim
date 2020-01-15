@@ -22,6 +22,7 @@ import android.util.Log;
 import android.widget.Toast;
 import androidx.core.app.NotificationCompat;
 
+import com.firmarehberim.canliradyo.activities.RadiosActivity;
 import com.firmarehberim.canliradyo.receivers.OnCancelBroadcastReceiver;
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayer;
@@ -272,6 +273,12 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
                 .addAction(android.R.drawable.ic_media_previous, "previous", generatePlaybackAction(3))
                 .addAction(notificationAction, "pause", playPauseAction)
                 .addAction(android.R.drawable.ic_media_next, "next", generatePlaybackAction(2));
+
+        PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
+                                      new Intent(this, RadiosActivity.class),
+                                                        PendingIntent.FLAG_UPDATE_CURRENT);
+
+        builder.setContentIntent(contentIntent);
 
         Target target = new Target() {
             @Override
