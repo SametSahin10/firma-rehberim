@@ -80,7 +80,15 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
     private MediaSessionCompat mediaSession;
     private MediaControllerCompat.TransportControls transportControls;
 
-    boolean isFromFavouriteRadiosFragment = false;
+    private boolean isFromFavouriteRadiosFragment = false;
+
+    public boolean isFromFavouriteRadiosFragment() {
+        return isFromFavouriteRadiosFragment;
+    }
+
+    public void setFromFavouriteRadiosFragment(boolean fromFavouriteRadiosFragment) {
+        isFromFavouriteRadiosFragment = fromFavouriteRadiosFragment;
+    }
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -110,7 +118,8 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
                             serviceCallbacks.updateRadiosFragment(STATE_READY);
                         }
                         if (isPlaying()) {
-                            serviceCallbacks.togglePlayPauseButton(false);
+                            serviceCallbacks.togglePlayPauseButton(false,
+                                                                    isFromFavouriteRadiosFragment);
                         }
                         int streamMaxVolume = audioManager
                                 .getStreamMaxVolume(exoPlayer.getAudioStreamType());
@@ -159,7 +168,8 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
                         exoPlayer.setPlayWhenReady(false);
                         exoPlayer.release();
                     }
-                    serviceCallbacks.togglePlayPauseButton(true);
+                    serviceCallbacks.togglePlayPauseButton(true,
+                                                            isFromFavouriteRadiosFragment);
                     relieveAudioFocus();
                     stopSelf();
                 }
@@ -312,7 +322,8 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
                         initNotification(PlaybackStatus.PLAYING);
                         if (exoPlayer != null) {
                             exoPlayer.setPlayWhenReady(true);
-                            serviceCallbacks.togglePlayPauseButton(false);
+                            serviceCallbacks.togglePlayPauseButton(false,
+                                                                   isFromFavouriteRadiosFragment);
                         }
                     }
                 }
@@ -323,7 +334,7 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
                 super.onPause();
                 initNotification(PlaybackStatus.PAUSED);
                 pauseRadio();
-                serviceCallbacks.togglePlayPauseButton(true);
+                serviceCallbacks.togglePlayPauseButton(true, isFromFavouriteRadiosFragment);
                 Log.d(LOG_TAG, "initMediaSession() onPause()");
             }
 
@@ -373,11 +384,11 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
         if (actionString.equalsIgnoreCase(ACTION_PLAY)) {
             Log.d(LOG_TAG, "handleIncomingActions() ACTION_PLAY");
             transportControls.play();
-            serviceCallbacks.togglePlayPauseButton(false);
+            serviceCallbacks.togglePlayPauseButton(false, isFromFavouriteRadiosFragment);
         } else if (actionString.equalsIgnoreCase(ACTION_PAUSE)) {
             Log.d(LOG_TAG, "handleIncomingActions() ACTION_PAUSE");
             transportControls.pause();
-            serviceCallbacks.togglePlayPauseButton(true);
+            serviceCallbacks.togglePlayPauseButton(true, isFromFavouriteRadiosFragment);
         } else if (actionString.equalsIgnoreCase(ACTION_NEXT)) {
             Log.d(LOG_TAG, "handleIncomingActions() ACTION_NEXT");
             transportControls.skipToNext();
@@ -500,7 +511,7 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
     public interface ServiceCallbacks {
         void updateRadiosFragment(int statusCode);
         void updateFavouriteRadiosFragment(int statusCode);
-        void togglePlayPauseButton(boolean isPaused);
+        void togglePlayPauseButton(boolean isPaused, boolean isFavouriteRadio);
         void updateVolumeBar(int streamMaxVolume);
     }
 }

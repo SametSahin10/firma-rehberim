@@ -39,13 +39,10 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.PopupWindow;
 import android.widget.SearchView;
 import android.widget.SeekBar;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -57,45 +54,22 @@ import com.firmarehberim.canliradyo.fragments.CitiesFragment;
 import com.firmarehberim.canliradyo.fragments.ContactsFragment;
 import com.firmarehberim.canliradyo.fragments.FavouriteRadiosFragment;
 import com.firmarehberim.canliradyo.fragments.NewspaperFragment;
-import com.firmarehberim.canliradyo.helper.QueryUtils;
 import com.firmarehberim.canliradyo.fragments.RadiosFragment;
 import com.firmarehberim.canliradyo.fragments.TimerFragment;
 import com.firmarehberim.canliradyo.fragments.TvFragment;
-import com.firmarehberim.canliradyo.adapters.CategoryAdapter;
-import com.firmarehberim.canliradyo.adapters.CityAdapter;
-import com.firmarehberim.canliradyo.data.RadioContract;
-import com.firmarehberim.canliradyo.data.RadioDbHelper;
-import com.firmarehberim.canliradyo.datamodel.Category;
-import com.firmarehberim.canliradyo.datamodel.City;
 import com.firmarehberim.canliradyo.datamodel.Radio;
 import com.firmarehberim.canliradyo.services.PlayRadioService;
 import java.util.ArrayList;
 import java.util.List;
 import com.firmarehberim.canliradyo.services.PlayRadioService.PlayRadioBinder;
 
-public class RadiosActivity extends AppCompatActivity implements RadiosFragment.OnEventFromRadiosFragmentListener,
-        FavouriteRadiosFragment.OnEventFromFavRadiosFragment,
-        RadiosFragment.OnRadioItemClickListener,
-        RadiosFragment.OnRadioLoadingCompleteListener,
-        RadiosFragment.OnRadioLoadingStartListener,
-        FavouriteRadiosFragment.OnFavRadioItemClickListener,
-        CitiesFragment.OnFilterRespectToCityListener,
-        CategoriesFragment.OnFilterRespectToCategoryListener,
-        TimerFragment.OnCountdownFinishedListener,
-        LoaderManager.LoaderCallbacks<List<Object>>,
-        PlayRadioService.ServiceCallbacks {
+public class RadiosActivity extends AppCompatActivity implements RadiosFragment.OnRadioItemClickListener,
+                                                                 FavouriteRadiosFragment.OnFavRadioItemClickListener,
+                                                                 CitiesFragment.OnFilterRespectToCityListener,
+                                                                 CategoriesFragment.OnFilterRespectToCategoryListener,
+                                                                 TimerFragment.OnCountdownFinishedListener,
+                                                                 PlayRadioService.ServiceCallbacks {
     private static final String LOG_TAG = RadiosActivity.class.getSimpleName();
-    private static final String CITIES_REQUEST_URL = "https://firmarehberim.com/sayfalar/radyo/json/iller.php";
-    private static final String CATEGORY_REQUEST_URL = "https://firmarehberim.com/sayfalar/radyo/json/kategoriler.php";
-    private static final int CITY_LOADER_ID = 1;
-    private static final int CATEGORY_LOADER_ID = 2;
-    private static final int STATE_BUFFERING = 10;
-    private static final int STATE_READY = 11;
-    private static final int STATE_IDLE = 12;
-    private static final int NUM_PAGES = 2;
-    private final static int FILTER_TYPE_RADIO = 1;
-    private final static int FILTER_TYPE_CITY = 2;
-    private final static int FILTER_TYPE_CATEGORY = 3;
 
     private final static int RADIOS_FRAGMENT_ID = 1;
     private final static int TV_FRAGMENT_ID = 2;
@@ -108,21 +82,9 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     private final static int TIMER_FRAGMENT_ID = 9;
     private int ACTIVE_FRAGMENT_ID;
 
-
     PlayRadioService playRadioService;
     boolean serviceBound = false;
 
-    private Toolbar toolbar;
-    private SearchView sw_searchForRadios;
-    private ImageView iv_searchIcon;
-    private EditText et_queryText;
-    private Spinner spinner_cities;
-    private Spinner spinner_categories;
-    private CityAdapter cityAdapter;
-    private CategoryAdapter categoryAdapter;
-    private ViewPager viewPager;
-    private PagerAdapter pagerAdapter;
-    private TabLayout tabLayout;
     private RadiosFragment radiosFragment;
     private FavouriteRadiosFragment favouriteRadiosFragment;
     private TimerFragment timerFragment;
@@ -148,17 +110,12 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     private ImageView iv_radioIcon;
     private TextView  tv_radioTitle;
     private ImageButton ib_share_radio;
-    private ImageButton ib_player_add_to_fav;
 
     private AudioManager audioManager;
 
-    Radio radioCurrentlyPlaying;
-    boolean isFromFavouriteRadiosFragment = false;
-    boolean isRadioLoadingCompleted = false;
     boolean isAudioStreamMuted = false;
 
-    City allTheCities;
-    Category allTheCategories;
+    Radio radioCurrentlyPlaying;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -533,99 +490,14 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
         return super.onKeyUp(keyCode, event);
     }
 
-    @NonNull
-    @Override
-    public Loader<List<Object>> onCreateLoader(int loaderId, @Nullable Bundle bundle) {
-        SpinnerLoader spinnerLoader = null;
-        switch (loaderId) {
-            case 1:
-                spinnerLoader = new SpinnerLoader(this, CITIES_REQUEST_URL);
-                break;
-            case 2:
-                spinnerLoader = new SpinnerLoader(this, CATEGORY_REQUEST_URL);
-                break;
-        }
-        return spinnerLoader;
-    }
-
-    @Override
-    public void onLoadFinished(@NonNull Loader<List<Object>> loader, List<Object> objects) {
-        int loaderId = loader.getId();
-        switch (loaderId) {
-            case 1:
-                cityAdapter.clear();
-                if (objects != null) {
-                    cityAdapter.add(allTheCities);
-                    cityAdapter.addAll(objects);
-                }
-                break;
-            case 2:
-                categoryAdapter.clear();
-                if (objects != null) {
-                    categoryAdapter.add(allTheCategories);
-                    categoryAdapter.addAll(objects);
-                }
-                break;
-        }
-//        pb_loadingCities.setVisibility(View.GONE);
-//        tv_emptyView.setText(getResources().getString(R.string.empty_cities_text));
-    }
-
-    @Override
-    public void onLoaderReset(@NonNull Loader<List<Object>> loader) {
-        int loaderId = loader.getId();
-        switch (loaderId) {
-            case 1:
-                cityAdapter.clear();
-                break;
-            case 2:
-                categoryAdapter.clear();
-                break;
-        }
-    }
-
-    private static class SpinnerLoader extends AsyncTaskLoader<List<Object>> {
-        private String requestUrl;
-
-        public SpinnerLoader(@NonNull Context context, String requestUrl) {
-            super(context);
-            this.requestUrl = requestUrl;
-        }
-
-        @Override
-        public List<Object> loadInBackground() {
-            if (requestUrl == null) {
-                return null;
-            }
-            ArrayList<Object> objects = null;
-            switch (requestUrl) {
-                case CITIES_REQUEST_URL:
-                    objects = QueryUtils.fetchCityData(requestUrl);
-                    break;
-                case CATEGORY_REQUEST_URL:
-                    objects = QueryUtils.fetchCategoryData(requestUrl);
-                    break;
-            }
-            return objects;
-        }
-
-        @Override
-        protected void onStartLoading() {
-            forceLoad();
-        }
-    }
-
     @Override
     public void onAttachFragment(Fragment fragment) {
         if (fragment instanceof RadiosFragment) {
             RadiosFragment radiosFragment = (RadiosFragment) fragment;
-            radiosFragment.setOnEventFromRadiosFragmentListener(this);
             radiosFragment.setOnRadioItemClickListener(this);
-            radiosFragment.setOnRadioLoadingCompleteListener(this);
         }
         if (fragment instanceof FavouriteRadiosFragment) {
             FavouriteRadiosFragment favouriteRadiosFragment = (FavouriteRadiosFragment) fragment;
-            favouriteRadiosFragment.setOnEventFromFavRadiosFragment(this);
             favouriteRadiosFragment.setOnFavRadioItemClickListener(this);
         }
         if (fragment instanceof CitiesFragment) {
@@ -653,55 +525,6 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
         }
     }
 
-    private void addToFavourites(Radio radio) {
-        RadioDbHelper dbHelper = new RadioDbHelper(this);
-        SQLiteDatabase sqLiteDatabase = dbHelper.getWritableDatabase();
-        ContentValues contentValues = new ContentValues();
-        contentValues.put(RadioContract.RadioEntry.COLUMN_RADIO_ID, radio.getRadioId());
-        contentValues.put(RadioContract.RadioEntry.COLUMN_RADIO_NAME, radio.getRadioName());
-        contentValues.put(RadioContract.RadioEntry.COLUMN_RADIO_CATEGORY, radio.getCategory());
-        contentValues.put(RadioContract.RadioEntry.COLUMN_RADIO_ICON_URL, radio.getRadioIconUrl());
-        contentValues.put(RadioContract.RadioEntry.COLUMN_RADIO_STREAM_LINK, radio.getStreamLink());
-        contentValues.put(RadioContract.RadioEntry.COLUMN_RADIO_SHAREABLE_LINK, radio.getShareableLink());
-        contentValues.put(RadioContract.RadioEntry.COLUMN_RADIO_HIT, radio.getHit());
-        contentValues.put(RadioContract.RadioEntry.COLUMN_NUM_OF_ONLINE_LISTENERS, radio.getNumOfOnlineListeners());
-        contentValues.put(RadioContract.RadioEntry.COLUMN_RADIO_IS_BEING_BUFFERED, radio.isBeingBuffered());
-        contentValues.put(RadioContract.RadioEntry.COLUMN_RADIO_IS_LIKED, radio.isLiked());
-        long newRowId = sqLiteDatabase.insert(RadioContract.RadioEntry.TABLE_NAME, null, contentValues);
-        Log.d(LOG_TAG, "newRowId: " + newRowId);
-    }
-
-    public void notifyFavouriteRadiosFragment() {
-        if (favouriteRadiosFragment != null) {
-//            favouriteRadiosFragment.updateFavouriteRadiosList();
-        }
-    }
-
-    @Override
-    public void onEventFromRadiosFragment(int radioId, boolean isLiked) {
-        if (radioCurrentlyPlaying != null) {
-            if (radioId == radioCurrentlyPlaying.getRadioId()) {
-                if (isLiked) {
-                    radioCurrentlyPlaying.setLiked(true);
-                } else {
-                    radioCurrentlyPlaying.setLiked(false);
-                }
-            }
-        }
-        notifyFavouriteRadiosFragment();
-    }
-
-    @Override
-    public void onEventFromFavRadiosFragment(int radioId) {
-        if (radioCurrentlyPlaying != null) {
-            if (radioId == radioCurrentlyPlaying.getRadioId()) {
-                radioCurrentlyPlaying.setLiked(false);
-//                updatePopupWindow();
-            }
-        }
-        radiosFragment.refreshRadiosList(radioId);
-    }
-
     @Override
     public void onRadioItemClick(Radio radioClicked) {
         boolean isConnected = checkConnectivity();
@@ -727,8 +550,8 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
                         }
                     }
                 });
-                isFromFavouriteRadiosFragment = false;
             }
+            playRadioService.setFromFavouriteRadiosFragment(false);
         } else {
             Toast.makeText(RadiosActivity.this,
                     "Lütfen internete bağlı olduğunuzdan emin olun",
@@ -739,15 +562,39 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     }
 
     @Override
-    public void onFavRadioItemClick(Radio currentFavRadio) {
-        playRadioService.playRadio(currentFavRadio);
-        //Can make some adjustments. For example disabling the "Add to favourites" menu option.
-        isFromFavouriteRadiosFragment = true;
-    }
-
-    @Override
-    public void onRadioLoadingComplete(boolean isRadioLoadingCompleted) {
-        this.isRadioLoadingCompleted = isRadioLoadingCompleted;
+    public void onFavRadioItemClick(Radio radioClicked) {
+        boolean isConnected = checkConnectivity();
+        if (isConnected) {
+            if (!serviceBound) {
+                Intent intent = new Intent(this, PlayRadioService.class);
+                startService(intent);
+                bindService(intent, serviceConnection, BIND_AUTO_CREATE);
+            } else {
+                radioCurrentlyPlaying = radioClicked;
+                playRadioService.playRadio(radioClicked);
+                tv_radioTitle.setText(radioCurrentlyPlaying.getRadioName());
+                String iconUrl = radioCurrentlyPlaying.getRadioIconUrl();
+                updateRadioIcon(iconUrl);
+                iv_radioIcon.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Intent intent = new Intent(Intent.ACTION_VIEW);
+                        Log.d("TAG", "Shareable link: " + radioCurrentlyPlaying.getShareableLink());
+                        intent.setData(Uri.parse(radioCurrentlyPlaying.getShareableLink()));
+                        if (intent.resolveActivity(getPackageManager()) != null) {
+                            startActivity(intent);
+                        }
+                    }
+                });
+            }
+            playRadioService.setFromFavouriteRadiosFragment(true);
+        } else {
+            Toast.makeText(RadiosActivity.this,
+                    "Lütfen internete bağlı olduğunuzdan emin olun",
+                    Toast.LENGTH_SHORT)
+                    .show();
+            ib_playPauseRadio.setImageDrawable(getResources().getDrawable(R.drawable.ic_play_radio));
+        }
     }
 
     @Override
@@ -773,11 +620,6 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
         radiosFragment.setFilteringRespectToCityEnabled(false);
         radiosFragment.setFilteringRespectToCategoryEnabled(true);
         radiosFragment.setCategoryToFilter(categoryIdToFilter);
-    }
-
-    @Override
-    public void onRadioLoadingStart() {
-        radiosFragment.pb_loadingRadios.setVisibility(View.VISIBLE);
     }
 
     @Override
@@ -833,13 +675,23 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     }
 
     @Override
-    public void togglePlayPauseButton(boolean isPaused) {
+    public void togglePlayPauseButton(boolean isPaused, boolean isFavouriteRadio) {
         if (isPaused) {
-            ib_playPauseRadio.setImageDrawable(getResources().getDrawable(R.drawable.ic_play_radio));
-            radiosFragment.setCurrentRadioStatus(13, radioCurrentlyPlaying);
+            if (isFavouriteRadio) {
+                ib_playPauseRadio.setImageDrawable(getResources().getDrawable(R.drawable.ic_play_radio));
+                favouriteRadiosFragment.setCurrentRadioStatus(13, radioCurrentlyPlaying);
+            } else {
+                ib_playPauseRadio.setImageDrawable(getResources().getDrawable(R.drawable.ic_play_radio));
+                radiosFragment.setCurrentRadioStatus(13, radioCurrentlyPlaying);
+            }
         } else {
-            ib_playPauseRadio.setImageDrawable(getResources().getDrawable(R.drawable.ic_pause_radio));
-            radiosFragment.setCurrentRadioStatus(11, radioCurrentlyPlaying);
+            if (isFavouriteRadio) {
+                ib_playPauseRadio.setImageDrawable(getResources().getDrawable(R.drawable.ic_pause_radio));
+                favouriteRadiosFragment.setCurrentRadioStatus(11, radioCurrentlyPlaying);
+            } else {
+                ib_playPauseRadio.setImageDrawable(getResources().getDrawable(R.drawable.ic_pause_radio));
+                radiosFragment.setCurrentRadioStatus(11, radioCurrentlyPlaying);
+            }
         }
     }
 
