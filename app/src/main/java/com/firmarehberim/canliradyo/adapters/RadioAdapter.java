@@ -115,8 +115,6 @@ public class RadioAdapter extends ArrayAdapter<Radio> {
             public void onClick(View v) {
                 if (isRadioInFavourites(currentRadio, favoriteRadios)) {
                     deleteFromFavourites(currentRadio);
-                    Log.d(LOG_TAG, "Removing " + currentRadio.getRadioName());
-                    radios.remove(currentRadio);
 //                    onDeleteFromFavouritesListener.onDeleteFromFavouritesClick(currentRadio.getRadioId());
                 } else {
                     addToFavourites(currentRadio);
