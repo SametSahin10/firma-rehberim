@@ -111,7 +111,7 @@ public class RadioCursorAdapter extends CursorAdapter {
         float scale = view.getContext().getResources().getDisplayMetrics().density;
         int width = (int) (60 * scale + 0.5f);
         int height = (int) (60 * scale + 0.5f);
-        Picasso.with(view.getContext()).load(iconUrl)
+        Picasso.get().load(iconUrl)
                 .resize(width, height)
                 .centerInside()
                 .placeholder(R.mipmap.ic_launcher)

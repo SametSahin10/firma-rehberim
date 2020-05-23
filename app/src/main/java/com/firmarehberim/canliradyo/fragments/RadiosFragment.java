@@ -322,6 +322,7 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
     public void setCurrentRadioStatus(int statusCode, Radio radioCurrentlyPlaying) {
         List<Radio> radios = radioAdapter.getItems();
         //find the currently playing radio from the radio list
+        // TODO: Fix NPE here.
         for (Radio radio: radios) {
             if (radio.getRadioId() == radioCurrentlyPlaying.getRadioId()) {
                 switch (statusCode) {

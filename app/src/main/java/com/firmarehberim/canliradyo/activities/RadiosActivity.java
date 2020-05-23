@@ -703,7 +703,7 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     }
 
     void updateRadioIcon(String iconUrl) {
-        Picasso.with(getApplicationContext()).load(iconUrl)
+        Picasso.get().load(iconUrl)
                 .resize(200, 200)
                 .centerInside()
                 .placeholder(R.drawable.ic_placeholder_radio_black)

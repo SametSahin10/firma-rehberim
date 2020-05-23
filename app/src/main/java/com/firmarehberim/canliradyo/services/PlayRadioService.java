@@ -288,7 +288,7 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
             }
 
             @Override
-            public void onBitmapFailed(Drawable errorDrawable) {
+            public void onBitmapFailed(Exception e, Drawable errorDrawable) {
                 Log.e(LOG_TAG, "Loading Bitmap failed");
             }
 
@@ -299,7 +299,7 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
         };
 
         if (radioCurrentlyPlaying != null) {
-            Picasso.with(this).load(radioCurrentlyPlaying.getRadioIconUrl()).into(target);
+            Picasso.get().load(radioCurrentlyPlaying.getRadioIconUrl()).into(target);
         }
 
         startForeground(112, builder.build());

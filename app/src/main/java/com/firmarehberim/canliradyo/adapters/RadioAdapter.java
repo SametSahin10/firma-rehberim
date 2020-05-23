@@ -87,7 +87,7 @@ public class RadioAdapter extends ArrayAdapter<Radio> {
         float scale = getContext().getResources().getDisplayMetrics().density;
         int width = (int) (50 * scale + 0.5f);
         int height = (int) (50 * scale + 0.5f);
-        Picasso.with(row.getContext()).load(iconUrl)
+        Picasso.get().load(iconUrl)
                 .resize(width, height)
                 .centerInside()
                 .placeholder(R.drawable.ic_placeholder_radio_black)
