@@ -339,10 +339,11 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
             @Override
             public void onPause() {
                 super.onPause();
+                Log.d(LOG_TAG, "initMediaSession() onPause()");
                 initNotification(PlaybackStatus.PAUSED);
                 pauseRadio();
                 serviceCallbacks.togglePlayPauseButton(true, isFromFavouriteRadiosFragment);
-                Log.d(LOG_TAG, "initMediaSession() onPause()");
+                stopForeground(false);
             }
 
             @Override
