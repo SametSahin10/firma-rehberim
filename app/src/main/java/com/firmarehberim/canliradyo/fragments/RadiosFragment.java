@@ -45,6 +45,7 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
 
     OnEventFromRadiosFragmentListener onEventFromRadiosFragmentListener;
     OnRadioItemClickListener onRadioItemClickListener;
+
     View.OnClickListener onClickListener;
 
     public void setOnRadioItemClickListener(OnRadioItemClickListener onRadioItemClickListener) {
@@ -145,15 +146,40 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
         lw_radios.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
+                Radio newRadio = (Radio) adapterView.getItemAtPosition(position);
                 if (radioClicked != null) {
-                    radioClicked.setBeingBuffered(false);
-                    radioClicked.setPlaying(false);
+                    // A radio had been playing already.
+                    if (radioClicked.getRadioId() == newRadio.getRadioId()) {
+                        // User clicked on the radio that's been playing already.
+                        if (radioClicked.isPlaying()) {
+                            radioClicked.setBeingBuffered(false);
+                            radioClicked.setPlaying(false);
+                            radioAdapter.notifyDataSetChanged();
+                            onRadioItemClickListener.onPlayingRadioItemClick(newRadio);
+                        } else {
+                            // User clicked on the radio that's had been playing and stopped.
+                            radioClicked = newRadio;
+                            radioClicked.setBeingBuffered(true);
+                            radioAdapter.notifyDataSetChanged();
+                            onRadioItemClickListener.onRadioItemClick(radioClicked);
+                        }
+                    } else {
+                        // User clicked on a radio which is different
+                        // from the currently playing one.
+                        radioClicked.setBeingBuffered(false);
+                        radioClicked.setPlaying(false);
+                        radioAdapter.notifyDataSetChanged();
+                        radioClicked = newRadio;
+                        onRadioItemClickListener.onRadioItemClick(radioClicked);
+                    }
+                    // Mark it as not playing and play the new one.
+                } else {
+                    // No radio had been playing. Play the clicked on from scratch.
+                    radioClicked = newRadio;
+                    radioClicked.setBeingBuffered(true);
                     radioAdapter.notifyDataSetChanged();
+                    onRadioItemClickListener.onRadioItemClick(radioClicked);
                 }
-                radioClicked = (Radio) adapterView.getItemAtPosition(position);
-                radioClicked.setBeingBuffered(true);
-                radioAdapter.notifyDataSetChanged();
-                onRadioItemClickListener.onRadioItemClick(radioClicked);
             }
         });
     }
@@ -378,6 +404,8 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
     }
 
     public interface OnRadioItemClickListener {
-        void onRadioItemClick(Radio currentRadio);
+        void onRadioItemClick(Radio radioClicked);
+        // Callback to be notified when user clicks on the radio that's been playing already.
+        void onPlayingRadioItemClick(Radio radioClicked);
     }
 }

@@ -562,6 +562,12 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     }
 
     @Override
+    public void onPlayingRadioItemClick(Radio radioClicked) {
+        if (playRadioService.isPlaying()) playRadioService.getTransportControls().pause();
+        radiosFragment.setCurrentRadioStatus(13, radioClicked);
+    }
+
+    @Override
     public void onFavRadioItemClick(Radio radioClicked) {
         boolean isConnected = checkConnectivity();
         if (isConnected) {
