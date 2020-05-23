@@ -327,21 +327,25 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
             if (radio.getRadioId() == radioCurrentlyPlaying.getRadioId()) {
                 switch (statusCode) {
                     case 10: //STATE_BUFFERING
+                        Log.d(LOG_TAG, "STATE_BUFFERING");
                         radio.setBeingBuffered(true);
                         radio.setPlaying(false);
                         radioAdapter.notifyDataSetChanged();
                         break;
                     case 11: //STATE_READY
+                        Log.d(LOG_TAG, "STATE_READY");
                         radio.setBeingBuffered(false);
                         radio.setPlaying(true);
                         radioAdapter.notifyDataSetChanged();
                         break;
                     case 12: //STATE_IDLE
+                        Log.d(LOG_TAG, "STATE_IDLE");
                         radio.setBeingBuffered(false);
                         radio.setPlaying(false);
                         radioAdapter.notifyDataSetChanged();
                         break;
                     case 13: //STATE_PAUSED - This state is not an exoplayer state.
+                        Log.d(LOG_TAG, "STATE_PAUSED");
                         radio.setPlaying(false);
                         radioAdapter.notifyDataSetChanged();
                     default:

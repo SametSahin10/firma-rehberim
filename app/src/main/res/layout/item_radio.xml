@@ -45,7 +45,7 @@
             android:visibility="invisible"
             app:lottie_rawRes="@raw/playing_radio"
             app:lottie_loop="true"
-            app:lottie_autoPlay="true"/>
+            app:lottie_autoPlay="true" />
 
         <ProgressBar
             android:id="@+id/pb_buffering_radio"
