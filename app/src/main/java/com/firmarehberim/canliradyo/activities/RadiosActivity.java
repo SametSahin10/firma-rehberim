@@ -78,27 +78,15 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     private FavouriteRadiosFragment favouriteRadiosFragment;
     private TimerFragment timerFragment;
 
-    private Button btn_nav_radios;
-    private Button btn_nav_tv;
-    private Button btn_nav_contacts;
-    private Button btn_nav_newspaper;
-    private Button btn_nav_fav_radios;
-    private Button btn_nav_categories;
-    private Button btn_nav_cities;
-    private Button btn_nav_global;
-    private ImageButton ib_search_for_radios;
-
     private MenuItem action_search;
     private SearchView searchView;
 
-    private ImageButton ib_timer;
     private ImageButton ib_volume_control;
     private SeekBar sb_volume_control;
     private ImageButton ib_playPauseRadio;
 
     private ImageView iv_radioIcon;
     private TextView  tv_radioTitle;
-    private ImageButton ib_share_radio;
 
     private AudioManager audioManager;
 
@@ -117,7 +105,7 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         fragmentTransaction.replace(R.id.fragment_container, radiosFragment).commit();
 
-        btn_nav_radios = findViewById(R.id.btn_nav_radios);
+        Button btn_nav_radios = findViewById(R.id.btn_nav_radios);
         btn_nav_radios.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -131,7 +119,7 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
             }
         });
 
-        btn_nav_tv = findViewById(R.id.btn_nav_tv);
+        Button btn_nav_tv = findViewById(R.id.btn_nav_tv);
         btn_nav_tv.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -146,7 +134,7 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
             }
         });
 
-        btn_nav_contacts = findViewById(R.id.btn_nav_contacts);
+        Button btn_nav_contacts = findViewById(R.id.btn_nav_contacts);
         btn_nav_contacts.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -161,7 +149,7 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
             }
         });
 
-        btn_nav_newspaper = findViewById(R.id.btn_nav_newspaper);
+        Button btn_nav_newspaper = findViewById(R.id.btn_nav_newspaper);
         btn_nav_newspaper.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -176,7 +164,7 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
             }
         });
 
-        btn_nav_fav_radios = findViewById(R.id.btn_nav_fav_radios);
+        Button btn_nav_fav_radios = findViewById(R.id.btn_nav_fav_radios);
         btn_nav_fav_radios.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -191,7 +179,7 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
             }
         });
 
-        btn_nav_categories = findViewById(R.id.btn_nav_categories);
+        Button btn_nav_categories = findViewById(R.id.btn_nav_categories);
         btn_nav_categories.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -206,7 +194,7 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
             }
         });
 
-        btn_nav_cities = findViewById(R.id.btn_nav_cities);
+        Button btn_nav_cities = findViewById(R.id.btn_nav_cities);
         btn_nav_cities.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -221,7 +209,7 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
             }
         });
 
-        btn_nav_global = findViewById(R.id.btn_nav_global);
+        Button btn_nav_global = findViewById(R.id.btn_nav_global);
         btn_nav_global.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -247,11 +235,10 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
             }
         });
 
-        ib_search_for_radios = findViewById(R.id.ib_search_for_radios);
+        ImageButton ib_search_for_radios = findViewById(R.id.ib_search_for_radios);
         ib_search_for_radios.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.d("TAG", "Requesting focus");
                 action_search.setVisible(true);
                 searchView.requestFocus();
                 searchView.setIconified(false);
@@ -262,7 +249,7 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
         tv_radioTitle = findViewById(R.id.tv_radio_title);
 
         timerFragment = new TimerFragment();
-        ib_timer = findViewById(R.id.ib_timer);
+        ImageButton ib_timer = findViewById(R.id.ib_timer);
         ib_timer.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -301,7 +288,6 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
                 if (playRadioService != null) {
                     SimpleExoPlayer exoPlayer = playRadioService.getPlayer();
                     if (exoPlayer != null) {
-                        Log.d("TAG", "Progress changed");
                         playRadioService.audioManager
                                 .setStreamVolume(exoPlayer.getAudioStreamType(), progress, 0);
                     }
@@ -319,7 +305,7 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
             }
         });
 
-        ib_share_radio = findViewById(R.id.ib_player_share_radio);
+        ImageButton ib_share_radio = findViewById(R.id.ib_player_share_radio);
         ib_share_radio.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -419,9 +405,6 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        SharedPreferences sharedPreferences =
-                PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        SharedPreferences.Editor editor = sharedPreferences.edit();
         switch (item.getItemId()) {
             case R.id.item_notifications:
                 return true;
@@ -532,7 +515,6 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
                     @Override
                     public void onClick(View v) {
                         Intent intent = new Intent(Intent.ACTION_VIEW);
-                        Log.d("TAG", "Shareable link: " + radioCurrentlyPlaying.getShareableLink());
                         intent.setData(Uri.parse(radioCurrentlyPlaying.getShareableLink()));
                         if (intent.resolveActivity(getPackageManager()) != null) {
                             startActivity(intent);
@@ -574,7 +556,6 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
                     @Override
                     public void onClick(View v) {
                         Intent intent = new Intent(Intent.ACTION_VIEW);
-                        Log.d("TAG", "Shareable link: " + radioCurrentlyPlaying.getShareableLink());
                         intent.setData(Uri.parse(radioCurrentlyPlaying.getShareableLink()));
                         if (intent.resolveActivity(getPackageManager()) != null) {
                             startActivity(intent);
