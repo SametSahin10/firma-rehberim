@@ -45,11 +45,16 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
 
     OnEventFromRadiosFragmentListener onEventFromRadiosFragmentListener;
     OnRadioItemClickListener onRadioItemClickListener;
+    OnLoadingRadiosFinishedListener onLoadingRadiosFinishedListener;
 
     View.OnClickListener onClickListener;
 
     public void setOnRadioItemClickListener(OnRadioItemClickListener onRadioItemClickListener) {
         this.onRadioItemClickListener = onRadioItemClickListener;
+    }
+
+    public void setOnLoadingRadiosFinishedListener(OnLoadingRadiosFinishedListener onLoadingRadiosFinishedListener) {
+        this.onLoadingRadiosFinishedListener = onLoadingRadiosFinishedListener;
     }
 
     String cityToFilter;
@@ -102,7 +107,6 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
     @Override
     public void onViewCreated(@NonNull final View view, @Nullable Bundle savedInstanceState) {
         boolean isConnected = checkConnectivity();
-
         onClickListener = new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -203,6 +207,7 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
         radioAdapter.clear();
         if (radios != null) {
             radioAdapter.addAll(radios);
+            onLoadingRadiosFinishedListener.onLoadingRadiosFinished(radios.get(0));
         }
         tv_emptyView.setText(getString(R.string.empty_radios_text));
         lw_radios.setVisibility(View.VISIBLE);
@@ -265,6 +270,7 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
                 RadioEntry.COLUMN_SHAREABLE_LINK,
                 RadioEntry.COLUMN_NAME,
                 RadioEntry.COLUMN_STREAM_LINK,
+                RadioEntry.COLUMN_IS_IN_HLS_FORMAT,
                 RadioEntry.COLUMN_HIT,
                 RadioEntry.COLUMN_CATEGORY_ID,
                 RadioEntry.COLUMN_USER_ID,
@@ -412,5 +418,10 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
         void onRadioItemClick(Radio radioClicked);
         // Callback to be notified when user clicks on the radio that's been playing already.
         void onPlayingRadioItemClick(Radio radioClicked);
+    }
+
+    // Listener to let RadiosActivity know when loading radios has finished.
+    public interface OnLoadingRadiosFinishedListener {
+        void onLoadingRadiosFinished(Radio firstRadioOfList);
     }
 }
