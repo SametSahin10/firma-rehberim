@@ -25,20 +25,17 @@ import androidx.core.app.NotificationCompat;
 import com.firmarehberim.canliradyo.activities.RadiosActivity;
 import com.firmarehberim.canliradyo.receivers.OnCancelBroadcastReceiver;
 import com.google.android.exoplayer2.ExoPlaybackException;
-import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
-import com.google.android.exoplayer2.ext.okhttp.OkHttpDataSourceFactory;
-import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
-import com.google.android.exoplayer2.source.ExtractorMediaSource;
 import com.google.android.exoplayer2.source.MediaSource;
+import com.google.android.exoplayer2.source.ProgressiveMediaSource;
+import com.google.android.exoplayer2.source.hls.HlsMediaSource;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 import com.google.android.exoplayer2.trackselection.MappingTrackSelector;
 import com.google.android.exoplayer2.trackselection.TrackSelector;
-import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
-import com.google.android.exoplayer2.upstream.TransferListener;
+import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory;
 import com.google.android.exoplayer2.util.EventLogger;
 import com.google.android.exoplayer2.util.Util;
 import com.squareup.picasso.Picasso;
@@ -47,8 +44,6 @@ import com.squareup.picasso.Target;
 import com.firmarehberim.canliradyo.datamodel.PlaybackStatus;
 import com.firmarehberim.canliradyo.datamodel.Radio;
 import com.firmarehberim.canliradyo.R;
-
-import okhttp3.OkHttpClient;
 
 public class PlayRadioService extends Service implements AudioManager.OnAudioFocusChangeListener {
     private static final String LOG_TAG = PlayRadioService.class.getSimpleName();
@@ -69,11 +64,7 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
     Radio radioCurrentlyPlaying;
 
     public AudioManager audioManager;
-    public SimpleExoPlayer exoPlayer;
-    private MediaSource mediaSource;
-    private DefaultDataSourceFactory dataSourceFactory;
-    private ExoPlayer.EventListener eventListener;
-    private DefaultBandwidthMeter BANDWIDTH_METER = new DefaultBandwidthMeter();
+    public SimpleExoPlayer player;
 
     TrackSelector trackSelector = new DefaultTrackSelector();
 
@@ -82,10 +73,6 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
     private MediaControllerCompat.TransportControls transportControls;
 
     private boolean isFromFavouriteRadiosFragment = false;
-
-    public boolean isFromFavouriteRadiosFragment() {
-        return isFromFavouriteRadiosFragment;
-    }
 
     public void setFromFavouriteRadiosFragment(boolean fromFavouriteRadiosFragment) {
         isFromFavouriteRadiosFragment = fromFavouriteRadiosFragment;
@@ -100,11 +87,11 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
     public void onCreate() {
         super.onCreate();
         initMediaSession();
-        eventListener = new ExoPlayer.EventListener() {
+        Player.EventListener eventListener = new Player.EventListener() {
             @Override
             public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
                 switch (playbackState) {
-                    case ExoPlayer.STATE_BUFFERING:
+                    case Player.STATE_BUFFERING:
                         Log.d("TAG", "STATE_BUFFERING");
                         if (isFromFavouriteRadiosFragment) {
                             serviceCallbacks.updateFavouriteRadiosFragment(STATE_BUFFERING);
@@ -112,7 +99,7 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
                             serviceCallbacks.updateRadiosFragment(STATE_BUFFERING);
                         }
                         break;
-                    case ExoPlayer.STATE_READY:
+                    case Player.STATE_READY:
                         if (isFromFavouriteRadiosFragment) {
                             serviceCallbacks.updateFavouriteRadiosFragment(STATE_READY);
                         } else {
@@ -120,23 +107,20 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
                         }
                         if (isPlaying()) {
                             serviceCallbacks.togglePlayPauseButton(false,
-                                                                    isFromFavouriteRadiosFragment);
+                                    isFromFavouriteRadiosFragment);
                         }
                         int streamMaxVolume = audioManager
-                                .getStreamMaxVolume(exoPlayer.getAudioStreamType());
+                                .getStreamMaxVolume(player.getAudioAttributes().contentType);
                         serviceCallbacks.updateVolumeBar(streamMaxVolume);
-                        Log.d("TAG", "STATE_READY");
                         break;
-                    case ExoPlayer.STATE_IDLE:
-                        Log.d("TAG", "STATE_IDLE");
+                    case Player.STATE_IDLE:
                         if (isFromFavouriteRadiosFragment) {
                             serviceCallbacks.updateFavouriteRadiosFragment(STATE_IDLE);
                         } else {
                             serviceCallbacks.updateRadiosFragment(STATE_IDLE);
                         }
                         break;
-                    case ExoPlayer.STATE_ENDED:
-                        Log.d("TAG", "STATE_ENDED");
+                    case Player.STATE_ENDED:
                         break;
                 }
             }
@@ -148,13 +132,12 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
             }
         };
         audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
-        exoPlayer = ExoPlayerFactory.newSimpleInstance(getApplicationContext(), trackSelector);
-        exoPlayer.addListener(eventListener);
+        player = new SimpleExoPlayer.Builder(getApplicationContext()).build();
+        player.addListener(eventListener);
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d(LOG_TAG, "onStartCommand");
         if (intent != null) {
             if (intent.getExtras() != null) {
                 boolean showNotification = intent.getExtras().getBoolean("showNotification");
@@ -165,9 +148,9 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
                     initNotification(PlaybackStatus.PLAYING);
                 } else {
                     Log.d(LOG_TAG, "Not showing notification");
-                    if (exoPlayer != null) {
-                        exoPlayer.setPlayWhenReady(false);
-                        exoPlayer.release();
+                    if (player != null) {
+                        player.setPlayWhenReady(false);
+                        player.release();
                     }
                     serviceCallbacks.togglePlayPauseButton(true,
                                                             isFromFavouriteRadiosFragment);
@@ -190,39 +173,49 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
 
     @Override
     public void onDestroy() {
-        if (exoPlayer != null) {
-            exoPlayer.setPlayWhenReady(false);
-            exoPlayer.release();
+        if (player != null) {
+            player.setPlayWhenReady(false);
+            player.release();
         }
         relieveAudioFocus();
         cancelNotification();
         super.onDestroy();
     }
 
-    private void prepareExoPlayer(Uri uri) {
-        dataSourceFactory = new DefaultDataSourceFactory(getApplicationContext(), Util.getUserAgent(getApplicationContext(), "exoPlayerSimple"), BANDWIDTH_METER);
-        String userAgent = Util.getUserAgent(getApplicationContext(), "exoPlayerSimple");
-        mediaSource = new ExtractorMediaSource(uri,
-                new OkHttpDataSourceFactory(new OkHttpClient(), userAgent, (TransferListener) null),
-                new DefaultExtractorsFactory(),
-                null,
-                null);
-        exoPlayer.addAnalyticsListener(new EventLogger((MappingTrackSelector) trackSelector));
-        exoPlayer.prepare(mediaSource);
-        exoPlayer.setPlayWhenReady(true);
+    private void prepareExoPlayer(Uri uri, boolean isRadioInHLSFormat) {
+        String userAgent = Util.getUserAgent(
+                getApplicationContext(),
+                "com.firmarehberim.canliradyo"
+        );
+        if (isRadioInHLSFormat) {
+            DefaultHttpDataSourceFactory dataSourceFactory =
+                    new DefaultHttpDataSourceFactory(userAgent);
+            HlsMediaSource hlsMediaSource = new HlsMediaSource.Factory(dataSourceFactory)
+                    .createMediaSource(uri);
+            player.addAnalyticsListener(new EventLogger((MappingTrackSelector) trackSelector));
+            player.prepare(hlsMediaSource);
+        } else {
+            DefaultDataSourceFactory dataSourceFactory =
+                    new DefaultDataSourceFactory(getApplicationContext(), userAgent);
+            MediaSource mediaSource = new ProgressiveMediaSource.Factory(dataSourceFactory)
+                    .createMediaSource(uri);
+            player.addAnalyticsListener(new EventLogger((MappingTrackSelector) trackSelector));
+            player.prepare(mediaSource);
+        }
+        player.setPlayWhenReady(true);
     }
 
     public void playRadio(Radio radioClicked) {
         radioCurrentlyPlaying = radioClicked;
         initNotification(PlaybackStatus.PLAYING);
-        if (exoPlayer != null) {
+        if (player != null) {
             if (isPlaying()) {
-                exoPlayer.setPlayWhenReady(false);
-                exoPlayer.stop(true);
+                player.setPlayWhenReady(false);
+                player.stop(true);
             }
         }
         String streamLink = radioClicked.getStreamLink();
-        prepareExoPlayer(Uri.parse(streamLink));
+        prepareExoPlayer(Uri.parse(streamLink), radioClicked.isInHLSFormat());
     }
 
     private void initNotification(PlaybackStatus playbackStatus) {
@@ -327,8 +320,8 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
                 if (audioFocusGained) {
                     if (radioCurrentlyPlaying != null) {
                         initNotification(PlaybackStatus.PLAYING);
-                        if (exoPlayer != null) {
-                            exoPlayer.setPlayWhenReady(true);
+                        if (player != null) {
+                            player.setPlayWhenReady(true);
                             serviceCallbacks.togglePlayPauseButton(false,
                                                                    isFromFavouriteRadiosFragment);
                         }
@@ -410,21 +403,21 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
     }
 
     public boolean isPlaying() {
-        if (exoPlayer != null) {
-            return exoPlayer.getPlaybackState() == Player.STATE_READY && exoPlayer.getPlayWhenReady();
+        if (player != null) {
+            return player.getPlaybackState() == Player.STATE_READY && player.getPlayWhenReady();
         } else {
             return false;
         }
     }
 
     public void pauseRadio() {
-        if (exoPlayer != null) {
-            exoPlayer.setPlayWhenReady(false);
+        if (player != null) {
+            player.setPlayWhenReady(false);
         }
     }
 
-    public SimpleExoPlayer getExoPlayer() {
-        return exoPlayer;
+    public SimpleExoPlayer getPlayer() {
+        return player;
     }
 
     public MediaControllerCompat.TransportControls getTransportControls() {

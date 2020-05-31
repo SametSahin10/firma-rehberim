@@ -16,6 +16,7 @@ import android.widget.TextView;
 
 import androidx.core.content.ContextCompat;
 
+import com.firmarehberim.canliradyo.data.RadioContract;
 import com.squareup.picasso.Picasso;
 
 import com.firmarehberim.canliradyo.R;
@@ -52,21 +53,22 @@ public class RadioCursorAdapter extends CursorAdapter {
         ProgressBar pb_buffering_radio = view.findViewById(R.id.pb_buffering_radio);
         ImageButton ib_add_to_favourites = view.findViewById(R.id.ib_add_to_favourites);
 
-        int idColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_ID);
+        int idColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_ID);
         int cityIdColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_CITY_ID);
         int townIdColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_TOWN_ID);
         int neighbourhoodIdColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_NEIGHBOURHOOD_ID);
         int categoryIdColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_CATEGORY_ID);
         int userIdColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_USER_ID);
-        int nameColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_NAME);
-        int categoryColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_CATEGORY);
-        int iconUrlColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_ICON_URL);
-        int streamLinkColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_STREAM_LINK);
-        int shareableLinkColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_SHAREABLE_LINK);
+        int nameColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_NAME);
+        int categoryColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_CATEGORY);
+        int iconUrlColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_ICON_URL);
+        int streamLinkColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_STREAM_LINK);
+        int isInHLSFormatColumnIndex = cursor.getColumnIndex(RadioContract.RadioEntry.COLUMN_IS_IN_HLS_FORMAT);
+        int shareableLinkColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_SHAREABLE_LINK);
         int numOfOnlineListenersColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_NUM_OF_ONLINE_LISTENERS);
-        int hitColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_HIT);
-        int isBeingBufferedColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_IS_BEING_BUFFERED);
-        int isLikedColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_IS_LIKED);
+        int hitColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_HIT);
+        int isBeingBufferedColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_IS_BEING_BUFFERED);
+        int isLikedColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_IS_LIKED);
 
         int radioId = cursor.getInt(idColumnIndex);
         int cityId = cursor.getInt(cityIdColumnIndex);
@@ -81,6 +83,10 @@ public class RadioCursorAdapter extends CursorAdapter {
         String shareableLink = cursor.getString(shareableLinkColumnIndex);
         int hit = cursor.getInt(hitColumnIndex);
         int numOfOnlineListeners = cursor.getInt(numOfOnlineListenersColumnIndex);
+        boolean isInHLSFormat = false;
+        if (cursor.getInt(isInHLSFormatColumnIndex) == 1) {
+            isInHLSFormat = true;
+        }
         boolean isBeingBuffered = false;
         if (cursor.getInt(isBeingBufferedColumnIndex) == 1) {
             isBeingBuffered = true;
@@ -99,6 +105,7 @@ public class RadioCursorAdapter extends CursorAdapter {
                                              shareableLink,
                                              radioName,
                                              streamLink,
+                                             isInHLSFormat,
                                              hit,
                                              categoryId,
                                              userId,
@@ -149,16 +156,16 @@ public class RadioCursorAdapter extends CursorAdapter {
         RadioDbHelper dbHelper = new RadioDbHelper((context));
         SQLiteDatabase sqLiteDatabase = dbHelper.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
-        contentValues.put(RadioEntry.COLUMN_RADIO_ID, radio.getRadioId());
-        contentValues.put(RadioEntry.COLUMN_RADIO_NAME, radio.getRadioName());
-        contentValues.put(RadioEntry.COLUMN_RADIO_CATEGORY, radio.getCategory());
-        contentValues.put(RadioEntry.COLUMN_RADIO_ICON_URL, radio.getRadioIconUrl());
-        contentValues.put(RadioEntry.COLUMN_RADIO_STREAM_LINK, radio.getStreamLink());
-        contentValues.put(RadioEntry.COLUMN_RADIO_SHAREABLE_LINK, radio.getShareableLink());
-        contentValues.put(RadioEntry.COLUMN_RADIO_HIT, radio.getHit());
+        contentValues.put(RadioEntry.COLUMN_ID, radio.getRadioId());
+        contentValues.put(RadioEntry.COLUMN_NAME, radio.getRadioName());
+        contentValues.put(RadioEntry.COLUMN_CATEGORY, radio.getCategory());
+        contentValues.put(RadioEntry.COLUMN_ICON_URL, radio.getRadioIconUrl());
+        contentValues.put(RadioEntry.COLUMN_STREAM_LINK, radio.getStreamLink());
+        contentValues.put(RadioEntry.COLUMN_SHAREABLE_LINK, radio.getShareableLink());
+        contentValues.put(RadioEntry.COLUMN_HIT, radio.getHit());
         contentValues.put(RadioEntry.COLUMN_NUM_OF_ONLINE_LISTENERS, radio.getNumOfOnlineListeners());
-        contentValues.put(RadioEntry.COLUMN_RADIO_IS_BEING_BUFFERED, radio.isBeingBuffered());
-        contentValues.put(RadioEntry.COLUMN_RADIO_IS_LIKED, radio.isLiked());
+        contentValues.put(RadioEntry.COLUMN_IS_BEING_BUFFERED, radio.isBeingBuffered());
+        contentValues.put(RadioEntry.COLUMN_IS_LIKED, radio.isLiked());
         long newRowId = sqLiteDatabase.insert(RadioEntry.TABLE_NAME, null, contentValues);
         Log.d(LOG_TAG, "newRowId: " + newRowId);
     }
@@ -166,7 +173,7 @@ public class RadioCursorAdapter extends CursorAdapter {
     private void deleteFromFavourites(Radio radio) {
         RadioDbHelper dbHelper = new RadioDbHelper(context);
         SQLiteDatabase sqLiteDatabase = dbHelper.getWritableDatabase();
-        String selection = RadioEntry.COLUMN_RADIO_NAME + "=?";
+        String selection = RadioEntry.COLUMN_NAME + "=?";
         String[] selectionArgs = {radio.getRadioName()};
         int numOfDeletedRows = sqLiteDatabase.delete(RadioEntry.TABLE_NAME, selection, selectionArgs);
     }

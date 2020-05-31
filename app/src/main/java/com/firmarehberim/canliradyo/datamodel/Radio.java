@@ -9,6 +9,7 @@ public class Radio {
     private String shareableLink;
     private String radioName;
     private String streamLink;
+    private boolean isInHLSFormat;
     private int hit;
     private String categoryId;
     private int userId;
@@ -26,6 +27,7 @@ public class Radio {
                  String shareableLink,
                  String radioName,
                  String streamLink,
+                 boolean isInHLSFormat,
                  int hit,
                  String categoryId,
                  int userId,
@@ -42,6 +44,7 @@ public class Radio {
         this.shareableLink = shareableLink;
         this.radioName = radioName;
         this.streamLink = streamLink;
+        this.isInHLSFormat = isInHLSFormat;
         this.hit = hit;
         this.categoryId = categoryId;
         this.userId = userId;
@@ -114,6 +117,14 @@ public class Radio {
 
     public void setStreamLink(String streamLink) {
         this.streamLink = streamLink;
+    }
+
+    public boolean isInHLSFormat() {
+        return isInHLSFormat;
+    }
+
+    public void setInHLSFormat(boolean inHLSFormat) {
+        isInHLSFormat = inHLSFormat;
     }
 
     public int getHit() {

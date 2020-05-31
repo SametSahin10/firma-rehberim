@@ -10,6 +10,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.sql.SQLOutput;
 import java.util.ArrayList;
 import com.firmarehberim.canliradyo.data.RadioContract.RadioEntry;
 import com.firmarehberim.canliradyo.datamodel.Category;
@@ -216,6 +217,7 @@ public class QueryUtils {
                 int userId = Integer.parseInt(radioObject.getString("uyeId"));
                 String category = radioObject.getString("kategori");
                 int numOfOnlineListeners = Integer.parseInt(radioObject.getString("online"));
+                boolean isRadioInHLSFormat = isInHLSFormat(streamLink);
                 Radio radio = new Radio(radioId,
                                         cityId,
                                         townId,
@@ -224,6 +226,7 @@ public class QueryUtils {
                                         shareableLink,
                                         radioName,
                                         streamLink,
+                                        isRadioInHLSFormat,
                                         hit,
                                         categoryId,
                                         userId,
@@ -259,6 +262,7 @@ public class QueryUtils {
                 int userId = Integer.parseInt(radioObject.getString("uyeid"));
                 String category = radioObject.getString("kategori");
                 int numOfOnlineListeners = Integer.parseInt(radioObject.getString("online"));
+                boolean isRadioInHLSFormat = isInHLSFormat(streamLink);
                 Radio radio = new Radio(radioId,
                                         3001,
                                         3001,
@@ -267,6 +271,7 @@ public class QueryUtils {
                                         shareableLink,
                                         radioName,
                                         streamLink,
+                                        isRadioInHLSFormat,
                                         hit,
                                         null,
                                         userId,
@@ -302,6 +307,7 @@ public class QueryUtils {
                 int hit = Integer.parseInt(radioObject.getString("hit"));
                 String category = radioObject.getString("kategori");
                 int numOfOnlineListeners = Integer.parseInt(radioObject.getString("online"));
+                boolean isRadioInHLSFormat = isInHLSFormat(streamLink);
                 Radio radio = new Radio(radioId,
                                         cityId,
                                         3001,
@@ -310,6 +316,7 @@ public class QueryUtils {
                                         shareableLink,
                                         radioName,
                                         streamLink,
+                                        isRadioInHLSFormat,
                                         hit,
                                         null,
                                         3001,
@@ -344,6 +351,7 @@ public class QueryUtils {
                 int hit = Integer.parseInt(radioObject.getString("hit"));
                 String category = radioObject.getString("kategori");
                 int numOfOnlineListeners = Integer.parseInt(radioObject.getString("online"));
+                boolean isRadioInHLSFormat = isInHLSFormat(streamLink);
                 Radio radio = new Radio(radioId,
                                         3001,
                                         3001,
@@ -352,6 +360,7 @@ public class QueryUtils {
                                         shareableLink,
                                         radioName,
                                         streamLink,
+                                        isRadioInHLSFormat,
                                         hit,
                                         null,
                                         3001,
@@ -366,5 +375,16 @@ public class QueryUtils {
             Log.e(LOG_TAG, "Problem occured while parsing radios through cities JSON response ");
         }
         return radios;
+    }
+
+    private static boolean isInHLSFormat(String streamLink) {
+        String[] splitStreamLink = streamLink.split("\\.");
+        if (splitStreamLink.length == 0) return false;
+        for (int i = 0; i < splitStreamLink.length; i++) {
+            System.out.println(splitStreamLink[i]);
+        }
+        String lastSegment = splitStreamLink[splitStreamLink.length - 1];
+        if (lastSegment.equals("m3u8")) return true;
+        return false;
     }
 }

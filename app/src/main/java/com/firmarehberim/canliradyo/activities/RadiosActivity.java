@@ -2,19 +2,14 @@ package com.firmarehberim.canliradyo.activities;
 
 import android.app.Activity;
 import android.content.ComponentName;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
-import android.database.sqlite.SQLiteDatabase;
 import android.media.AudioManager;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
 import com.firmarehberim.canliradyo.R;
-import com.google.android.material.tabs.TabLayout;
+
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
@@ -23,13 +18,9 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
-import androidx.loader.app.LoaderManager;
-import androidx.loader.content.AsyncTaskLoader;
-import androidx.loader.content.Loader;
-import androidx.viewpager.widget.PagerAdapter;
-import androidx.viewpager.widget.ViewPager;
+
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
+
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -59,8 +50,6 @@ import com.firmarehberim.canliradyo.fragments.TimerFragment;
 import com.firmarehberim.canliradyo.fragments.TvFragment;
 import com.firmarehberim.canliradyo.datamodel.Radio;
 import com.firmarehberim.canliradyo.services.PlayRadioService;
-import java.util.ArrayList;
-import java.util.List;
 import com.firmarehberim.canliradyo.services.PlayRadioService.PlayRadioBinder;
 
 public class RadiosActivity extends AppCompatActivity implements RadiosFragment.OnRadioItemClickListener,
@@ -310,7 +299,7 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 if (playRadioService != null) {
-                    SimpleExoPlayer exoPlayer = playRadioService.getExoPlayer();
+                    SimpleExoPlayer exoPlayer = playRadioService.getPlayer();
                     if (exoPlayer != null) {
                         Log.d("TAG", "Progress changed");
                         playRadioService.audioManager
@@ -468,7 +457,7 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (event.getKeyCode() == KeyEvent.KEYCODE_VOLUME_DOWN) {
             if (playRadioService != null) {
-                SimpleExoPlayer exoPlayer = playRadioService.getExoPlayer();
+                SimpleExoPlayer exoPlayer = playRadioService.getPlayer();
                 if (exoPlayer != null) {
                     sb_volume_control.setProgress(audioManager.getStreamVolume(exoPlayer.getAudioStreamType()));
                 }
@@ -481,7 +470,7 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     public boolean onKeyUp(int keyCode, KeyEvent event) {
         if (event.getKeyCode() == KeyEvent.KEYCODE_VOLUME_UP) {
             if (playRadioService != null) {
-                SimpleExoPlayer exoPlayer = playRadioService.getExoPlayer();
+                SimpleExoPlayer exoPlayer = playRadioService.getPlayer();
                 if (exoPlayer != null) {
                     sb_volume_control.setProgress(audioManager.getStreamVolume(exoPlayer.getAudioStreamType()));
                 }

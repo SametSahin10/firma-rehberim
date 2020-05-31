@@ -21,10 +21,10 @@ import androidx.loader.content.AsyncTaskLoader;
 import androidx.loader.content.Loader;
 
 import com.firmarehberim.canliradyo.adapters.FavouriteRadioAdapter;
+import com.firmarehberim.canliradyo.data.RadioContract;
 import com.firmarehberim.canliradyo.data.RadioDbHelper;
 import com.firmarehberim.canliradyo.helper.QueryUtils;
 import com.firmarehberim.canliradyo.R;
-import com.firmarehberim.canliradyo.adapters.RadioAdapter;
 import com.firmarehberim.canliradyo.datamodel.Radio;
 import com.firmarehberim.canliradyo.data.RadioContract.RadioEntry;
 
@@ -166,21 +166,21 @@ public class FavouriteRadiosFragment extends Fragment implements LoaderManager.L
         SQLiteDatabase sqLiteDatabase = dbHelper.getReadableDatabase();
         String[] projection = {
                 RadioEntry._ID,
-                RadioEntry.COLUMN_RADIO_ID,
+                RadioEntry.COLUMN_ID,
                 RadioEntry.COLUMN_CITY_ID,
                 RadioEntry.COLUMN_TOWN_ID,
                 RadioEntry.COLUMN_NEIGHBOURHOOD_ID,
-                RadioEntry.COLUMN_RADIO_ICON_URL,
-                RadioEntry.COLUMN_RADIO_SHAREABLE_LINK,
-                RadioEntry.COLUMN_RADIO_NAME,
-                RadioEntry.COLUMN_RADIO_STREAM_LINK,
-                RadioEntry.COLUMN_RADIO_HIT,
+                RadioEntry.COLUMN_ICON_URL,
+                RadioEntry.COLUMN_SHAREABLE_LINK,
+                RadioEntry.COLUMN_NAME,
+                RadioEntry.COLUMN_STREAM_LINK,
+                RadioEntry.COLUMN_HIT,
                 RadioEntry.COLUMN_CATEGORY_ID,
                 RadioEntry.COLUMN_USER_ID,
-                RadioEntry.COLUMN_RADIO_CATEGORY,
+                RadioEntry.COLUMN_CATEGORY,
                 RadioEntry.COLUMN_NUM_OF_ONLINE_LISTENERS,
-                RadioEntry.COLUMN_RADIO_IS_BEING_BUFFERED,
-                RadioEntry.COLUMN_RADIO_IS_LIKED};
+                RadioEntry.COLUMN_IS_BEING_BUFFERED,
+                RadioEntry.COLUMN_IS_LIKED};
         Cursor cursor = sqLiteDatabase.query(RadioEntry.TABLE_NAME,
                 projection,
                 null,
@@ -192,21 +192,22 @@ public class FavouriteRadiosFragment extends Fragment implements LoaderManager.L
     }
 
     private List<Radio> retrieveRadiosFromCursor(Cursor cursor) {
-        int idColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_ID);
+        int idColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_ID);
         int cityIdColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_CITY_ID);
         int townIdColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_TOWN_ID);
         int neighbourhoodIdColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_NEIGHBOURHOOD_ID);
         int categoryIdColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_CATEGORY_ID);
         int userIdColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_USER_ID);
-        int nameColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_NAME);
-        int categoryColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_CATEGORY);
-        int iconUrlColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_ICON_URL);
-        int streamLinkColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_STREAM_LINK);
-        int shareableLinkColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_SHAREABLE_LINK);
+        int nameColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_NAME);
+        int categoryColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_CATEGORY);
+        int iconUrlColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_ICON_URL);
+        int streamLinkColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_STREAM_LINK);
+        int isInHLSFormatColumnIndex = cursor.getColumnIndex(RadioContract.RadioEntry.COLUMN_IS_IN_HLS_FORMAT);
+        int shareableLinkColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_SHAREABLE_LINK);
         int numOfOnlineListenersColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_NUM_OF_ONLINE_LISTENERS);
-        int hitColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_HIT);
-        int isBeingBufferedColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_IS_BEING_BUFFERED);
-        int isLikedColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_RADIO_IS_LIKED);
+        int hitColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_HIT);
+        int isBeingBufferedColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_IS_BEING_BUFFERED);
+        int isLikedColumnIndex = cursor.getColumnIndex(RadioEntry.COLUMN_IS_LIKED);
 
         List<Radio> radios = new ArrayList<>();
 
@@ -224,6 +225,10 @@ public class FavouriteRadiosFragment extends Fragment implements LoaderManager.L
             String shareableLink = cursor.getString(shareableLinkColumnIndex);
             int hit = cursor.getInt(hitColumnIndex);
             int numOfOnlineListeners = cursor.getInt(numOfOnlineListenersColumnIndex);
+            boolean isInHLSFormat = false;
+            if (cursor.getInt(isInHLSFormatColumnIndex) == 1) {
+                isInHLSFormat = true;
+            }
             boolean isBeingBuffered = false;
             if (cursor.getInt(isBeingBufferedColumnIndex) == 1) {
                 isBeingBuffered = true;
@@ -241,6 +246,7 @@ public class FavouriteRadiosFragment extends Fragment implements LoaderManager.L
                     shareableLink,
                     radioName,
                     streamLink,
+                    isInHLSFormat,
                     hit,
                     categoryId,
                     userId,
