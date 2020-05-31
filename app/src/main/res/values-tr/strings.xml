@@ -20,4 +20,5 @@
     <string name="notifications">Bildirimler</string>
     <string name="radios">Radyolar</string>
     <string name="timer">Zamanlayıcı</string>
+    <string name="tv_loading_radios">Radyolar yükleniyor...</string>
 </resources>

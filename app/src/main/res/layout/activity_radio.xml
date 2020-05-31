@@ -5,7 +5,6 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
-
     <LinearLayout
         android:id="@+id/lin_lay_top_bar"
         android:orientation="horizontal"
@@ -13,7 +12,6 @@
         android:layout_height="wrap_content"
         android:padding="2dp"
         android:weightSum="4">
-
         <Button
             android:id="@+id/btn_nav_radios"
             android:layout_width="0dp"
@@ -25,7 +23,6 @@
             android:textColor="#FFFFFF"
             android:textSize="15sp"
             android:text="@string/radyo"/>
-
         <Button
             android:id="@+id/btn_nav_tv"
             android:layout_width="0dp"
@@ -37,7 +34,6 @@
             android:textColor="#FFFFFF"
             android:textSize="15sp"
             android:text="@string/tv"/>
-
         <Button
             android:id="@+id/btn_nav_contacts"
             android:layout_width="0dp"
@@ -49,7 +45,6 @@
             android:textColor="#FFFFFF"
             android:textSize="15sp"
             android:text="@string/rehber"/>
-
         <Button
             android:id="@+id/btn_nav_newspaper"
             android:layout_width="0dp"
@@ -61,7 +56,6 @@
             android:textColor="#FFFFFF"
             android:textSize="15sp"
             android:text="@string/gazete"/>
-
     </LinearLayout>
 
     <RelativeLayout
@@ -69,12 +63,10 @@
         android:layout_height="wrap_content"
         android:layout_below="@id/lin_lay_top_bar"
         android:layout_above="@id/lin_lay_bottom_bar">
-
         <FrameLayout
             android:id="@+id/fragment_container"
             android:layout_width="match_parent"
             android:layout_height="match_parent"/>
-
     </RelativeLayout>
 
     <LinearLayout
@@ -85,7 +77,6 @@
         android:layout_above="@id/rl_player_one"
         android:padding="2dp"
         android:weightSum="4">
-
         <Button
             android:id="@+id/btn_nav_fav_radios"
             android:layout_width="0dp"
@@ -97,7 +88,6 @@
             android:textColor="#FFFFFF"
             android:textSize="15sp"
             android:text="@string/favori"/>
-
         <Button
             android:id="@+id/btn_nav_categories"
             android:layout_width="0dp"
@@ -109,7 +99,6 @@
             android:textColor="#FFFFFF"
             android:textSize="15sp"
             android:text="@string/t_r"/>
-
         <ImageButton
             android:id="@+id/ib_search_for_radios"
             android:layout_width="35dp"
@@ -118,7 +107,6 @@
             android:background="@drawable/navigation_button_background"
             android:scaleType="fitCenter"
             android:src="@drawable/baseline_search_white_36"/>
-
         <Button
             android:id="@+id/btn_nav_cities"
             android:layout_width="0dp"
@@ -130,7 +118,6 @@
             android:textColor="#FFFFFF"
             android:textSize="15sp"
             android:text="@string/yerel"/>
-
         <Button
             android:id="@+id/btn_nav_global"
             android:layout_width="0dp"
@@ -151,7 +138,6 @@
         android:layout_above="@id/rl_player_two"
         android:padding="8dp"
         android:background="@color/radio_player_background_color">
-
         <ImageButton
             android:id="@+id/ib_timer"
             android:layout_width="30dp"
@@ -160,7 +146,6 @@
             android:background="@null"
             android:scaleType="fitCenter"
             android:src="@drawable/ic_timer"/>
-
         <ImageButton
             android:id="@+id/ib_volume_control"
             android:layout_width="30dp"
@@ -171,7 +156,6 @@
             android:background="@null"
             android:scaleType="fitCenter"
             android:src="@drawable/ic_volume_control"/>
-
         <SeekBar
             android:id="@+id/sb_volume_control_bar"
             android:layout_width="200dp"
@@ -181,7 +165,6 @@
             android:splitTrack="false"
             android:progressDrawable="@drawable/seekbar_style"
             android:thumb="@drawable/seekbar_thumb"/>
-
         <ImageButton
             android:id="@+id/ib_player_share_radio"
             android:layout_width="30dp"
@@ -192,7 +175,6 @@
             android:background="@null"
             android:scaleType="fitCenter"
             android:src="@drawable/ic_share"/>
-
         <ImageButton
             android:id="@+id/ib_player_add_to_fav"
             android:layout_width="30dp"
@@ -202,7 +184,6 @@
             android:background="@null"
             android:scaleType="fitCenter"
             android:src="@drawable/ic_favourite_empty"/>
-
     </RelativeLayout>
 
     <RelativeLayout
@@ -213,14 +194,12 @@
         android:padding="8dp"
         android:background="@color/radio_player_background_color"
         android:elevation="4dp">
-
         <ImageView
             android:id="@+id/iv_radio_icon"
             android:layout_width="50dp"
             android:layout_height="50dp"
             android:layout_centerVertical="true"
             android:src="@drawable/ic_placeholder_radio"/>
-
         <TextView
             android:id="@+id/tv_radio_title"
             android:layout_width="250dp"
@@ -231,8 +210,7 @@
             android:fontFamily="@font/righteous_regular_res"
             android:textColor="@color/radio_title_text_color"
             android:textSize="20sp"
-            android:text="Show Radyo"/>
-
+            android:text="@string/tv_loading_radios"/>
         <ImageButton
             android:id="@+id/ib_play_radio"
             android:layout_width="35dp"
@@ -244,6 +222,5 @@
             android:background="@null"
             android:scaleType="fitCenter"
             android:src="@drawable/ic_play_radio"/>
-
     </RelativeLayout>
 </RelativeLayout>
