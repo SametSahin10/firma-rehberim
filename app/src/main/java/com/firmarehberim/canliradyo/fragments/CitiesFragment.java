@@ -1,21 +1,26 @@
 package com.firmarehberim.canliradyo.fragments;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.loader.app.LoaderManager;
 import androidx.loader.content.AsyncTaskLoader;
 import androidx.loader.content.Loader;
+
+import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.firmarehberim.canliradyo.helper.QueryUtils;
@@ -62,6 +67,30 @@ public class CitiesFragment extends Fragment implements LoaderManager.LoaderCall
         gv_cities = view.findViewById(R.id.gv_cities);
         tv_emptyView = view.findViewById(R.id.tv_emptyCityView);
         gv_cities.setEmptyView(tv_emptyView);
+
+//        DisplayMetrics displayMetrics = new DisplayMetrics();
+//        getActivity().getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+//        int width = displayMetrics.widthPixels;
+//        int height = displayMetrics.heightPixels;
+//        RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(
+//                (int) (width * 0.25),
+//                (int) (height * 0.1)
+//        );
+//        RelativeLayout itemView = new RelativeLayout(getContext());
+//        itemView.setLayoutParams(layoutParams);
+
+//        TextView tv_city_name = (TextView) LayoutInflater.from(getContext())
+//                .inflate(R.layout.tv_city_name, itemView);
+//        TextView tv_city_name = getActivity().findViewById(R.id.tv_city_name);
+//        itemView.addView(tv_city_name);
+
+//        TextView tv_city_name = new TextView(getContext());
+//        tv_city_name.setTextColor(Color.WHITE);
+//        tv_city_name.setTextSize(20);
+//        tv_city_name.setBackground(
+//                ContextCompat.getDrawable(view.getContext(), R.drawable.category_item_background)
+//        );
+//        itemView.addView(tv_city_name);
 
         cityAdapter = new CityAdapter(getContext(), R.layout.item_city, new ArrayList<>());
         gv_cities.setAdapter(cityAdapter);

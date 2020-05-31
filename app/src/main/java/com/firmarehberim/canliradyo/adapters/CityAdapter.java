@@ -72,7 +72,7 @@ public class CityAdapter extends ArrayAdapter<Object> {
 //        return row;
 //    }
 
-    private class CityHolder {
+    private static class CityHolder {
         private TextView tv_city_name;
     }
 }
