@@ -16,7 +16,7 @@ public class RadioDbHelper extends SQLiteOpenHelper {
         super(context, DATABASE_NAME, null, 1);
     }
 
-    public void onCreate(SQLiteDatabase sQLiteDatabase) {
-        sQLiteDatabase.execSQL("CREATE TABLE favourite_radios (_id INTEGER PRIMARY KEY AUTOINCREMENT, id INTEGER NOT NULL, city_id INTEGER NOT NULL, town_id INTEGER NOT NULL, neighbourhood_id INTEGER NOT NULL, category_id TEXT NOT NULL, user_id INTEGER NOT NULL, name TEXT NOT NULL, category TEXT NOT NULL, icon_url TEXT NOT NULL, stream_link TEXT NOT NULL, shareable_link TEXT NOT NULL, hit INTEGER NOT NULL, num_of_online_listeners INTEGER NOT NULL, is_being_buffered INTEGER NOT NULL DEFAULT 0, is_Liked INTEGER NOT NULL DEFAULT 0);");
+    public void onCreate(SQLiteDatabase sqliteDatabase) {
+        sqliteDatabase.execSQL("CREATE TABLE favourite_radios (_id INTEGER PRIMARY KEY AUTOINCREMENT, id INTEGER NOT NULL, city_id INTEGER NOT NULL, town_id INTEGER NOT NULL, neighbourhood_id INTEGER NOT NULL, category_id TEXT NOT NULL, user_id INTEGER NOT NULL, name TEXT NOT NULL, category TEXT NOT NULL, icon_url TEXT NOT NULL, stream_link TEXT NOT NULL, is_in_hls_format INTEGER NOT NULL DEFAULT 0, shareable_link TEXT NOT NULL, hit INTEGER NOT NULL, num_of_online_listeners INTEGER NOT NULL DEFAULT 0, is_being_buffered INTEGER NOT NULL DEFAULT 0, is_Liked INTEGER NOT NULL DEFAULT 0);");
     }
 }

@@ -42,14 +42,9 @@ public class FavouriteRadiosFragment extends Fragment implements LoaderManager.L
         this.onFavRadioItemClickListener = onFavRadioItemClickListener;
     }
 
-    private RadioDbHelper dbHelper;
-
-    private ListView lw_radios;
-    private Cursor cursor;
     private FavouriteRadioAdapter favouriteRadioAdapter;
     private TextView tv_emptyView;
     private ProgressBar pb_loadingRadios;
-    private ProgressBar pb_bufferingRadio;
 
     private List<Radio> favoriteRadios;
 
@@ -69,12 +64,12 @@ public class FavouriteRadiosFragment extends Fragment implements LoaderManager.L
         boolean isConnected = activeNetwork != null
                 && activeNetwork.isConnectedOrConnecting();
         pb_loadingRadios = view.findViewById(R.id.pb_loadingRadios);
-        pb_bufferingRadio = view.findViewById(R.id.pb_buffering_radio);
-        lw_radios = view.findViewById(R.id.lw_radios);
+        ProgressBar pb_bufferingRadio = view.findViewById(R.id.pb_buffering_radio);
+        ListView lw_radios = view.findViewById(R.id.lw_radios);
         tv_emptyView = view.findViewById(R.id.tv_emptyRadioView);
         lw_radios.setEmptyView(tv_emptyView);
 
-        cursor = queryAllTheRadios(getContext());
+        Cursor cursor = queryAllTheRadios(getContext());
         favoriteRadios = new ArrayList<>();
         favoriteRadios = retrieveRadiosFromCursor(cursor);
         favouriteRadioAdapter = new FavouriteRadioAdapter(getContext(),
@@ -92,7 +87,6 @@ public class FavouriteRadiosFragment extends Fragment implements LoaderManager.L
             pb_loadingRadios.setVisibility(View.GONE);
         }
 
-        //////////////////////////////////////////////////////////////////////////////
         lw_radios.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
@@ -162,7 +156,7 @@ public class FavouriteRadiosFragment extends Fragment implements LoaderManager.L
     }
 
     private Cursor queryAllTheRadios(Context context) {
-        dbHelper = new RadioDbHelper(context);
+        RadioDbHelper dbHelper = new RadioDbHelper(context);
         SQLiteDatabase sqLiteDatabase = dbHelper.getReadableDatabase();
         String[] projection = {
                 RadioEntry._ID,
@@ -174,6 +168,7 @@ public class FavouriteRadiosFragment extends Fragment implements LoaderManager.L
                 RadioEntry.COLUMN_SHAREABLE_LINK,
                 RadioEntry.COLUMN_NAME,
                 RadioEntry.COLUMN_STREAM_LINK,
+                RadioEntry.COLUMN_IS_IN_HLS_FORMAT,
                 RadioEntry.COLUMN_HIT,
                 RadioEntry.COLUMN_CATEGORY_ID,
                 RadioEntry.COLUMN_USER_ID,

@@ -380,9 +380,6 @@ public class QueryUtils {
     private static boolean isInHLSFormat(String streamLink) {
         String[] splitStreamLink = streamLink.split("\\.");
         if (splitStreamLink.length == 0) return false;
-        for (int i = 0; i < splitStreamLink.length; i++) {
-            System.out.println(splitStreamLink[i]);
-        }
         String lastSegment = splitStreamLink[splitStreamLink.length - 1];
         if (lastSegment.equals("m3u8")) return true;
         return false;

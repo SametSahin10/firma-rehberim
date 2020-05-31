@@ -103,7 +103,7 @@ public class FavouriteRadioAdapter extends ArrayAdapter<Radio> {
             holder.pb_buffering_radio.setVisibility(View.INVISIBLE);
         }
         holder.ib_add_to_favourites.setImageDrawable(ContextCompat.getDrawable(getContext(), R.drawable.ic_favourite_full));
-        holder.ib_add_to_favourites.setOnClickListener(new View.OnClickListener() {
+        holder.ib_add_to_favourites.setOnClickListener(new View.OnClickListener() {w
             @Override
             public void onClick(View v) {
                 Log.d(LOG_TAG, "Removing " + currentRadio.getRadioName());
@@ -114,7 +114,7 @@ public class FavouriteRadioAdapter extends ArrayAdapter<Radio> {
         return row;
     }
 
-    private class RadioHolder {
+    private static class RadioHolder {
         private ImageView iv_item_radio_icon;
         private TextView tv_radio_name;
         private ImageView iv_playing_gif;

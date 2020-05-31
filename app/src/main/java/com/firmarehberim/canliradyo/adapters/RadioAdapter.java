@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import androidx.core.content.ContextCompat;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -127,7 +128,7 @@ public class RadioAdapter extends ArrayAdapter<Radio> {
         return row;
     }
 
-    private class RadioHolder {
+    private static class RadioHolder {
         private ImageView iv_item_radio_icon;
         private TextView tv_radio_name;
         private ImageView iv_playing_gif;
@@ -147,6 +148,7 @@ public class RadioAdapter extends ArrayAdapter<Radio> {
         contentValues.put(RadioEntry.COLUMN_SHAREABLE_LINK, radio.getShareableLink());
         contentValues.put(RadioEntry.COLUMN_NAME, radio.getRadioName());
         contentValues.put(RadioEntry.COLUMN_STREAM_LINK, radio.getStreamLink());
+        contentValues.put(RadioEntry.COLUMN_IS_IN_HLS_FORMAT, radio.isInHLSFormat());
         contentValues.put(RadioEntry.COLUMN_HIT, radio.getHit());
         contentValues.put(RadioEntry.COLUMN_CATEGORY_ID, radio.getCategoryId());
         contentValues.put(RadioEntry.COLUMN_USER_ID, radio.getUserId());
@@ -169,22 +171,23 @@ public class RadioAdapter extends ArrayAdapter<Radio> {
         RadioDbHelper dbHelper = new RadioDbHelper(context);
         SQLiteDatabase sqLiteDatabase = dbHelper.getReadableDatabase();
         String[] projection = {
-                RadioContract.RadioEntry._ID,
-                RadioContract.RadioEntry.COLUMN_ID,
-                RadioContract.RadioEntry.COLUMN_CITY_ID,
-                RadioContract.RadioEntry.COLUMN_TOWN_ID,
-                RadioContract.RadioEntry.COLUMN_NEIGHBOURHOOD_ID,
-                RadioContract.RadioEntry.COLUMN_ICON_URL,
-                RadioContract.RadioEntry.COLUMN_SHAREABLE_LINK,
-                RadioContract.RadioEntry.COLUMN_NAME,
-                RadioContract.RadioEntry.COLUMN_STREAM_LINK,
-                RadioContract.RadioEntry.COLUMN_HIT,
-                RadioContract.RadioEntry.COLUMN_CATEGORY_ID,
-                RadioContract.RadioEntry.COLUMN_USER_ID,
-                RadioContract.RadioEntry.COLUMN_CATEGORY,
-                RadioContract.RadioEntry.COLUMN_NUM_OF_ONLINE_LISTENERS,
-                RadioContract.RadioEntry.COLUMN_IS_BEING_BUFFERED,
-                RadioContract.RadioEntry.COLUMN_IS_LIKED};
+                RadioEntry._ID,
+                RadioEntry.COLUMN_ID,
+                RadioEntry.COLUMN_CITY_ID,
+                RadioEntry.COLUMN_TOWN_ID,
+                RadioEntry.COLUMN_NEIGHBOURHOOD_ID,
+                RadioEntry.COLUMN_ICON_URL,
+                RadioEntry.COLUMN_SHAREABLE_LINK,
+                RadioEntry.COLUMN_NAME,
+                RadioEntry.COLUMN_STREAM_LINK,
+                RadioEntry.COLUMN_IS_IN_HLS_FORMAT,
+                RadioEntry.COLUMN_HIT,
+                RadioEntry.COLUMN_CATEGORY_ID,
+                RadioEntry.COLUMN_USER_ID,
+                RadioEntry.COLUMN_CATEGORY,
+                RadioEntry.COLUMN_NUM_OF_ONLINE_LISTENERS,
+                RadioEntry.COLUMN_IS_BEING_BUFFERED,
+                RadioEntry.COLUMN_IS_LIKED};
         Cursor cursor = sqLiteDatabase.query(RadioContract.RadioEntry.TABLE_NAME,
                 projection,
                 null,
