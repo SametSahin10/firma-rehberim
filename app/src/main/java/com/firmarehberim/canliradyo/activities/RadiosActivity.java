@@ -53,6 +53,7 @@ import com.firmarehberim.canliradyo.services.PlayRadioService;
 import com.firmarehberim.canliradyo.services.PlayRadioService.PlayRadioBinder;
 
 public class RadiosActivity extends AppCompatActivity implements RadiosFragment.OnRadioItemClickListener,
+                                                                 RadiosFragment.OnLoadingRadiosFinishedListener,
                                                                  FavouriteRadiosFragment.OnFavRadioItemClickListener,
                                                                  CitiesFragment.OnFilterRespectToCityListener,
                                                                  CategoriesFragment.OnFilterRespectToCategoryListener,
@@ -467,6 +468,7 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
         if (fragment instanceof RadiosFragment) {
             RadiosFragment radiosFragment = (RadiosFragment) fragment;
             radiosFragment.setOnRadioItemClickListener(this);
+            radiosFragment.setOnLoadingRadiosFinishedListener(this);
         }
         if (fragment instanceof FavouriteRadiosFragment) {
             FavouriteRadiosFragment favouriteRadiosFragment = (FavouriteRadiosFragment) fragment;
@@ -536,6 +538,23 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     public void onPlayingRadioItemClick(Radio radioClicked) {
         if (playRadioService.isPlaying()) playRadioService.getTransportControls().pause();
         radiosFragment.setCurrentRadioStatus(13, radioClicked);
+    }
+
+    @Override
+    public void onLoadingRadiosFinished(final Radio firstRadioOnList) {
+        tv_radioTitle.setText(firstRadioOnList.getRadioName());
+        String iconUrl = firstRadioOnList.getRadioIconUrl();
+        updateRadioIcon(iconUrl);
+        iv_radioIcon.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setData(Uri.parse(firstRadioOnList.getShareableLink()));
+                if (intent.resolveActivity(getPackageManager()) != null) {
+                    startActivity(intent);
+                }
+            }
+        });
     }
 
     @Override

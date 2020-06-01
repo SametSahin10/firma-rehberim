@@ -422,6 +422,6 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
 
     // Listener to let RadiosActivity know when loading radios has finished.
     public interface OnLoadingRadiosFinishedListener {
-        void onLoadingRadiosFinished(Radio firstRadioOfList);
+        void onLoadingRadiosFinished(Radio firstRadioOnList);
     }
 }
