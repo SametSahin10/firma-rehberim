@@ -96,6 +96,22 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
 
     Radio radioClicked;
 
+    public Radio getRadioClicked() {
+        return radioClicked;
+    }
+
+    public void setRadioClicked(Radio radioClicked) {
+        this.radioClicked = radioClicked;
+    }
+
+    public RadioAdapter getRadioAdapter() {
+        return radioAdapter;
+    }
+
+    public void setRadioAdapter(RadioAdapter radioAdapter) {
+        this.radioAdapter = radioAdapter;
+    }
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {

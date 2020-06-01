@@ -94,6 +94,7 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     boolean isAudioStreamMuted = false;
 
     Radio radioCurrentlyPlaying;
+    Radio firstRadioOnList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -327,10 +328,47 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
             public void onClick(View v) {
                 boolean isConnected = checkConnectivity();
                 if (isConnected) {
-                    if (playRadioService.isPlaying()) {
-                        playRadioService.getTransportControls().pause();
+                    if (radioCurrentlyPlaying == null) {
+                        // Play/pause button pressed before any selection has been from the list.
+                        // Playing the first radio on list.
+                        // Performing actions as if the first radio on list was clicked.
+
+                        // Beginning of operations normally performed on RadiosFragment
+                        radiosFragment.setRadioClicked(firstRadioOnList);
+                        radiosFragment.getRadioClicked().setBeingBuffered(true);
+                        radiosFragment.getRadioAdapter().notifyDataSetChanged();
+                        // End of operations normally performed on RadiosFragment
+
+                        // Beginning of operations normally performed on RadiosActivity
+                        if (!serviceBound) {
+                            Intent intent = new Intent(getApplicationContext(), PlayRadioService.class);
+                            startService(intent);
+                            bindService(intent, serviceConnection, BIND_AUTO_CREATE);
+                        } else {
+                            radioCurrentlyPlaying = firstRadioOnList;
+                            playRadioService.playRadio(firstRadioOnList);
+                            tv_radioTitle.setText(radioCurrentlyPlaying.getRadioName());
+                            String iconUrl = radioCurrentlyPlaying.getRadioIconUrl();
+                            updateRadioIcon(iconUrl);
+                            iv_radioIcon.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                                    intent.setData(Uri.parse(radioCurrentlyPlaying.getShareableLink()));
+                                    if (intent.resolveActivity(getPackageManager()) != null) {
+                                        startActivity(intent);
+                                    }
+                                }
+                            });
+                        }
+                        playRadioService.setFromFavouriteRadiosFragment(false);
+                        // End of operations normally performed on RadiosActivity
                     } else {
-                        playRadioService.getTransportControls().play();
+                        if (playRadioService.isPlaying()) {
+                            playRadioService.getTransportControls().pause();
+                        } else {
+                            playRadioService.getTransportControls().play();
+                        }
                     }
                 } else {
                     Toast.makeText(RadiosActivity.this,
@@ -542,6 +580,7 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
 
     @Override
     public void onLoadingRadiosFinished(final Radio firstRadioOnList) {
+        this.firstRadioOnList = firstRadioOnList;
         tv_radioTitle.setText(firstRadioOnList.getRadioName());
         String iconUrl = firstRadioOnList.getRadioIconUrl();
         updateRadioIcon(iconUrl);
