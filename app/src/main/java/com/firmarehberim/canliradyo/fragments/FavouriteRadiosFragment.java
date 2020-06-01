@@ -281,6 +281,7 @@ public class FavouriteRadiosFragment extends Fragment implements LoaderManager.L
                     case 13: //STATE_PAUSED - This state is not an exoplayer state.
                         radio.setPlaying(false);
                         favouriteRadioAdapter.notifyDataSetChanged();
+                        break;
                     default:
                         Log.e(LOG_TAG, "Unknown status code: " + statusCode);
                 }
