@@ -145,7 +145,7 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
         tv_emptyView = view.findViewById(R.id.tv_emptyRadioView);
         lw_radios.setEmptyView(tv_emptyView);
 
-        Cursor cursor = queryAllTheRadios(getContext());
+        Cursor cursor = queryAllRadios(getContext());
         List<Radio> radios = retrieveRadiosFromCursor(cursor);
         radioAdapter = new RadioAdapter(getContext(),
                                         R.layout.item_radio,
@@ -273,9 +273,9 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
         getLoaderManager().restartLoader(RADIO_LOADER_ID, null, this);
     }
 
-    private Cursor queryAllTheRadios(Context context) {
+    private Cursor queryAllRadios(Context context) {
         RadioDbHelper dbHelper = new RadioDbHelper(context);
-        SQLiteDatabase sqLiteDatabase = dbHelper.getReadableDatabase();
+        SQLiteDatabase sqLiteDatabase = dbHelper.getWritableDatabase();
         String[] projection = {
                 RadioEntry._ID,
                 RadioEntry.COLUMN_ID,

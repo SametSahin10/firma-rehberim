@@ -1,22 +1,53 @@
 package com.firmarehberim.canliradyo.data;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
+import com.firmarehberim.canliradyo.data.RadioContract.RadioEntry;
 
 public class RadioDbHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "radios.db";
-    private static final int DATABASE_VERSION = 1;
-    public static final String LOG_TAG = "RadioDbHelper";
-
-    public void onUpgrade(SQLiteDatabase sQLiteDatabase, int i, int i2) {
-    }
+    // DATABASE_VERSION is set to 2 to trigger onUpgrade()
+    private static final int DATABASE_VERSION = 2;
+    public static final String LOG_TAG = RadioDbHelper.class.getSimpleName();
 
     public RadioDbHelper(Context context) {
-        super(context, DATABASE_NAME, null, 1);
+        super(context, DATABASE_NAME, null, DATABASE_VERSION);
+        Log.d(LOG_TAG, "DATABASE_VERSION:" + DATABASE_VERSION);
     }
 
     public void onCreate(SQLiteDatabase sqliteDatabase) {
-        sqliteDatabase.execSQL("CREATE TABLE favourite_radios (_id INTEGER PRIMARY KEY AUTOINCREMENT, id INTEGER NOT NULL, city_id INTEGER NOT NULL, town_id INTEGER NOT NULL, neighbourhood_id INTEGER NOT NULL, category_id TEXT NOT NULL, user_id INTEGER NOT NULL, name TEXT NOT NULL, category TEXT NOT NULL, icon_url TEXT NOT NULL, stream_link TEXT NOT NULL, is_in_hls_format INTEGER NOT NULL DEFAULT 0, shareable_link TEXT NOT NULL, hit INTEGER NOT NULL, num_of_online_listeners INTEGER NOT NULL DEFAULT 0, is_being_buffered INTEGER NOT NULL DEFAULT 0, is_Liked INTEGER NOT NULL DEFAULT 0);");
+        Log.d(LOG_TAG, "onCreate() called");
+        Log.d(LOG_TAG, "creating database");
+        sqliteDatabase.execSQL("CREATE TABLE " + RadioEntry.TABLE_NAME + "(_id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                                RadioEntry.COLUMN_ID + " INTEGER NOT NULL," +
+                                RadioEntry.COLUMN_CITY_ID + " INTEGER NOT NULL," +
+                                RadioEntry.COLUMN_TOWN_ID + " INTEGER NOT NULL," +
+                                RadioEntry.COLUMN_NEIGHBOURHOOD_ID + " INTEGER NOT NULL," +
+                                RadioEntry.COLUMN_CATEGORY_ID + " TEXT NOT NULL," +
+                                RadioEntry.COLUMN_USER_ID + " INTEGER NOT NULL," +
+                                RadioEntry.COLUMN_NAME + " TEXT NOT NULL," +
+                                RadioEntry.COLUMN_CATEGORY + " TEXT NOT NULL," +
+                                RadioEntry.COLUMN_ICON_URL + " TEXT NOT NULL," +
+                                RadioEntry.COLUMN_STREAM_LINK + " TEXT NOT NULL," +
+                                RadioEntry.COLUMN_IS_IN_HLS_FORMAT + " INTEGER NOT NULL DEFAULT 0," +
+                                RadioEntry.COLUMN_SHAREABLE_LINK + " TEXT NOT NULL," +
+                                RadioEntry.COLUMN_HIT + " INTEGER NOT NULL," +
+                                RadioEntry.COLUMN_NUM_OF_ONLINE_LISTENERS + " INTEGER NOT NULL DEFAULT 0," +
+                                RadioEntry.COLUMN_IS_BEING_BUFFERED + " INTEGER NOT NULL DEFAULT 0," +
+                                RadioEntry.COLUMN_IS_LIKED + " INTEGER NOT NULL DEFAULT 0);");
+    }
+
+    @Override
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        Log.d(LOG_TAG, "onUpgrade() called");
+        Log.d(LOG_TAG, "oldVersion: " + oldVersion);
+        Log.d(LOG_TAG, "newVersion: " + newVersion);
+
+        db.execSQL("ALTER TABLE "
+                + RadioEntry.TABLE_NAME
+                + " ADD COLUMN " + RadioEntry.COLUMN_IS_IN_HLS_FORMAT + " INTEGER DEFAULT 0");
     }
 }
