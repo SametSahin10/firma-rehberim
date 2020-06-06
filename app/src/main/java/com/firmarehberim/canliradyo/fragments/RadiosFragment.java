@@ -373,36 +373,37 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
     }
 
     public void setCurrentRadioStatus(int statusCode, Radio radioCurrentlyPlaying) {
-        List<Radio> radios = radioAdapter.getItems();
-        //find the currently playing radio from the radio list
-        // TODO: Fix NPE here.
-        for (Radio radio: radios) {
-            if (radio.getRadioId() == radioCurrentlyPlaying.getRadioId()) {
-                switch (statusCode) {
-                    case 10: //STATE_BUFFERING
-                        Log.d(LOG_TAG, "STATE_BUFFERING");
-                        radio.setBeingBuffered(true);
-                        radio.setPlaying(false);
-                        radioAdapter.notifyDataSetChanged();
-                        break;
-                    case 11: //STATE_READY
-                        Log.d(LOG_TAG, "STATE_READY");
-                        radio.setBeingBuffered(false);
-                        radio.setPlaying(true);
-                        radioAdapter.notifyDataSetChanged();
-                        break;
-                    case 12: //STATE_IDLE
-                        Log.d(LOG_TAG, "STATE_IDLE");
-                        radio.setBeingBuffered(false);
-                        radio.setPlaying(false);
-                        radioAdapter.notifyDataSetChanged();
-                        break;
-                    case 13: //STATE_PAUSED - This state is not an exoplayer state.
-                        Log.d(LOG_TAG, "STATE_PAUSED");
-                        radio.setPlaying(false);
-                        radioAdapter.notifyDataSetChanged();
-                    default:
-                        Log.e(LOG_TAG, "Unknown status code: " + statusCode);
+        if (radioCurrentlyPlaying != null) {
+            List<Radio> radios = radioAdapter.getItems();
+            // Find the currently playing radio from the radio list
+            for (Radio radio: radios) {
+                if (radio.getRadioId() == radioCurrentlyPlaying.getRadioId()) {
+                    switch (statusCode) {
+                        case 10: //STATE_BUFFERING
+                            Log.d(LOG_TAG, "STATE_BUFFERING");
+                            radio.setBeingBuffered(true);
+                            radio.setPlaying(false);
+                            radioAdapter.notifyDataSetChanged();
+                            break;
+                        case 11: //STATE_READY
+                            Log.d(LOG_TAG, "STATE_READY");
+                            radio.setBeingBuffered(false);
+                            radio.setPlaying(true);
+                            radioAdapter.notifyDataSetChanged();
+                            break;
+                        case 12: //STATE_IDLE
+                            Log.d(LOG_TAG, "STATE_IDLE");
+                            radio.setBeingBuffered(false);
+                            radio.setPlaying(false);
+                            radioAdapter.notifyDataSetChanged();
+                            break;
+                        case 13: //STATE_PAUSED - This state is not an exoplayer state.
+                            Log.d(LOG_TAG, "STATE_PAUSED");
+                            radio.setPlaying(false);
+                            radioAdapter.notifyDataSetChanged();
+                        default:
+                            Log.e(LOG_TAG, "Unknown status code: " + statusCode);
+                    }
                 }
             }
         }
