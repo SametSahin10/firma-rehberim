@@ -221,7 +221,7 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
     @Override
     public void onLoadFinished(@NonNull Loader<List<Radio>> loader, List<Radio> radios) {
         radioAdapter.clear();
-        if (radios != null) {
+        if (radios != null && !radios.isEmpty()) {
             radioAdapter.addAll(radios);
             onLoadingRadiosFinishedListener.onLoadingRadiosFinished(radios.get(0));
         }
