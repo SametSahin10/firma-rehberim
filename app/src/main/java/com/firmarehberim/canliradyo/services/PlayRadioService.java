@@ -246,14 +246,16 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
             notificationManager.createNotificationChannel(notificationChannel);
         }
 
-
-        Bitmap largeIcon = BitmapFactory.decodeResource(getResources(), R.drawable.ic_placeholder_radio);
-
-        final NotificationCompat.Builder builder = new NotificationCompat.Builder(this, channelId)
-                .setShowWhen(false)
+        Bitmap largeIcon = BitmapFactory.decodeResource(
+            getResources(), R.drawable.ic_placeholder_radio
+        );
+        final NotificationCompat.Builder builder =
+                new NotificationCompat.Builder(this, channelId);
+        builder.setShowWhen(false)
                 .setStyle(new androidx.media.app.NotificationCompat.MediaStyle()
-                            .setMediaSession(mediaSession.getSessionToken())
-                            .setShowActionsInCompactView(0, 1, 2))
+                    .setMediaSession(mediaSession.getSessionToken())
+                    .setShowActionsInCompactView(0, 1, 2)
+                )
                 .setColor(getResources().getColor(R.color.colorPrimary))
                 .setLargeIcon(largeIcon)
                 .setSmallIcon(R.mipmap.ic_launcher)
@@ -263,13 +265,24 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
                 .setDeleteIntent(onCancelPendingIntent)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setAutoCancel(false)
-                .addAction(android.R.drawable.ic_media_previous, "previous", generatePlaybackAction(3))
+                .addAction(
+                    android.R.drawable.ic_media_previous,
+                    "previous",
+                    generatePlaybackAction(3)
+                )
                 .addAction(notificationAction, "pause", playPauseAction)
-                .addAction(android.R.drawable.ic_media_next, "next", generatePlaybackAction(2));
+                .addAction(
+                    android.R.drawable.ic_media_next,
+                    "next",
+                    generatePlaybackAction(2)
+                );
 
-        PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
-                                      new Intent(this, RadiosActivity.class),
-                                                        PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent contentIntent = PendingIntent.getActivity(
+            this,
+            0,
+            new Intent(this, RadiosActivity.class),
+            PendingIntent.FLAG_UPDATE_CURRENT
+        );
 
         builder.setContentIntent(contentIntent);
 
@@ -322,8 +335,10 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
                         initNotification(PlaybackStatus.PLAYING);
                         if (player != null) {
                             player.setPlayWhenReady(true);
-                            serviceCallbacks.togglePlayPauseButton(false,
-                                                                   isFromFavouriteRadiosFragment);
+                            serviceCallbacks.togglePlayPauseButton(
+                                false,
+                                isFromFavouriteRadiosFragment
+                            );
                         }
                     }
                 }
@@ -363,16 +378,35 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
         switch (actionNumber) {
             case 0:
                 playbackAction.setAction(ACTION_PLAY);
-                return PendingIntent.getService(this, actionNumber, playbackAction, 0);
+                return PendingIntent.getService(
+                    this,
+                    actionNumber,
+                    playbackAction,
+                    0
+                );
             case 1:
                 playbackAction.setAction(ACTION_PAUSE);
-                return PendingIntent.getService(this, actionNumber, playbackAction, 0);
+                return PendingIntent.getService(
+                    this,
+                    actionNumber,
+                    playbackAction,
+                    0
+                );
             case 2:
                 playbackAction.setAction(ACTION_NEXT);
-                return PendingIntent.getService(this, actionNumber, playbackAction, 0);
+                return PendingIntent.getService(
+                    this,
+                    actionNumber,
+                    playbackAction,
+                    0
+                );
             case 3:
                 playbackAction.setAction(ACTION_PREVIOUS);
-                return PendingIntent.getService(this, actionNumber, playbackAction, 0);
+                return PendingIntent.getService(
+                    this,
+                    actionNumber,
+                    playbackAction,0
+                );
             default:
                 break;
         }
