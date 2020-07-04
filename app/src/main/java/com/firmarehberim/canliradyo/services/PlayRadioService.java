@@ -52,11 +52,11 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
     private static final int STATE_IDLE = 12;
     private static final int NOTIFICATION_ID = 101;
 
-    public static final String ACTION_PLAY = "net.dijitalbeyin.firma_rehberim.ACTION_PLAY";
-    public static final String ACTION_PAUSE = "net.dijitalbeyin.firma_rehberim.ACTION_PAUSE";
-    public static final String ACTION_PREVIOUS = "net.dijitalbeyin.firma_rehberim.ACTION_PREVIOUS";
-    public static final String ACTION_NEXT = "net.dijitalbeyin.firma_rehberim.ACTION_NEXT";
-    public static final String ACTION_STOP = "net.dijitalbeyin.firma_rehberim.ACTION_STOP";
+    public static final String ACTION_PLAY = "com.firmarehberim.canliradyo.ACTION_PLAY";
+    public static final String ACTION_PAUSE = "com.firmarehberim.canliradyo.ACTION_PAUSE";
+    public static final String ACTION_PREVIOUS = "com.firmarehberim.canliradyo.ACTION_PREVIOUS";
+    public static final String ACTION_NEXT = "com.firmarehberim.canliradyo.ACTION_NEXT";
+    public static final String ACTION_STOP = "com.firmarehberim.canliradyo.ACTION_STOP";
 
     private final IBinder binder = new PlayRadioBinder();
     private ServiceCallbacks serviceCallbacks;
