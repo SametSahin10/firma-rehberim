@@ -108,10 +108,6 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
         return radioAdapter;
     }
 
-    public void setRadioAdapter(RadioAdapter radioAdapter) {
-        this.radioAdapter = radioAdapter;
-    }
-
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -372,12 +368,13 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
         return radios;
     }
 
-    public void setCurrentRadioStatus(int statusCode, Radio radioCurrentlyPlaying) {
-        if (radioCurrentlyPlaying != null) {
+    public void setCurrentRadioStatus(int statusCode, Radio currentlyPlayingRadio) {
+        if (currentlyPlayingRadio != null) {
             List<Radio> radios = radioAdapter.getItems();
+            Log.d(LOG_TAG, "size of radios list: " + radios.size());
             // Find the currently playing radio from the radio list
             for (Radio radio: radios) {
-                if (radio.getRadioId() == radioCurrentlyPlaying.getRadioId()) {
+                if (radio.getRadioId() == currentlyPlayingRadio.getRadioId()) {
                     switch (statusCode) {
                         case 10: //STATE_BUFFERING
                             Log.d(LOG_TAG, "STATE_BUFFERING");

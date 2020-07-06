@@ -659,6 +659,14 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
                     }
                 }
             });
+        } else {
+            if (serviceBound) {
+                Radio currentlyPlayingRadio = playRadioService.getCurrentlyPlayingRadio();
+                if (currentlyPlayingRadio != null) {
+                    radiosFragment.setCurrentRadioStatus(11, currentlyPlayingRadio);
+                    radiosFragment.setRadioClicked(currentlyPlayingRadio);
+                }
+            }
         }
     }
 
@@ -768,6 +776,7 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
             sb_volume_control.setProgress(streamVolume);
             if (playRadioService.getCurrentlyPlayingRadio() != null) {
                 currentlyPlayingRadio = playRadioService.getCurrentlyPlayingRadio();
+                radiosFragment.setCurrentRadioStatus(11, currentlyPlayingRadio);
                 tv_radioTitle.setText(currentlyPlayingRadio.getRadioName());
                 String iconUrl = currentlyPlayingRadio.getRadioIconUrl();
                 updateRadioIcon(iconUrl);
