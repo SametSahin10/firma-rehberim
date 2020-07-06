@@ -401,6 +401,7 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
                             Log.d(LOG_TAG, "STATE_PAUSED");
                             radio.setPlaying(false);
                             radioAdapter.notifyDataSetChanged();
+                            break;
                         default:
                             Log.e(LOG_TAG, "Unknown status code: " + statusCode);
                     }
