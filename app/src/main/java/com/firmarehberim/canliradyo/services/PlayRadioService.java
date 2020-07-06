@@ -25,7 +25,6 @@ import androidx.core.app.NotificationCompat;
 import com.firmarehberim.canliradyo.activities.RadiosActivity;
 import com.firmarehberim.canliradyo.receivers.OnCancelBroadcastReceiver;
 import com.google.android.exoplayer2.ExoPlaybackException;
-import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.source.MediaSource;
@@ -38,6 +37,7 @@ import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory;
 import com.google.android.exoplayer2.util.EventLogger;
 import com.google.android.exoplayer2.util.Util;
+import com.google.gson.Gson;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
 
@@ -61,7 +61,7 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
     private final IBinder binder = new PlayRadioBinder();
     private ServiceCallbacks serviceCallbacks;
 
-    Radio radioCurrentlyPlaying;
+    Radio currentlyPlayingRadio;
 
     public AudioManager audioManager;
     public SimpleExoPlayer player;
@@ -73,6 +73,10 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
     private MediaControllerCompat.TransportControls transportControls;
 
     private boolean isFromFavouriteRadiosFragment = false;
+
+    public Radio getCurrentlyPlayingRadio() {
+        return currentlyPlayingRadio;
+    }
 
     public void setFromFavouriteRadiosFragment(boolean fromFavouriteRadiosFragment) {
         isFromFavouriteRadiosFragment = fromFavouriteRadiosFragment;
@@ -109,9 +113,10 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
                             serviceCallbacks.togglePlayPauseButton(false,
                                     isFromFavouriteRadiosFragment);
                         }
-                        int streamMaxVolume = audioManager
-                                .getStreamMaxVolume(player.getAudioAttributes().contentType);
-                        serviceCallbacks.updateVolumeBar(streamMaxVolume);
+                        int streamMaxVolume = audioManager.getStreamMaxVolume(
+                            player.getAudioAttributes().contentType
+                        );
+                        Log.d(LOG_TAG, "streamMaxVolume: " + streamMaxVolume);
                         break;
                     case Player.STATE_IDLE:
                         if (isFromFavouriteRadiosFragment) {
@@ -206,7 +211,7 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
     }
 
     public void playRadio(Radio radioClicked) {
-        radioCurrentlyPlaying = radioClicked;
+        currentlyPlayingRadio = radioClicked;
         initNotification(PlaybackStatus.PLAYING);
         if (player != null) {
             if (isPlaying()) {
@@ -230,28 +235,46 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
         }
 
         Intent onCancelIntent = new Intent(this, OnCancelBroadcastReceiver.class);
-        PendingIntent onCancelPendingIntent =
-                    PendingIntent.getBroadcast(this, 0, onCancelIntent, 0);
+        PendingIntent onCancelPendingIntent = PendingIntent.getBroadcast(
+            this,
+            0,
+            onCancelIntent,
+            0
+        );
 
         String channelId = "newChannelId";
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             channelId = getString(R.string.app_name);
-            NotificationChannel notificationChannel = new NotificationChannel(channelId,
-                                                                              channelId,
-                                                NotificationManager.IMPORTANCE_DEFAULT);
+            NotificationChannel notificationChannel = new NotificationChannel(
+                channelId,
+                channelId,
+                NotificationManager.IMPORTANCE_DEFAULT
+            );
             notificationChannel.setDescription(channelId);
             notificationChannel.setSound(null, null);
-            NotificationManager notificationManager
-                    = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-            notificationManager.createNotificationChannel(notificationChannel);
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            if (notificationManager != null) {
+                notificationManager.createNotificationChannel(notificationChannel);
+            }
         }
 
         Bitmap largeIcon = BitmapFactory.decodeResource(
             getResources(), R.drawable.ic_placeholder_radio
         );
+
+        Intent intentToStartRadiosActivity = new Intent(this, RadiosActivity.class);
+        intentToStartRadiosActivity.putExtra("activityStartedFromNotification", true);
+        PendingIntent contentIntent = PendingIntent.getActivity(
+                this,
+                0,
+                intentToStartRadiosActivity,
+                PendingIntent.FLAG_UPDATE_CURRENT
+        );
+
         final NotificationCompat.Builder builder =
                 new NotificationCompat.Builder(this, channelId);
         builder.setShowWhen(false)
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .setStyle(new androidx.media.app.NotificationCompat.MediaStyle()
                     .setMediaSession(mediaSession.getSessionToken())
                     .setShowActionsInCompactView(0, 1, 2)
@@ -259,7 +282,7 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
                 .setColor(getResources().getColor(R.color.colorPrimary))
                 .setLargeIcon(largeIcon)
                 .setSmallIcon(R.mipmap.ic_launcher)
-                .setContentTitle(radioCurrentlyPlaying.getRadioName())
+                .setContentTitle(currentlyPlayingRadio.getRadioName())
                 .setContentText("Radyo çalınıyor")
                 .setContentInfo("Firma Rehberim Radyo")
                 .setDeleteIntent(onCancelPendingIntent)
@@ -276,13 +299,6 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
                     "next",
                     generatePlaybackAction(2)
                 );
-
-        PendingIntent contentIntent = PendingIntent.getActivity(
-            this,
-            0,
-            new Intent(this, RadiosActivity.class),
-            PendingIntent.FLAG_UPDATE_CURRENT
-        );
 
         builder.setContentIntent(contentIntent);
 
@@ -304,8 +320,8 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
             }
         };
 
-        if (radioCurrentlyPlaying != null) {
-            Picasso.get().load(radioCurrentlyPlaying.getRadioIconUrl()).into(target);
+        if (currentlyPlayingRadio != null) {
+            Picasso.get().load(currentlyPlayingRadio.getRadioIconUrl()).into(target);
         }
 
         startForeground(112, builder.build());
@@ -331,7 +347,7 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
                 super.onPlay();
                 boolean audioFocusGained = gainAudioFocus();
                 if (audioFocusGained) {
-                    if (radioCurrentlyPlaying != null) {
+                    if (currentlyPlayingRadio != null) {
                         initNotification(PlaybackStatus.PLAYING);
                         if (player != null) {
                             player.setPlayWhenReady(true);
@@ -479,6 +495,18 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
         }
     }
 
+    public class PlayRadioBinder extends Binder {
+        public PlayRadioService getService() {
+            return PlayRadioService.this;
+        }
+    }
+
+    public interface ServiceCallbacks {
+        void updateRadiosFragment(int statusCode);
+        void updateFavouriteRadiosFragment(int statusCode);
+        void togglePlayPauseButton(boolean isPaused, boolean isFavouriteRadio);
+    }
+
     public boolean gainAudioFocus() {
         boolean playBackNowAuthorized;
         int response;
@@ -507,8 +535,8 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
         }
         // If Build version is lower than 26
         response = audioManager.requestAudioFocus(this,
-                                AudioManager.STREAM_MUSIC,
-                                AudioManager.AUDIOFOCUS_GAIN);
+                AudioManager.STREAM_MUSIC,
+                AudioManager.AUDIOFOCUS_GAIN);
         switch (response) {
             case AudioManager.AUDIOFOCUS_REQUEST_FAILED:
                 playBackNowAuthorized = false;
@@ -535,18 +563,5 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
                             .build();
             audioManager.abandonAudioFocusRequest(focusRequest);
         }
-    }
-
-    public class PlayRadioBinder extends Binder {
-        public PlayRadioService getService() {
-            return PlayRadioService.this;
-        }
-    }
-
-    public interface ServiceCallbacks {
-        void updateRadiosFragment(int statusCode);
-        void updateFavouriteRadiosFragment(int statusCode);
-        void togglePlayPauseButton(boolean isPaused, boolean isFavouriteRadio);
-        void updateVolumeBar(int streamMaxVolume);
     }
 }

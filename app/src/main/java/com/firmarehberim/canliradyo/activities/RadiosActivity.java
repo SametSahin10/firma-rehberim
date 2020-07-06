@@ -7,22 +7,16 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.media.AudioManager;
-
 import com.firmarehberim.canliradyo.R;
-
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
-
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
-
 import androidx.appcompat.app.AppCompatActivity;
-
 import android.os.IBinder;
-import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -36,10 +30,9 @@ import android.widget.SearchView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.google.android.exoplayer2.SimpleExoPlayer;
+import com.google.gson.Gson;
 import com.squareup.picasso.Picasso;
-
 import com.firmarehberim.canliradyo.fragments.CategoriesFragment;
 import com.firmarehberim.canliradyo.fragments.CitiesFragment;
 import com.firmarehberim.canliradyo.fragments.ContactsFragment;
@@ -87,19 +80,30 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     private ImageButton ib_playPauseRadio;
 
     private ImageView iv_radioIcon;
-    private TextView  tv_radioTitle;
+    private TextView tv_radioTitle;
 
     private AudioManager audioManager;
 
     boolean isAudioStreamMuted = false;
+    boolean activityStartedFromNotification = false;
 
-    Radio radioCurrentlyPlaying;
+    Radio currentlyPlayingRadio;
     Radio firstRadioOnList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.d(LOG_TAG, "Activity callbacks || onCreate()");
         setContentView(R.layout.activity_radio);
+        setVolumeControlStream(AudioManager.STREAM_MUSIC);
+
+        Intent intent = getIntent();
+        if (intent.getExtras() != null) {
+            activityStartedFromNotification = intent
+                    .getExtras()
+                    .getBoolean("activityStartedFromNotification");
+            Log.d(LOG_TAG, "activityStartedFromNotification: " + activityStartedFromNotification);
+        }
 
         ACTIVE_FRAGMENT_ID = RADIOS_FRAGMENT_ID;
         radiosFragment = new RadiosFragment();
@@ -112,7 +116,9 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
             @Override
             public void onClick(View v) {
                 if (ACTIVE_FRAGMENT_ID != RADIOS_FRAGMENT_ID) {
-                    getSupportActionBar().setTitle("Firma Rehberim Radyo");
+                    if (getSupportActionBar() != null) {
+                        getSupportActionBar().setTitle("Firma Rehberim Radyo");
+                    }
                     FragmentManager fragmentManager = getSupportFragmentManager();
                     FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
                     fragmentTransaction.replace(R.id.fragment_container, radiosFragment).commit();
@@ -126,7 +132,9 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
             @Override
             public void onClick(View v) {
                 if (ACTIVE_FRAGMENT_ID != TV_FRAGMENT_ID) {
-                    getSupportActionBar().setTitle("TV");
+                    if (getSupportActionBar() != null) {
+                        getSupportActionBar().setTitle("TV");
+                    }
                     TvFragment tvFragment = new TvFragment();
                     FragmentManager fragmentManager = getSupportFragmentManager();
                     FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
@@ -141,7 +149,9 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
             @Override
             public void onClick(View v) {
                 if (ACTIVE_FRAGMENT_ID != CONTACTS_FRAGMENT_ID) {
-                    getSupportActionBar().setTitle("Rehber");
+                    if (getSupportActionBar() != null) {
+                        getSupportActionBar().setTitle("Rehber");
+                    }
                     ContactsFragment contactsFragment = new ContactsFragment();
                     FragmentManager fragmentManager = getSupportFragmentManager();
                     FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
@@ -156,7 +166,9 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
             @Override
             public void onClick(View v) {
                 if (ACTIVE_FRAGMENT_ID != NEWSPAPER_FRAGMENT_ID) {
-                    getSupportActionBar().setTitle("Gazete");
+                    if (getSupportActionBar() != null) {
+                        getSupportActionBar().setTitle("Gazete");
+                    }
                     NewspaperFragment newspaperFragment = new NewspaperFragment();
                     FragmentManager fragmentManager = getSupportFragmentManager();
                     FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
@@ -171,7 +183,9 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
             @Override
             public void onClick(View v) {
                 if (ACTIVE_FRAGMENT_ID != FAV_RADIOS_FRAGMENT_ID) {
-                    getSupportActionBar().setTitle("Favori Radyolar");
+                    if (getSupportActionBar() != null) {
+                        getSupportActionBar().setTitle("Favori Radyolar");
+                    }
                     favouriteRadiosFragment = new FavouriteRadiosFragment();
                     FragmentManager fragmentManager = getSupportFragmentManager();
                     FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
@@ -186,7 +200,9 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
             @Override
             public void onClick(View v) {
                 if (ACTIVE_FRAGMENT_ID != CATEGORIES_FRAGMENT_ID) {
-                    getSupportActionBar().setTitle("Kategoriler");
+                    if (getSupportActionBar() != null) {
+                        getSupportActionBar().setTitle("Kategoriler");
+                    }
                     CategoriesFragment categoriesFragment = new CategoriesFragment();
                     FragmentManager fragmentManager = getSupportFragmentManager();
                     FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
@@ -201,7 +217,9 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
             @Override
             public void onClick(View v) {
                 if (ACTIVE_FRAGMENT_ID != CITIES_FRAGMENT_ID) {
-                    getSupportActionBar().setTitle("Şehirler");
+                    if (getSupportActionBar() != null) {
+                        getSupportActionBar().setTitle("Şehirler");
+                    }
                     CitiesFragment citiesFragment = new CitiesFragment();
                     FragmentManager fragmentManager = getSupportFragmentManager();
                     FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
@@ -218,7 +236,9 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
                 if (ACTIVE_FRAGMENT_ID != GLOBAL_FRAGMENT_ID) {
                     Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
                     FragmentManager fragmentManager = getSupportFragmentManager();
-                    getSupportActionBar().setTitle("Ulusal");
+                    if (getSupportActionBar() != null) {
+                        getSupportActionBar().setTitle("Ulusal");
+                    }
                     radiosFragment.setFilteringRespectToCityEnabled(false);
                     radiosFragment.setFilteringRespectToCategoryEnabled(false);
                     if (ACTIVE_FRAGMENT_ID == RADIOS_FRAGMENT_ID) {
@@ -259,7 +279,9 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
                     FragmentManager fragmentManager = getSupportFragmentManager();
                     FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
                     fragmentTransaction.replace(R.id.fragment_container, timerFragment).commit();
-                    getSupportActionBar().setTitle("Zamanlayıcı");
+                    if (getSupportActionBar() != null) {
+                        getSupportActionBar().setTitle("Zamanlayıcı");
+                    }
                     ACTIVE_FRAGMENT_ID = TIMER_FRAGMENT_ID;
                 }
             }
@@ -283,36 +305,38 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
 
         audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         sb_volume_control = findViewById(R.id.sb_volume_control_bar);
-        sb_volume_control.setProgress(7);
+        sb_volume_control.setMax(14);
+        int streamVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+        Log.d(LOG_TAG, "streamVolume:" + streamVolume);
+        sb_volume_control.setProgress(streamVolume);
         sb_volume_control.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 if (playRadioService != null) {
                     SimpleExoPlayer exoPlayer = playRadioService.getPlayer();
                     if (exoPlayer != null) {
-                        playRadioService.audioManager
-                                .setStreamVolume(exoPlayer.getAudioStreamType(), progress, 0);
+                        Log.d(LOG_TAG, "onProgressChanged()");
+                        Log.d(LOG_TAG, "progress: " + progress);
+                        playRadioService.audioManager.setStreamVolume(
+                            exoPlayer.getAudioStreamType(), progress, 0
+                        );
                     }
                 }
             }
 
             @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
+            public void onStartTrackingTouch(SeekBar seekBar) {}
 
             @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-
-            }
+            public void onStopTrackingTouch(SeekBar seekBar) {}
         });
 
         ImageButton ib_share_radio = findViewById(R.id.ib_player_share_radio);
         ib_share_radio.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (radioCurrentlyPlaying != null) {
-                    shareRadio(radioCurrentlyPlaying);
+                if (currentlyPlayingRadio != null) {
+                    shareRadio(currentlyPlayingRadio);
                 } else {
                     Toast.makeText(RadiosActivity.this,
                             "Paylaşmak için bir radyoyu çalmaya başlayın",
@@ -328,8 +352,9 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
             public void onClick(View v) {
                 boolean isConnected = checkConnectivity();
                 if (isConnected) {
-                    if (radioCurrentlyPlaying == null) {
-                        // Play/pause button pressed before any selection has been from the list.
+                    if (currentlyPlayingRadio == null) {
+                        // Play/pause button pressed before any selection
+                        // has been made from the list.
                         // Playing the first radio on list.
                         // Performing actions as if the first radio on list was clicked.
 
@@ -341,20 +366,22 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
 
                         // Beginning of operations normally performed on RadiosActivity
                         if (!serviceBound) {
-                            Intent intent = new Intent(getApplicationContext(), PlayRadioService.class);
+                            Intent intent = new Intent(
+                                getApplicationContext(), PlayRadioService.class
+                            );
                             startService(intent);
                             bindService(intent, serviceConnection, BIND_AUTO_CREATE);
                         } else {
-                            radioCurrentlyPlaying = firstRadioOnList;
+                            currentlyPlayingRadio = firstRadioOnList;
                             playRadioService.playRadio(firstRadioOnList);
-                            tv_radioTitle.setText(radioCurrentlyPlaying.getRadioName());
-                            String iconUrl = radioCurrentlyPlaying.getRadioIconUrl();
+                            tv_radioTitle.setText(currentlyPlayingRadio.getRadioName());
+                            String iconUrl = currentlyPlayingRadio.getRadioIconUrl();
                             updateRadioIcon(iconUrl);
                             iv_radioIcon.setOnClickListener(new View.OnClickListener() {
                                 @Override
                                 public void onClick(View v) {
                                     Intent intent = new Intent(Intent.ACTION_VIEW);
-                                    intent.setData(Uri.parse(radioCurrentlyPlaying.getShareableLink()));
+                                    intent.setData(Uri.parse(currentlyPlayingRadio.getShareableLink()));
                                     if (intent.resolveActivity(getPackageManager()) != null) {
                                         startActivity(intent);
                                     }
@@ -375,7 +402,9 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
                             "Lütfen internete bağlı olduğunuzdan emin olun",
                                  Toast.LENGTH_SHORT)
                                  .show();
-                    ib_playPauseRadio.setImageDrawable(getResources().getDrawable(R.drawable.ic_play_radio));
+                    ib_playPauseRadio.setImageDrawable(
+                        getResources().getDrawable(R.drawable.ic_play_radio)
+                    );
                 }
             }
         });
@@ -384,16 +413,49 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     @Override
     protected void onStart() {
         super.onStart();
-        Intent intent = new Intent(this, PlayRadioService.class);
-        bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+        Log.d(LOG_TAG, "Activity callbacks || onStart()");
+    }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+        Log.d(LOG_TAG, "Activity callbacks || onRestart()");
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.d(LOG_TAG, "Activity callbacks || onResume()");
+        if (!serviceBound) {
+            Log.d(LOG_TAG, "Service is not bound. Binding to the service.");
+            Intent intent = new Intent(this, PlayRadioService.class);
+            bindService(intent, serviceConnection, BIND_AUTO_CREATE);
+        } else {
+            Log.d(LOG_TAG, "Service is bound.");
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.d(LOG_TAG, "Activity callbacks || onPause()");
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        Log.d(LOG_TAG, "Activity callbacks || onStop()");
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        Log.d(LOG_TAG, "Activity callbacks || onDestroy()");
+        // TODO: unbind service on onStop() instead.
         if (serviceBound) {
             unbindService(serviceConnection);
         }
+//        saveIsRadioPlaying(false);
     }
 
     @Override
@@ -546,23 +608,23 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
                 startService(intent);
                 bindService(intent, serviceConnection, BIND_AUTO_CREATE);
             } else {
-                radioCurrentlyPlaying = radioClicked;
+                currentlyPlayingRadio = radioClicked;
                 playRadioService.playRadio(radioClicked);
-                tv_radioTitle.setText(radioCurrentlyPlaying.getRadioName());
-                String iconUrl = radioCurrentlyPlaying.getRadioIconUrl();
+                tv_radioTitle.setText(currentlyPlayingRadio.getRadioName());
+                String iconUrl = currentlyPlayingRadio.getRadioIconUrl();
                 updateRadioIcon(iconUrl);
                 iv_radioIcon.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         Intent intent = new Intent(Intent.ACTION_VIEW);
-                        intent.setData(Uri.parse(radioCurrentlyPlaying.getShareableLink()));
+                        intent.setData(Uri.parse(currentlyPlayingRadio.getShareableLink()));
                         if (intent.resolveActivity(getPackageManager()) != null) {
                             startActivity(intent);
                         }
                     }
                 });
+                playRadioService.setFromFavouriteRadiosFragment(false);
             }
-            playRadioService.setFromFavouriteRadiosFragment(false);
         } else {
             Toast.makeText(RadiosActivity.this,
                     "Lütfen internete bağlı olduğunuzdan emin olun",
@@ -580,20 +642,24 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
 
     @Override
     public void onLoadingRadiosFinished(final Radio firstRadioOnList) {
-        this.firstRadioOnList = firstRadioOnList;
-        tv_radioTitle.setText(firstRadioOnList.getRadioName());
-        String iconUrl = firstRadioOnList.getRadioIconUrl();
-        updateRadioIcon(iconUrl);
-        iv_radioIcon.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(Intent.ACTION_VIEW);
-                intent.setData(Uri.parse(firstRadioOnList.getShareableLink()));
-                if (intent.resolveActivity(getPackageManager()) != null) {
-                    startActivity(intent);
+        // If activity is started with ab intent from a Notification tap
+        // there's no need use first radio on list to set title, icon etc.
+        if (!activityStartedFromNotification) {
+            this.firstRadioOnList = firstRadioOnList;
+            tv_radioTitle.setText(firstRadioOnList.getRadioName());
+            String iconUrl = firstRadioOnList.getRadioIconUrl();
+            updateRadioIcon(iconUrl);
+            iv_radioIcon.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                    intent.setData(Uri.parse(firstRadioOnList.getShareableLink()));
+                    if (intent.resolveActivity(getPackageManager()) != null) {
+                        startActivity(intent);
+                    }
                 }
-            }
-        });
+            });
+        }
     }
 
     @Override
@@ -605,16 +671,16 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
                 startService(intent);
                 bindService(intent, serviceConnection, BIND_AUTO_CREATE);
             } else {
-                radioCurrentlyPlaying = radioClicked;
+                currentlyPlayingRadio = radioClicked;
                 playRadioService.playRadio(radioClicked);
-                tv_radioTitle.setText(radioCurrentlyPlaying.getRadioName());
-                String iconUrl = radioCurrentlyPlaying.getRadioIconUrl();
+                tv_radioTitle.setText(currentlyPlayingRadio.getRadioName());
+                String iconUrl = currentlyPlayingRadio.getRadioIconUrl();
                 updateRadioIcon(iconUrl);
                 iv_radioIcon.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         Intent intent = new Intent(Intent.ACTION_VIEW);
-                        intent.setData(Uri.parse(radioCurrentlyPlaying.getShareableLink()));
+                        intent.setData(Uri.parse(currentlyPlayingRadio.getShareableLink()));
                         if (intent.resolveActivity(getPackageManager()) != null) {
                             startActivity(intent);
                         }
@@ -623,10 +689,10 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
             }
             playRadioService.setFromFavouriteRadiosFragment(true);
         } else {
-            Toast.makeText(RadiosActivity.this,
-                    "Lütfen internete bağlı olduğunuzdan emin olun",
-                    Toast.LENGTH_SHORT)
-                    .show();
+            showToast(
+            RadiosActivity.this,
+            getResources().getString(R.string.no_internet_connection_toast_message)
+            );
             ib_playPauseRadio.setImageDrawable(getResources().getDrawable(R.drawable.ic_play_radio));
         }
     }
@@ -676,8 +742,12 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     }
 
     private boolean checkConnectivity() {
-        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        ConnectivityManager cm =
+                (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = null;
+        if (cm != null) {
+            activeNetwork = cm.getActiveNetworkInfo();
+        }
         boolean isConnected = activeNetwork != null
                 && activeNetwork.isConnectedOrConnecting();
         return isConnected;
@@ -686,26 +756,61 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     private ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
+            Log.d(LOG_TAG, "onServiceConnected");
             PlayRadioBinder binder = (PlayRadioBinder) service;
             playRadioService = binder.getService();
             serviceBound = true;
             playRadioService.setServiceCallbacks(RadiosActivity.this);
+            int streamMaxVolume = audioManager.getStreamMaxVolume(
+                playRadioService.getPlayer().getAudioAttributes().contentType
+            );
+            int streamVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+            sb_volume_control.setProgress(streamVolume);
+            if (playRadioService.getCurrentlyPlayingRadio() != null) {
+                currentlyPlayingRadio = playRadioService.getCurrentlyPlayingRadio();
+                tv_radioTitle.setText(currentlyPlayingRadio.getRadioName());
+                String iconUrl = currentlyPlayingRadio.getRadioIconUrl();
+                updateRadioIcon(iconUrl);
+                iv_radioIcon.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Intent intent = new Intent(Intent.ACTION_VIEW);
+                        intent.setData(Uri.parse(currentlyPlayingRadio.getShareableLink()));
+                        if (intent.resolveActivity(getPackageManager()) != null) {
+                            startActivity(intent);
+                        }
+                    }
+                });
+                playRadioService.setFromFavouriteRadiosFragment(false);
+            }
+            if (playRadioService.isPlaying()) {
+                Log.d(LOG_TAG, "Service is bound and the radio is playing. Setting playPause icon to pause icon");
+                ib_playPauseRadio.setImageDrawable(
+                    getResources().getDrawable(R.drawable.ic_pause_radio)
+                );
+            } else {
+                Log.d(LOG_TAG, "Service is bound and the radio is not playing. Setting playPause icon to play icon");
+                ib_playPauseRadio.setImageDrawable(
+                    getResources().getDrawable(R.drawable.ic_play_radio)
+                );
+            }
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
+            Log.d(LOG_TAG, "onServiceDisconnected");
             serviceBound = false;
         }
     };
 
     @Override
     public void updateRadiosFragment(int statusCode) {
-        radiosFragment.setCurrentRadioStatus(statusCode, radioCurrentlyPlaying);
+        radiosFragment.setCurrentRadioStatus(statusCode, currentlyPlayingRadio);
     }
 
     @Override
     public void updateFavouriteRadiosFragment(int statusCode) {
-        favouriteRadiosFragment.setCurrentRadioStatus(statusCode, radioCurrentlyPlaying);
+        favouriteRadiosFragment.setCurrentRadioStatus(statusCode, currentlyPlayingRadio);
     }
 
     @Override
@@ -713,27 +818,20 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
         if (isPaused) {
             if (isFavouriteRadio) {
                 ib_playPauseRadio.setImageDrawable(getResources().getDrawable(R.drawable.ic_play_radio));
-                favouriteRadiosFragment.setCurrentRadioStatus(13, radioCurrentlyPlaying);
+                favouriteRadiosFragment.setCurrentRadioStatus(13, currentlyPlayingRadio);
             } else {
                 ib_playPauseRadio.setImageDrawable(getResources().getDrawable(R.drawable.ic_play_radio));
-                radiosFragment.setCurrentRadioStatus(13, radioCurrentlyPlaying);
+                radiosFragment.setCurrentRadioStatus(13, currentlyPlayingRadio);
             }
         } else {
             if (isFavouriteRadio) {
                 ib_playPauseRadio.setImageDrawable(getResources().getDrawable(R.drawable.ic_pause_radio));
-                favouriteRadiosFragment.setCurrentRadioStatus(11, radioCurrentlyPlaying);
+                favouriteRadiosFragment.setCurrentRadioStatus(11, currentlyPlayingRadio);
             } else {
                 ib_playPauseRadio.setImageDrawable(getResources().getDrawable(R.drawable.ic_pause_radio));
-                radiosFragment.setCurrentRadioStatus(11, radioCurrentlyPlaying);
+                radiosFragment.setCurrentRadioStatus(11, currentlyPlayingRadio);
             }
         }
-    }
-
-    @Override
-    public void updateVolumeBar(int streamMaxVolume) {
-        sb_volume_control.setMax(streamMaxVolume);
-        // Set manually for now. Should use system stream sound instead.
-//        sb_volume_control.setProgress(7);
     }
 
     void updateRadioIcon(String iconUrl) {
@@ -743,5 +841,9 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
                 .placeholder(R.drawable.ic_placeholder_radio_black)
                 .error(R.drawable.ic_pause_radio)
                 .into(iv_radioIcon);
+    }
+
+    void showToast(Context context, String message) {
+        Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
     }
 }
