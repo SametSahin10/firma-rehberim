@@ -371,7 +371,6 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
     public void setCurrentRadioStatus(int statusCode, Radio currentlyPlayingRadio) {
         if (currentlyPlayingRadio != null) {
             List<Radio> radios = radioAdapter.getItems();
-            Log.d(LOG_TAG, "size of radios list: " + radios.size());
             // Find the currently playing radio from the radio list
             for (Radio radio: radios) {
                 if (radio.getRadioId() == currentlyPlayingRadio.getRadioId()) {
