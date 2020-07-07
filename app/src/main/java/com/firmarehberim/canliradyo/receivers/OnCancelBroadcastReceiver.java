@@ -10,7 +10,6 @@ import com.firmarehberim.canliradyo.services.PlayRadioService;
 public class OnCancelBroadcastReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
-        Log.d("TAG", "Broadcast received");
         Intent cancelNotificationIntent = new Intent(context, PlayRadioService.class);
         cancelNotificationIntent.putExtra("showNotification", false);
         context.startService(cancelNotificationIntent);
