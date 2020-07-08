@@ -270,6 +270,70 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
         iv_radioIcon = findViewById(R.id.iv_radio_icon);
         tv_radioTitle = findViewById(R.id.tv_radio_title);
 
+        View.OnClickListener playPauseOnClickListener = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                boolean isConnected = checkConnectivity();
+                if (isConnected) {
+                    if (currentlyPlayingRadio == null) {
+                        // Play/pause button pressed before any selection
+                        // has been made from the list.
+                        // Playing the first radio on list.
+                        // Performing actions as if the first radio on list was clicked.
+
+                        // Beginning of operations normally performed on RadiosFragment
+                        radiosFragment.setRadioClicked(firstRadioOnList);
+                        radiosFragment.getRadioClicked().setBeingBuffered(true);
+                        radiosFragment.getRadioAdapter().notifyDataSetChanged();
+                        // End of operations normally performed on RadiosFragment
+
+                        // Beginning of operations normally performed on RadiosActivity
+                        if (!serviceBound) {
+                            Intent intent = new Intent(
+                                    getApplicationContext(), PlayRadioService.class
+                            );
+                            startService(intent);
+                            bindService(intent, serviceConnection, BIND_AUTO_CREATE);
+                        } else {
+                            currentlyPlayingRadio = firstRadioOnList;
+                            playRadioService.playRadio(firstRadioOnList);
+                            tv_radioTitle.setText(currentlyPlayingRadio.getRadioName());
+                            String iconUrl = currentlyPlayingRadio.getRadioIconUrl();
+                            updateRadioIcon(iconUrl);
+                            iv_radioIcon.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                                    intent.setData(Uri.parse(currentlyPlayingRadio.getShareableLink()));
+                                    if (intent.resolveActivity(getPackageManager()) != null) {
+                                        startActivity(intent);
+                                    }
+                                }
+                            });
+                        }
+                        playRadioService.setFromFavouriteRadiosFragment(false);
+                        // End of operations normally performed on RadiosActivity
+                    } else {
+                        if (playRadioService.isPlaying()) {
+                            playRadioService.getTransportControls().pause();
+                        } else {
+                            playRadioService.getTransportControls().play();
+                        }
+                    }
+                } else {
+                    Toast.makeText(RadiosActivity.this,
+                            "Lütfen internete bağlı olduğunuzdan emin olun",
+                            Toast.LENGTH_SHORT)
+                            .show();
+                    ib_playPauseRadio.setImageDrawable(
+                            getResources().getDrawable(R.drawable.ic_play_radio)
+                    );
+                }
+            }
+        };
+
+        tv_radioTitle.setOnClickListener(playPauseOnClickListener);
+
         timerFragment = new TimerFragment();
         ImageButton ib_timer = findViewById(R.id.ib_timer);
         ib_timer.setOnClickListener(new View.OnClickListener() {
@@ -347,67 +411,7 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
         });
 
         ib_playPauseRadio = findViewById(R.id.ib_play_radio);
-        ib_playPauseRadio.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                boolean isConnected = checkConnectivity();
-                if (isConnected) {
-                    if (currentlyPlayingRadio == null) {
-                        // Play/pause button pressed before any selection
-                        // has been made from the list.
-                        // Playing the first radio on list.
-                        // Performing actions as if the first radio on list was clicked.
-
-                        // Beginning of operations normally performed on RadiosFragment
-                        radiosFragment.setRadioClicked(firstRadioOnList);
-                        radiosFragment.getRadioClicked().setBeingBuffered(true);
-                        radiosFragment.getRadioAdapter().notifyDataSetChanged();
-                        // End of operations normally performed on RadiosFragment
-
-                        // Beginning of operations normally performed on RadiosActivity
-                        if (!serviceBound) {
-                            Intent intent = new Intent(
-                                getApplicationContext(), PlayRadioService.class
-                            );
-                            startService(intent);
-                            bindService(intent, serviceConnection, BIND_AUTO_CREATE);
-                        } else {
-                            currentlyPlayingRadio = firstRadioOnList;
-                            playRadioService.playRadio(firstRadioOnList);
-                            tv_radioTitle.setText(currentlyPlayingRadio.getRadioName());
-                            String iconUrl = currentlyPlayingRadio.getRadioIconUrl();
-                            updateRadioIcon(iconUrl);
-                            iv_radioIcon.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    Intent intent = new Intent(Intent.ACTION_VIEW);
-                                    intent.setData(Uri.parse(currentlyPlayingRadio.getShareableLink()));
-                                    if (intent.resolveActivity(getPackageManager()) != null) {
-                                        startActivity(intent);
-                                    }
-                                }
-                            });
-                        }
-                        playRadioService.setFromFavouriteRadiosFragment(false);
-                        // End of operations normally performed on RadiosActivity
-                    } else {
-                        if (playRadioService.isPlaying()) {
-                            playRadioService.getTransportControls().pause();
-                        } else {
-                            playRadioService.getTransportControls().play();
-                        }
-                    }
-                } else {
-                    Toast.makeText(RadiosActivity.this,
-                            "Lütfen internete bağlı olduğunuzdan emin olun",
-                                 Toast.LENGTH_SHORT)
-                                 .show();
-                    ib_playPauseRadio.setImageDrawable(
-                        getResources().getDrawable(R.drawable.ic_play_radio)
-                    );
-                }
-            }
-        });
+        ib_playPauseRadio.setOnClickListener(playPauseOnClickListener);
     }
 
     @Override
