@@ -455,7 +455,6 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
         if (serviceBound) {
             unbindService(serviceConnection);
         }
-//        saveIsRadioPlaying(false);
     }
 
     @Override
@@ -609,7 +608,9 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
                 bindService(intent, serviceConnection, BIND_AUTO_CREATE);
             } else {
                 currentlyPlayingRadio = radioClicked;
-                playRadioService.playRadio(radioClicked);
+//                playRadioService.playRadio(radioClicked);
+                playRadioService.setCurrentlyPlayingRadio(currentlyPlayingRadio);
+                playRadioService.getTransportControls().play();
                 tv_radioTitle.setText(currentlyPlayingRadio.getRadioName());
                 String iconUrl = currentlyPlayingRadio.getRadioIconUrl();
                 updateRadioIcon(iconUrl);
@@ -642,7 +643,7 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
 
     @Override
     public void onLoadingRadiosFinished(final Radio firstRadioOnList) {
-        // If activity is started with ab intent from a Notification tap
+        // If activity is started with an intent from a Notification tap
         // there's no need use first radio on list to set title, icon etc.
         if (!activityStartedFromNotification) {
             this.firstRadioOnList = firstRadioOnList;
@@ -708,7 +709,9 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     @Override
     public void onFilterRespectToCity(String cityToFilter) {
         //Filter respect to city.
-        getSupportActionBar().setTitle(getResources().getString(R.string.app_name));
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setTitle(getResources().getString(R.string.app_name));
+        }
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         fragmentTransaction.replace(R.id.fragment_container, radiosFragment).commit();
@@ -720,7 +723,9 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
 
     @Override
     public void OnFilterRespectToCategory(int categoryIdToFilter) {
-        getSupportActionBar().setTitle("Firma Rehberim Radyo");
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setTitle("Firma Rehberim Radyo");
+        }
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         fragmentTransaction.replace(R.id.fragment_container, radiosFragment).commit();

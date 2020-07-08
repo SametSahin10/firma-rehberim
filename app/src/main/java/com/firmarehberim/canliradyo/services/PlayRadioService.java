@@ -5,6 +5,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
@@ -23,6 +24,7 @@ import android.widget.Toast;
 import androidx.core.app.NotificationCompat;
 
 import com.firmarehberim.canliradyo.activities.RadiosActivity;
+import com.firmarehberim.canliradyo.receivers.BecomingNoisyReceiver;
 import com.firmarehberim.canliradyo.receivers.OnCancelBroadcastReceiver;
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.Player;
@@ -61,9 +63,10 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
     private final IBinder binder = new PlayRadioBinder();
     private ServiceCallbacks serviceCallbacks;
 
-    Radio currentlyPlayingRadio;
+    private Radio currentlyPlayingRadio;
 
     public AudioManager audioManager;
+    private AudioFocusRequest audioFocusRequest;
     public SimpleExoPlayer player;
 
     TrackSelector trackSelector = new DefaultTrackSelector();
@@ -72,10 +75,17 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
     private MediaSessionCompat mediaSession;
     private MediaControllerCompat.TransportControls transportControls;
 
+    private IntentFilter intentFilter = new IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY);
+    private BecomingNoisyReceiver becomingNoisyReceiver = new BecomingNoisyReceiver();
+
     private boolean isFromFavouriteRadiosFragment = false;
 
     public Radio getCurrentlyPlayingRadio() {
         return currentlyPlayingRadio;
+    }
+
+    public void setCurrentlyPlayingRadio(Radio currentlyPlayingRadio) {
+        this.currentlyPlayingRadio = currentlyPlayingRadio;
     }
 
     public void setFromFavouriteRadiosFragment(boolean fromFavouriteRadiosFragment) {
@@ -113,10 +123,6 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
                             serviceCallbacks.togglePlayPauseButton(false,
                                     isFromFavouriteRadiosFragment);
                         }
-                        int streamMaxVolume = audioManager.getStreamMaxVolume(
-                            player.getAudioAttributes().contentType
-                        );
-                        Log.d(LOG_TAG, "streamMaxVolume: " + streamMaxVolume);
                         break;
                     case Player.STATE_IDLE:
                         if (isFromFavouriteRadiosFragment) {
@@ -145,22 +151,30 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent != null) {
             if (intent.getExtras() != null) {
-                boolean showNotification = intent.getExtras().getBoolean("showNotification");
-                if (showNotification) {
-                    if (mediaSessionManager == null) {
-                        initMediaSession();
+                boolean pauseAudio = intent.getExtras().getBoolean("pauseAudio");
+                Log.d(LOG_TAG, "Pausing audio to prevent being noisy");
+                if (pauseAudio) transportControls.pause();
+
+                if (intent.getExtras().containsKey("showNotification")) {
+                    boolean showNotification = intent.getExtras().getBoolean("showNotification");
+                    if (showNotification) {
+                        if (mediaSessionManager == null) {
+                            initMediaSession();
+                        }
+                        initNotification(PlaybackStatus.PLAYING);
+                    } else {
+                        Log.d(LOG_TAG, "Not showing notification");
+                        if (player != null) {
+                            player.setPlayWhenReady(false);
+                            player.release();
+                        }
+                        serviceCallbacks.togglePlayPauseButton(
+                            true,
+                            isFromFavouriteRadiosFragment
+                        );
+                        relieveAudioFocus();
+                        stopSelf();
                     }
-                    initNotification(PlaybackStatus.PLAYING);
-                } else {
-                    Log.d(LOG_TAG, "Not showing notification");
-                    if (player != null) {
-                        player.setPlayWhenReady(false);
-                        player.release();
-                    }
-                    serviceCallbacks.togglePlayPauseButton(true,
-                                                            isFromFavouriteRadiosFragment);
-                    relieveAudioFocus();
-                    stopSelf();
                 }
             }
             handleIncomingActions(intent);
@@ -334,7 +348,11 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
     }
 
     private void initMediaSession() {
-        if (mediaSessionManager != null) return;
+        if (mediaSessionManager != null) {
+            Log.d(LOG_TAG, "mediaSessionManager is not null");
+            return;
+        }
+        Log.d(LOG_TAG, "mediaSessionManager is null");
         mediaSessionManager = (MediaSessionManager) getSystemService(MEDIA_SESSION_SERVICE);
         mediaSession = new MediaSessionCompat(this, "RadioPlayer");
         transportControls = mediaSession.getController().getTransportControls();
@@ -345,17 +363,14 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
             @Override
             public void onPlay() {
                 super.onPlay();
+                Log.d(LOG_TAG, "registering receiver");
+                registerReceiver(becomingNoisyReceiver, intentFilter);
                 boolean audioFocusGained = gainAudioFocus();
                 if (audioFocusGained) {
+                    initNotification(PlaybackStatus.PLAYING);
                     if (currentlyPlayingRadio != null) {
-                        initNotification(PlaybackStatus.PLAYING);
-                        if (player != null) {
-                            player.setPlayWhenReady(true);
-                            serviceCallbacks.togglePlayPauseButton(
-                                false,
-                                isFromFavouriteRadiosFragment
-                            );
-                        }
+                        String streamLink = currentlyPlayingRadio.getStreamLink();
+                        prepareExoPlayer(Uri.parse(streamLink), currentlyPlayingRadio.isInHLSFormat());
                     }
                 }
             }
@@ -363,6 +378,8 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
             @Override
             public void onPause() {
                 super.onPause();
+                Log.d(LOG_TAG, "unregistering receiver");
+                unregisterReceiver(becomingNoisyReceiver);
                 Log.d(LOG_TAG, "initMediaSession() onPause()");
                 initNotification(PlaybackStatus.PAUSED);
                 pauseRadio();
@@ -508,20 +525,22 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
     }
 
     public boolean gainAudioFocus() {
+        Log.d(LOG_TAG, "gaining audio focus");
         boolean playBackNowAuthorized;
         int response;
+
         AudioAttributes audioAttributes = new AudioAttributes.Builder()
                 .setUsage(AudioAttributes.USAGE_MEDIA)
                 .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
                 .build();
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            AudioFocusRequest focusRequest =
-                    new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
-                            .setAudioAttributes(audioAttributes)
-                            .setAcceptsDelayedFocusGain(false)
-                            .setOnAudioFocusChangeListener(this)
-                            .build();
-            response = audioManager.requestAudioFocus(focusRequest);
+            audioFocusRequest = new AudioFocusRequest.Builder(
+                AudioManager.AUDIOFOCUS_GAIN
+            ).setAudioAttributes(audioAttributes)
+             .setAcceptsDelayedFocusGain(false)
+             .setOnAudioFocusChangeListener(this)
+             .build();
+            response = audioManager.requestAudioFocus(audioFocusRequest);
             switch (response) {
                 case AudioManager.AUDIOFOCUS_REQUEST_FAILED:
                     playBackNowAuthorized = false;
@@ -551,17 +570,11 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
 
     private void relieveAudioFocus() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            AudioAttributes audioAttributes = new AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_MEDIA)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                    .build();
-            AudioFocusRequest focusRequest =
-                    new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
-                            .setAudioAttributes(audioAttributes)
-                            .setAcceptsDelayedFocusGain(false)
-                            .setOnAudioFocusChangeListener(this)
-                            .build();
-            audioManager.abandonAudioFocusRequest(focusRequest);
+            if (audioFocusRequest != null) {
+                audioManager.abandonAudioFocusRequest(audioFocusRequest);
+            }
+        } else {
+            audioManager.abandonAudioFocus(this);
         }
     }
 }

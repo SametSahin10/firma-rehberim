@@ -94,7 +94,7 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
     public ProgressBar pb_loadingRadios;
     private ProgressBar pb_bufferingRadio;
 
-    Radio radioClicked;
+    private Radio radioClicked;
 
     public Radio getRadioClicked() {
         return radioClicked;
@@ -173,7 +173,7 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
                             radioAdapter.notifyDataSetChanged();
                             onRadioItemClickListener.onPlayingRadioItemClick(newRadio);
                         } else {
-                            // User clicked on the radio that's had been playing and stopped.
+                            // User clicked on the radio that'd been playing and stopped.
                             radioClicked = newRadio;
                             radioClicked.setBeingBuffered(true);
                             radioAdapter.notifyDataSetChanged();
@@ -190,7 +190,7 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
                     }
                     // Mark it as not playing and play the new one.
                 } else {
-                    // No radio had been playing. Play the clicked on from scratch.
+                    // No radio had been playing. Play the clicked one from scratch.
                     radioClicked = newRadio;
                     radioClicked.setBeingBuffered(true);
                     radioAdapter.notifyDataSetChanged();
