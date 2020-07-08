@@ -14,12 +14,9 @@ public class RadioDbHelper extends SQLiteOpenHelper {
 
     public RadioDbHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
-        Log.d(LOG_TAG, "DATABASE_VERSION:" + DATABASE_VERSION);
     }
 
     public void onCreate(SQLiteDatabase sqliteDatabase) {
-        Log.d(LOG_TAG, "onCreate() called");
-        Log.d(LOG_TAG, "creating database");
         sqliteDatabase.execSQL("CREATE TABLE " + RadioEntry.TABLE_NAME + "(_id INTEGER PRIMARY KEY AUTOINCREMENT," +
                                 RadioEntry.COLUMN_ID + " INTEGER NOT NULL," +
                                 RadioEntry.COLUMN_CITY_ID + " INTEGER NOT NULL," +
@@ -41,9 +38,6 @@ public class RadioDbHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        Log.d(LOG_TAG, "onUpgrade() called");
-        Log.d(LOG_TAG, "oldVersion: " + oldVersion);
-        Log.d(LOG_TAG, "newVersion: " + newVersion);
 
         db.execSQL("ALTER TABLE "
                 + RadioEntry.TABLE_NAME

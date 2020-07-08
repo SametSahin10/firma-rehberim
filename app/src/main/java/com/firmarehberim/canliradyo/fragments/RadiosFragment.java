@@ -116,6 +116,8 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
         return rootView;
     }
 
+
+
     @Override
     public void onViewCreated(@NonNull final View view, @Nullable Bundle savedInstanceState) {
         boolean isConnected = checkConnectivity();
@@ -123,13 +125,11 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
             @Override
             public void onClick(View view) {
                 int position = (int) view.getTag();
-                Log.d("TAG", "" + position);
                 List<Radio> radios = radioAdapter.getItems();
                 Radio radio = radios.get(position);
                 Intent intent = new Intent(Intent.ACTION_VIEW);
                 intent.setData(Uri.parse(radio.getShareableLink()));
                 if (intent.resolveActivity(getContext().getPackageManager()) != null) {
-                    Log.d("TAG", radio.getShareableLink());
                     startActivity(intent);
                 }
             }
@@ -154,7 +154,6 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
         if (isConnected) {
             getLoaderManager().initLoader(RADIO_LOADER_ID, null, this).forceLoad();
         } else {
-            Log.d("TAG", "No Network Connection");
             tv_emptyView.setText(getString(R.string.no_internet_connection_text));
             pb_loadingRadios.setVisibility(View.GONE);
         }
@@ -183,8 +182,7 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
                         // User clicked on a radio which is different
                         // from the currently playing one.
                         radioClicked.setBeingBuffered(false);
-                        radioClicked.setPlaying(false);
-                        radioAdapter.notifyDataSetChanged();
+                        setCurrentRadioStatus(13, radioClicked);
                         radioClicked = newRadio;
                         onRadioItemClickListener.onRadioItemClick(radioClicked);
                     }
@@ -198,6 +196,11 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
                 }
             }
         });
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
     }
 
     @Override
@@ -219,11 +222,14 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
         radioAdapter.clear();
         if (radios != null && !radios.isEmpty()) {
             radioAdapter.addAll(radios);
-            onLoadingRadiosFinishedListener.onLoadingRadiosFinished(radios.get(0));
+            if (radioClicked == null) {
+                onLoadingRadiosFinishedListener.onLoadingRadiosFinished(radios.get(0));
+            }
         }
         tv_emptyView.setText(getString(R.string.empty_radios_text));
         lw_radios.setVisibility(View.VISIBLE);
         pb_loadingRadios.setVisibility(View.GONE);
+        getLoaderManager().destroyLoader(RADIO_LOADER_ID);
     }
 
     @Override
@@ -376,25 +382,21 @@ public class RadiosFragment extends Fragment implements LoaderManager.LoaderCall
                 if (radio.getRadioId() == currentlyPlayingRadio.getRadioId()) {
                     switch (statusCode) {
                         case 10: //STATE_BUFFERING
-                            Log.d(LOG_TAG, "STATE_BUFFERING");
                             radio.setBeingBuffered(true);
                             radio.setPlaying(false);
                             radioAdapter.notifyDataSetChanged();
                             break;
                         case 11: //STATE_READY
-                            Log.d(LOG_TAG, "STATE_READY");
                             radio.setBeingBuffered(false);
                             radio.setPlaying(true);
                             radioAdapter.notifyDataSetChanged();
                             break;
                         case 12: //STATE_IDLE
-                            Log.d(LOG_TAG, "STATE_IDLE");
                             radio.setBeingBuffered(false);
                             radio.setPlaying(false);
                             radioAdapter.notifyDataSetChanged();
                             break;
                         case 13: //STATE_PAUSED - This state is not an exoplayer state.
-                            Log.d(LOG_TAG, "STATE_PAUSED");
                             radio.setPlaying(false);
                             radioAdapter.notifyDataSetChanged();
                             break;

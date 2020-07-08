@@ -106,7 +106,6 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
             public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
                 switch (playbackState) {
                     case Player.STATE_BUFFERING:
-                        Log.d("TAG", "STATE_BUFFERING");
                         if (isFromFavouriteRadiosFragment) {
                             serviceCallbacks.updateFavouriteRadiosFragment(STATE_BUFFERING);
                         } else {
@@ -152,7 +151,6 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
         if (intent != null) {
             if (intent.getExtras() != null) {
                 boolean pauseAudio = intent.getExtras().getBoolean("pauseAudio");
-                Log.d(LOG_TAG, "Pausing audio to prevent being noisy");
                 if (pauseAudio) transportControls.pause();
 
                 if (intent.getExtras().containsKey("showNotification")) {
@@ -163,7 +161,6 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
                         }
                         initNotification(PlaybackStatus.PLAYING);
                     } else {
-                        Log.d(LOG_TAG, "Not showing notification");
                         if (player != null) {
                             player.setPlayWhenReady(false);
                             player.release();
@@ -179,7 +176,6 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
             }
             handleIncomingActions(intent);
         }
-        Log.d(LOG_TAG, "onStartCommand()");
         return START_STICKY;
     }
 
@@ -196,6 +192,7 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
             player.setPlayWhenReady(false);
             player.release();
         }
+        unregisterReceiver(becomingNoisyReceiver);
         relieveAudioFocus();
         cancelNotification();
         super.onDestroy();
@@ -349,10 +346,8 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
 
     private void initMediaSession() {
         if (mediaSessionManager != null) {
-            Log.d(LOG_TAG, "mediaSessionManager is not null");
             return;
         }
-        Log.d(LOG_TAG, "mediaSessionManager is null");
         mediaSessionManager = (MediaSessionManager) getSystemService(MEDIA_SESSION_SERVICE);
         mediaSession = new MediaSessionCompat(this, "RadioPlayer");
         transportControls = mediaSession.getController().getTransportControls();
@@ -363,7 +358,6 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
             @Override
             public void onPlay() {
                 super.onPlay();
-                Log.d(LOG_TAG, "registering receiver");
                 registerReceiver(becomingNoisyReceiver, intentFilter);
                 boolean audioFocusGained = gainAudioFocus();
                 if (audioFocusGained) {
@@ -378,9 +372,7 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
             @Override
             public void onPause() {
                 super.onPause();
-                Log.d(LOG_TAG, "unregistering receiver");
                 unregisterReceiver(becomingNoisyReceiver);
-                Log.d(LOG_TAG, "initMediaSession() onPause()");
                 initNotification(PlaybackStatus.PAUSED);
                 pauseRadio();
                 serviceCallbacks.togglePlayPauseButton(true, isFromFavouriteRadiosFragment);
@@ -450,21 +442,16 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
         if (playbackAction == null || playbackAction.getAction() == null) return;
         String actionString = playbackAction.getAction();
         if (actionString.equalsIgnoreCase(ACTION_PLAY)) {
-            Log.d(LOG_TAG, "handleIncomingActions() ACTION_PLAY");
             transportControls.play();
             serviceCallbacks.togglePlayPauseButton(false, isFromFavouriteRadiosFragment);
         } else if (actionString.equalsIgnoreCase(ACTION_PAUSE)) {
-            Log.d(LOG_TAG, "handleIncomingActions() ACTION_PAUSE");
             transportControls.pause();
             serviceCallbacks.togglePlayPauseButton(true, isFromFavouriteRadiosFragment);
         } else if (actionString.equalsIgnoreCase(ACTION_NEXT)) {
-            Log.d(LOG_TAG, "handleIncomingActions() ACTION_NEXT");
             transportControls.skipToNext();
         } else if (actionString.equalsIgnoreCase(ACTION_PREVIOUS)) {
-            Log.d(LOG_TAG, "handleIncomingActions() ACTION_PREVIOUS");
             transportControls.skipToPrevious();
         } else if (actionString.equalsIgnoreCase(ACTION_STOP)) {
-            Log.d(LOG_TAG, "handleIncomingActions() ACTION_STOP");
             transportControls.stop();
         }
     }
@@ -499,22 +486,15 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
     public void onAudioFocusChange(int focusChange) {
         // Will implement this later.
         if (focusChange == AudioManager.AUDIOFOCUS_GAIN) {
-            Log.d(LOG_TAG, "Gained audio focus");
             transportControls.play();
         } else if (focusChange == AudioManager.AUDIOFOCUS_REQUEST_FAILED) {
-            Log.d(LOG_TAG, "Audio focus request failed");
             transportControls.pause();
         } else if (focusChange == AudioManager.AUDIOFOCUS_LOSS) {
-            Log.d(LOG_TAG, "Audio focus lost");
-            Log.d(LOG_TAG, "Focus change: AUDIOFOCUS_LOSS");
             transportControls.pause();
         } else if (focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT) {
-            Log.d(LOG_TAG, "Audio focus lost");
-            Log.d(LOG_TAG, "Focus change: AUDIOFOCUS_LOSS_TRANSIENT");
             transportControls.pause();
             relieveAudioFocus();
         } else {
-            Log.d(LOG_TAG, "Unknown focus change");
         }
     }
 
@@ -531,7 +511,6 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
     }
 
     public boolean gainAudioFocus() {
-        Log.d(LOG_TAG, "gaining audio focus");
         boolean playBackNowAuthorized;
         int response;
 

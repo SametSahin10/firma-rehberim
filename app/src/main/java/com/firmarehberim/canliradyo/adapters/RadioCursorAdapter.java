@@ -147,7 +147,6 @@ public class RadioCursorAdapter extends CursorAdapter {
                     onRadioDeleteListener.onRadioDelete(currentRadio.getRadioId());
                 }
                 notifyDataSetChanged();
-                Log.d(LOG_TAG, "onClick ON RadioCursorAdapter: ");
             }
         });
     }
@@ -167,7 +166,6 @@ public class RadioCursorAdapter extends CursorAdapter {
         contentValues.put(RadioEntry.COLUMN_IS_BEING_BUFFERED, radio.isBeingBuffered());
         contentValues.put(RadioEntry.COLUMN_IS_LIKED, radio.isLiked());
         long newRowId = sqLiteDatabase.insert(RadioEntry.TABLE_NAME, null, contentValues);
-        Log.d(LOG_TAG, "newRowId: " + newRowId);
     }
 
     private void deleteFromFavourites(Radio radio) {

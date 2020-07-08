@@ -82,7 +82,6 @@ public class FavouriteRadiosFragment extends Fragment implements LoaderManager.L
         if (isConnected) {
             getLoaderManager().initLoader(FAVOURITE_RADIO_LOADER_ID, null, this).forceLoad();
         } else {
-            Log.d("TAG", "No Network Connection");
             tv_emptyView.setText(getString(R.string.no_internet_connection_text));
             pb_loadingRadios.setVisibility(View.GONE);
         }
@@ -110,7 +109,6 @@ public class FavouriteRadiosFragment extends Fragment implements LoaderManager.L
 
     @Override
     public void onLoadFinished(Loader<List<Radio>> loader, List<Radio> radios) {
-        Log.d(LOG_TAG, "onLoadFinished");
         favouriteRadioAdapter.clear();
         if (radios != null) {
             favouriteRadioAdapter.addAll(radios);
@@ -119,10 +117,7 @@ public class FavouriteRadiosFragment extends Fragment implements LoaderManager.L
         Cursor cursor = queryAllTheRadios(getContext());
         if (cursor != null) {
             List<Radio> radiosFromCursor = retrieveRadiosFromCursor(cursor);
-            Log.d(LOG_TAG, "Adding radios from cursor");
-            Log.d(LOG_TAG, "Number of favorite radios: " + radiosFromCursor.size());
             for (Radio radio: radiosFromCursor) {
-                Log.d(LOG_TAG, radio.getRadioName() + "\n");
             }
             favouriteRadioAdapter.addAll(radiosFromCursor);
         }
@@ -264,19 +259,16 @@ public class FavouriteRadiosFragment extends Fragment implements LoaderManager.L
                         radio.setBeingBuffered(true);
                         radio.setPlaying(false);
                         favouriteRadioAdapter.notifyDataSetChanged();
-                        Log.d("TAG", "STATE_BUFFERING");
                         break;
                     case 11: //STATE_READY
                         radio.setBeingBuffered(false);
                         radio.setPlaying(true);
                         favouriteRadioAdapter.notifyDataSetChanged();
-                        Log.d("TAG", "STATE_READY");
                         break;
                     case 12: //STATE_IDLE
                         radio.setBeingBuffered(false);
                         radio.setPlaying(false);
                         favouriteRadioAdapter.notifyDataSetChanged();
-                        Log.d("TAG", "STATE_IDLE");
                         break;
                     case 13: //STATE_PAUSED - This state is not an exoplayer state.
                         radio.setPlaying(false);

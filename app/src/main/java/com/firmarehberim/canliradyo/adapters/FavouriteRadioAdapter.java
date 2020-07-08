@@ -106,7 +106,6 @@ public class FavouriteRadioAdapter extends ArrayAdapter<Radio> {
         holder.ib_add_to_favourites.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.d(LOG_TAG, "Removing " + currentRadio.getRadioName());
                 radios.remove(currentRadio);
                 notifyDataSetChanged();
             }

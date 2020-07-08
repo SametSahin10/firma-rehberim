@@ -83,13 +83,7 @@ public class TimerFragment extends Fragment {
                 String[] timeAsArray = currentTime.split(":");
                 int currentHour = Integer.valueOf(timeAsArray[0]);
                 int currentMinute = Integer.valueOf(timeAsArray[1]);
-                Log.d(LOG_TAG, "current Hour: " + currentHour);
-                Log.d(LOG_TAG, "current Minute: " + currentMinute);
-//                Log.d(LOG_TAG, "current Second: " + currentMilliSecond / 1000);
-                Log.d(LOG_TAG, "selected Hour: " + selectedHour);
-                Log.d(LOG_TAG, "selected Minute: " + selectedMinute);
                 long countDownInterval = ((selectedHour - currentHour)*3600000) + ((selectedMinute - currentMinute)*60000);
-                Log.d(LOG_TAG, "countDownInterval: " + countDownInterval);
                 if (countDownTimer == null) {
                     countDownTimer = new CountDownTimer(countDownInterval, 1000) {
                         @Override
@@ -97,7 +91,6 @@ public class TimerFragment extends Fragment {
                             DateFormat simpleDateFormat = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());
                             simpleDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
                             Date remainingTimeAsDate = new Date(millisUntilFinished);
-                            Log.d(LOG_TAG, "Remaining time as date: " + remainingTimeAsDate.toString());
                             tv_remaining_time.setText(simpleDateFormat.format(remainingTimeAsDate));
                         }
 

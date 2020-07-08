@@ -28,13 +28,11 @@ public class CityAdapter extends ArrayAdapter<Object> {
 
     @Override
     public View getDropDownView(int position, View convertView, ViewGroup parent) {
-        Log.d("TAG", "getDropDownView: ");
         return getCustomView(position, convertView, parent);
     }
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        Log.d("TAG", "getView: ");
         return getCustomView(position, convertView, parent);
     }
 

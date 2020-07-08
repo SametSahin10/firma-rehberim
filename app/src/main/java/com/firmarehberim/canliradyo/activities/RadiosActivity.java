@@ -87,13 +87,12 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     boolean isAudioStreamMuted = false;
     boolean activityStartedFromNotification = false;
 
-    Radio currentlyPlayingRadio;
-    Radio firstRadioOnList;
+    private Radio currentlyPlayingRadio;
+    private Radio firstRadioOnList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.d(LOG_TAG, "Activity callbacks || onCreate()");
         setContentView(R.layout.activity_radio);
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
@@ -102,7 +101,6 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
             activityStartedFromNotification = intent
                     .getExtras()
                     .getBoolean("activityStartedFromNotification");
-            Log.d(LOG_TAG, "activityStartedFromNotification: " + activityStartedFromNotification);
         }
 
         ACTIVE_FRAGMENT_ID = RADIOS_FRAGMENT_ID;
@@ -290,7 +288,7 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
                         // Beginning of operations normally performed on RadiosActivity
                         if (!serviceBound) {
                             Intent intent = new Intent(
-                                    getApplicationContext(), PlayRadioService.class
+                                getApplicationContext(), PlayRadioService.class
                             );
                             startService(intent);
                             bindService(intent, serviceConnection, BIND_AUTO_CREATE);
@@ -371,7 +369,6 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
         sb_volume_control = findViewById(R.id.sb_volume_control_bar);
         sb_volume_control.setMax(14);
         int streamVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
-        Log.d(LOG_TAG, "streamVolume:" + streamVolume);
         sb_volume_control.setProgress(streamVolume);
         sb_volume_control.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
@@ -379,8 +376,6 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
                 if (playRadioService != null) {
                     SimpleExoPlayer exoPlayer = playRadioService.getPlayer();
                     if (exoPlayer != null) {
-                        Log.d(LOG_TAG, "onProgressChanged()");
-                        Log.d(LOG_TAG, "progress: " + progress);
                         playRadioService.audioManager.setStreamVolume(
                             exoPlayer.getAudioStreamType(), progress, 0
                         );
@@ -417,44 +412,56 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     @Override
     protected void onStart() {
         super.onStart();
-        Log.d(LOG_TAG, "Activity callbacks || onStart()");
     }
 
     @Override
     protected void onRestart() {
         super.onRestart();
-        Log.d(LOG_TAG, "Activity callbacks || onRestart()");
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        Log.d(LOG_TAG, "Activity callbacks || onResume()");
         if (!serviceBound) {
-            Log.d(LOG_TAG, "Service is not bound. Binding to the service.");
             Intent intent = new Intent(this, PlayRadioService.class);
             bindService(intent, serviceConnection, BIND_AUTO_CREATE);
         } else {
-            Log.d(LOG_TAG, "Service is bound.");
+            final Radio currentlyPlayingRadio = playRadioService.getCurrentlyPlayingRadio();
+            if (currentlyPlayingRadio != null) {
+                this.currentlyPlayingRadio = currentlyPlayingRadio;
+                radiosFragment.setRadioClicked(currentlyPlayingRadio);
+                radiosFragment.setCurrentRadioStatus(11, currentlyPlayingRadio);
+                tv_radioTitle.setText(currentlyPlayingRadio.getRadioName());
+                String iconUrl = currentlyPlayingRadio.getRadioIconUrl();
+                updateRadioIcon(iconUrl);
+                iv_radioIcon.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Intent intent = new Intent(Intent.ACTION_VIEW);
+                        intent.setData(Uri.parse(currentlyPlayingRadio.getShareableLink()));
+                        if (intent.resolveActivity(getPackageManager()) != null) {
+                            startActivity(intent);
+                        }
+                    }
+                });
+                playRadioService.setFromFavouriteRadiosFragment(false);
+            }
         }
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        Log.d(LOG_TAG, "Activity callbacks || onPause()");
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        Log.d(LOG_TAG, "Activity callbacks || onStop()");
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        Log.d(LOG_TAG, "Activity callbacks || onDestroy()");
         // TODO: unbind service on onStop() instead.
         if (serviceBound) {
             unbindService(serviceConnection);
@@ -666,10 +673,23 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
             });
         } else {
             if (serviceBound) {
-                Radio currentlyPlayingRadio = playRadioService.getCurrentlyPlayingRadio();
+                final Radio currentlyPlayingRadio = playRadioService.getCurrentlyPlayingRadio();
                 if (currentlyPlayingRadio != null) {
-                    radiosFragment.setCurrentRadioStatus(11, currentlyPlayingRadio);
                     radiosFragment.setRadioClicked(currentlyPlayingRadio);
+                    radiosFragment.setCurrentRadioStatus(11, currentlyPlayingRadio);
+                    tv_radioTitle.setText(currentlyPlayingRadio.getRadioName());
+                    String iconUrl = currentlyPlayingRadio.getRadioIconUrl();
+                    updateRadioIcon(iconUrl);
+                    iv_radioIcon.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            Intent intent = new Intent(Intent.ACTION_VIEW);
+                            intent.setData(Uri.parse(currentlyPlayingRadio.getShareableLink()));
+                            if (intent.resolveActivity(getPackageManager()) != null) {
+                                startActivity(intent);
+                            }
+                        }
+                    });
                 }
             }
         }
@@ -773,14 +793,10 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
     private ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            Log.d(LOG_TAG, "onServiceConnected");
             PlayRadioBinder binder = (PlayRadioBinder) service;
             playRadioService = binder.getService();
             serviceBound = true;
             playRadioService.setServiceCallbacks(RadiosActivity.this);
-            int streamMaxVolume = audioManager.getStreamMaxVolume(
-                playRadioService.getPlayer().getAudioAttributes().contentType
-            );
             int streamVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
             sb_volume_control.setProgress(streamVolume);
             if (playRadioService.getCurrentlyPlayingRadio() != null) {
@@ -802,12 +818,10 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
                 playRadioService.setFromFavouriteRadiosFragment(false);
             }
             if (playRadioService.isPlaying()) {
-                Log.d(LOG_TAG, "Service is bound and the radio is playing. Setting playPause icon to pause icon");
                 ib_playPauseRadio.setImageDrawable(
                     getResources().getDrawable(R.drawable.ic_pause_radio)
                 );
             } else {
-                Log.d(LOG_TAG, "Service is bound and the radio is not playing. Setting playPause icon to play icon");
                 ib_playPauseRadio.setImageDrawable(
                     getResources().getDrawable(R.drawable.ic_play_radio)
                 );
@@ -816,7 +830,6 @@ public class RadiosActivity extends AppCompatActivity implements RadiosFragment.
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-            Log.d(LOG_TAG, "onServiceDisconnected");
             serviceBound = false;
         }
     };
