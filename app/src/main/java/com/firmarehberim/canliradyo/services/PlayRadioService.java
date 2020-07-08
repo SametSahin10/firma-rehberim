@@ -506,6 +506,11 @@ public class PlayRadioService extends Service implements AudioManager.OnAudioFoc
             transportControls.pause();
         } else if (focusChange == AudioManager.AUDIOFOCUS_LOSS) {
             Log.d(LOG_TAG, "Audio focus lost");
+            Log.d(LOG_TAG, "Focus change: AUDIOFOCUS_LOSS");
+            transportControls.pause();
+        } else if (focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT) {
+            Log.d(LOG_TAG, "Audio focus lost");
+            Log.d(LOG_TAG, "Focus change: AUDIOFOCUS_LOSS_TRANSIENT");
             transportControls.pause();
         } else {
             Log.d(LOG_TAG, "Unknown focus change");
